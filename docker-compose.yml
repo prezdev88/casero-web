@@ -17,9 +17,12 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - internal
 
   app:
     build: .
+    container_name: casero-app
     depends_on:
       db:
         condition: service_healthy
@@ -28,10 +31,21 @@ services:
       SPRING_DATASOURCE_USERNAME: casero
       SPRING_DATASOURCE_PASSWORD: casero
       CASERO_IMPORT_SQLITE_PATH: /app/casero.sqlite
-    ports:
-      - "8080:8080"
+    # OJO: quitamos el mapeo de 8080 al host, ahora la entrada será por Nginx
+    # ports:
+    #   - "8080:8080"
+    expose:
+      - "8080"
     volumes:
       - ./casero.sqlite:/app/casero.sqlite:ro
+    networks:
+      - internal
+      - proxy-net
 
 volumes:
   postgres_data:
+
+networks:
+  internal:
+  proxy-net:
+    external: true

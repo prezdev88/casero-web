@@ -1,8 +1,12 @@
 package cl.casero.migration.web.controller;
 
+import cl.casero.migration.domain.Customer;
 import cl.casero.migration.domain.MonthlyStatistic;
+import cl.casero.migration.repository.CustomerRepository;
 import cl.casero.migration.service.CustomerService;
 import cl.casero.migration.service.StatisticsService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -30,8 +34,8 @@ public class StatisticsController {
         model.addAttribute("totalDebt", statisticsService.getTotalDebt());
         model.addAttribute("averageDebt", statisticsService.getAverageDebt());
         model.addAttribute("customersCount", statisticsService.getCustomersCount());
-        model.addAttribute("topDebtors", customerService.getTopDebtors(10));
-        model.addAttribute("bestCustomers", customerService.getBestCustomers(10));
+        model.addAttribute("topDebtors", customerService.getTopDebtors(PageRequest.of(0, 10)).getContent());
+        model.addAttribute("bestCustomers", customerService.getBestCustomers(PageRequest.of(0, 10)).getContent());
         return "statistics/summary";
     }
 
@@ -57,20 +61,38 @@ public class StatisticsController {
     }
 
     @GetMapping("/debtors")
-    public String topDebtors(Model model) {
-        model.addAttribute("debtors", customerService.getTopDebtors(20));
+    public String topDebtors(@RequestParam(value = "page", defaultValue = "0") int page,
+                             @RequestParam(value = "size", defaultValue = "10") int size,
+                             Model model) {
+        int sanitizedPage = Math.max(page, 0);
+        int sanitizedSize = Math.min(Math.max(size, 1), 100);
+        PageRequest pageable = PageRequest.of(sanitizedPage, sanitizedSize);
+        Page<Customer> debtorsPage = customerService.getTopDebtors(pageable);
+        model.addAttribute("debtorsPage", debtorsPage);
         return "statistics/debtors";
     }
 
     @GetMapping("/best-customers")
-    public String bestCustomers(Model model) {
-        model.addAttribute("customers", customerService.getBestCustomers(20));
+    public String bestCustomers(@RequestParam(value = "page", defaultValue = "0") int page,
+                                @RequestParam(value = "size", defaultValue = "10") int size,
+                                Model model) {
+        int sanitizedPage = Math.max(page, 0);
+        int sanitizedSize = Math.min(Math.max(size, 1), 100);
+        PageRequest pageable = PageRequest.of(sanitizedPage, sanitizedSize);
+        Page<Customer> bestCustomersPage = customerService.getBestCustomers(pageable);
+        model.addAttribute("customersPage", bestCustomersPage);
         return "statistics/best-customers";
     }
 
     @GetMapping("/sectors")
-    public String customersBySector(Model model) {
-        model.addAttribute("sectors", customerService.getCustomersCountBySector());
+    public String customersBySector(@RequestParam(value = "page", defaultValue = "0") int page,
+                                    @RequestParam(value = "size", defaultValue = "10") int size,
+                                    Model model) {
+        int sanitizedPage = Math.max(page, 0);
+        int sanitizedSize = Math.min(Math.max(size, 1), 100);
+        PageRequest pageable = PageRequest.of(sanitizedPage, sanitizedSize);
+        Page<CustomerRepository.SectorCountView> sectorsPage = customerService.getCustomersCountBySector(pageable);
+        model.addAttribute("sectorsPage", sectorsPage);
         return "statistics/sectors";
     }
 }

@@ -5,12 +5,12 @@ import cl.casero.migration.service.dto.DebtForgivenessForm;
 import cl.casero.migration.service.dto.MoneyTransactionForm;
 import cl.casero.migration.service.dto.PaymentForm;
 import cl.casero.migration.service.dto.SaleForm;
-
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface TransactionService {
 
-    List<Transaction> listByCustomer(Long customerId, boolean ascending);
+    Page<Transaction> listByCustomer(Long customerId, Pageable pageable);
 
     void registerSale(Long customerId, SaleForm form);
 

@@ -5,10 +5,10 @@ import cl.casero.migration.repository.CustomerRepository;
 import cl.casero.migration.service.SectorService;
 import cl.casero.migration.service.CustomerService;
 import cl.casero.migration.service.dto.CreateCustomerForm;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 @Transactional
@@ -24,11 +24,11 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public List<Customer> search(String filter) {
+    public Page<Customer> search(String filter, Pageable pageable) {
         if (filter == null || filter.isBlank()) {
-            return List.of();
+            return Page.empty(pageable);
         }
-        return customerRepository.search(filter.trim());
+        return customerRepository.search(filter.trim(), pageable);
     }
 
     @Override
@@ -54,19 +54,13 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public List<Customer> getTopDebtors(int limit) {
-        return customerRepository.findTop10ByOrderByDebtDesc()
-                .stream()
-                .limit(limit)
-                .toList();
+    public Page<Customer> getTopDebtors(Pageable pageable) {
+        return customerRepository.findAllByOrderByDebtDesc(pageable);
     }
 
     @Override
-    public List<Customer> getBestCustomers(int limit) {
-        return customerRepository.findTop10ByOrderByDebtAsc()
-                .stream()
-                .limit(limit)
-                .toList();
+    public Page<Customer> getBestCustomers(Pageable pageable) {
+        return customerRepository.findAllByOrderByDebtAsc(pageable);
     }
 
     @Override
@@ -75,7 +69,7 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public List<CustomerRepository.SectorCountView> getCustomersCountBySector() {
-        return customerRepository.countBySector();
+    public Page<CustomerRepository.SectorCountView> getCustomersCountBySector(Pageable pageable) {
+        return customerRepository.countBySector(pageable);
     }
 }

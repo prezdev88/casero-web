@@ -4,11 +4,11 @@ import cl.casero.migration.domain.Customer;
 import cl.casero.migration.service.dto.CreateCustomerForm;
 
 import cl.casero.migration.repository.CustomerRepository;
-
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface CustomerService {
-    List<Customer> search(String filter);
+    Page<Customer> search(String filter, Pageable pageable);
 
     Customer get(Long id);
 
@@ -16,11 +16,11 @@ public interface CustomerService {
 
     void updateAddress(Long id, String address);
 
-    List<Customer> getTopDebtors(int limit);
+    Page<Customer> getTopDebtors(Pageable pageable);
 
-    List<Customer> getBestCustomers(int limit);
+    Page<Customer> getBestCustomers(Pageable pageable);
 
     long count();
 
-    List<CustomerRepository.SectorCountView> getCustomersCountBySector();
+    Page<CustomerRepository.SectorCountView> getCustomersCountBySector(Pageable pageable);
 }

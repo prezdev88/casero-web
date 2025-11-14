@@ -16,17 +16,28 @@
                 </tr>
                 </thead>
                 <tbody>
-                <tr th:each="customer : ${debtors}">
+                <tr th:each="customer : ${debtorsPage.content}">
                     <td th:text="${customer.name}">Cliente</td>
                     <td th:text="${customer.sector.name}">Sector</td>
                     <td th:text="${T(cl.casero.migration.util.CurrencyUtil).format(customer.debt)}">$0</td>
                 </tr>
-                <tr th:if="${debtors.isEmpty()}">
+                <tr th:if="${debtorsPage.empty}">
                     <td colspan="3">Sin datos</td>
                 </tr>
                 </tbody>
             </table>
         </div>
+        <nav class="pagination"
+             th:if="${debtorsPage.totalPages > 1}"
+             th:with="prev=${T(java.lang.Math).max(0, debtorsPage.number - 1)}, next=${T(java.lang.Math).min(debtorsPage.totalPages - 1, debtorsPage.number + 1)}">
+            <a th:href="@{/statistics/debtors(page=${prev}, size=${debtorsPage.size})}"
+               th:classappend="${!debtorsPage.hasPrevious()} ? ' disabled'"
+               aria-label="Página anterior">Anterior</a>
+            <span class="current" th:text="${debtorsPage.number + 1} + ' / ' + ${debtorsPage.totalPages}">1 / 1</span>
+            <a th:href="@{/statistics/debtors(page=${next}, size=${debtorsPage.size})}"
+               th:classappend="${!debtorsPage.hasNext()} ? ' disabled'"
+               aria-label="Página siguiente">Siguiente</a>
+        </nav>
     </div>
 </div>
 </body>

@@ -15,16 +15,27 @@
                 </tr>
                 </thead>
                 <tbody>
-                <tr th:each="sector : ${sectors}">
+                <tr th:each="sector : ${sectorsPage.content}">
                     <td th:text="${sector.name}">Sector</td>
                     <td th:text="${sector.total}">0</td>
                 </tr>
-                <tr th:if="${sectors.isEmpty()}">
+                <tr th:if="${sectorsPage.empty}">
                     <td colspan="2">Sin datos</td>
                 </tr>
                 </tbody>
             </table>
         </div>
+        <nav class="pagination"
+             th:if="${sectorsPage.totalPages > 1}"
+             th:with="prev=${T(java.lang.Math).max(0, sectorsPage.number - 1)}, next=${T(java.lang.Math).min(sectorsPage.totalPages - 1, sectorsPage.number + 1)}">
+            <a th:href="@{/statistics/sectors(page=${prev}, size=${sectorsPage.size})}"
+               th:classappend="${!sectorsPage.hasPrevious()} ? ' disabled'"
+               aria-label="Página anterior">Anterior</a>
+            <span class="current" th:text="${sectorsPage.number + 1} + ' / ' + ${sectorsPage.totalPages}">1 / 1</span>
+            <a th:href="@{/statistics/sectors(page=${next}, size=${sectorsPage.size})}"
+               th:classappend="${!sectorsPage.hasNext()} ? ' disabled'"
+               aria-label="Página siguiente">Siguiente</a>
+        </nav>
     </div>
 </div>
 </body>

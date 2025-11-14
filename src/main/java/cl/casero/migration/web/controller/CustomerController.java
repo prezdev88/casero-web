@@ -13,6 +13,10 @@ import cl.casero.migration.service.dto.PaymentForm;
 import cl.casero.migration.service.dto.SaleForm;
 import cl.casero.migration.service.dto.UpdateAddressForm;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -23,8 +27,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
-import java.util.List;
 
 @Controller
 @RequestMapping("/customers")
@@ -46,10 +48,18 @@ public class CustomerController {
     }
 
     @GetMapping
-    public String listCustomers(@RequestParam(value = "q", required = false) String query, Model model) {
+    public String listCustomers(@RequestParam(value = "q", required = false) String query,
+                                @RequestParam(value = "page", defaultValue = "0") int page,
+                                @RequestParam(value = "size", defaultValue = "10") int size,
+                                Model model) {
+        int sanitizedPage = Math.max(page, 0);
+        int sanitizedSize = Math.min(Math.max(size, 1), 50);
+        Pageable pageable = PageRequest.of(sanitizedPage, sanitizedSize);
         boolean hasQuery = query != null && !query.isBlank();
-        List<Customer> customers = hasQuery ? customerService.search(query.trim()) : List.of();
-        model.addAttribute("customers", customers);
+        Page<Customer> customersPage = hasQuery
+                ? customerService.search(query.trim(), pageable)
+                : Page.empty(pageable);
+        model.addAttribute("customersPage", customersPage);
         model.addAttribute("query", query == null ? "" : query);
         model.addAttribute("showResults", hasQuery);
         return "customers/list";
@@ -83,12 +93,18 @@ public class CustomerController {
     @GetMapping("/{id}")
     public String viewCustomer(@PathVariable Long id,
                                @RequestParam(value = "ascending", defaultValue = "false") boolean ascending,
+                               @RequestParam(value = "page", defaultValue = "0") int page,
+                               @RequestParam(value = "size", defaultValue = "10") int size,
                                Model model) {
+        int sanitizedPage = Math.max(page, 0);
+        int sanitizedSize = Math.min(Math.max(size, 1), 50);
+        Sort sort = Sort.by(ascending ? Sort.Direction.ASC : Sort.Direction.DESC, "date");
+        Pageable pageable = PageRequest.of(sanitizedPage, sanitizedSize, sort);
         Customer customer = customerService.get(id);
-        List<Transaction> transactions = transactionService.listByCustomer(id, ascending);
+        Page<Transaction> transactions = transactionService.listByCustomer(id, pageable);
 
         model.addAttribute("customer", customer);
-        model.addAttribute("transactions", transactions);
+        model.addAttribute("transactionsPage", transactions);
         model.addAttribute("ascending", ascending);
 
         return "customers/detail";

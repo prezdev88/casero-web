@@ -205,6 +205,37 @@ button:hover {
     background: #0f5ad3;
 }
 
+.pagination {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+    margin-top: 1rem;
+}
+
+.pagination a,
+.pagination span {
+    padding: 0.4rem 0.85rem;
+    border-radius: 999px;
+    border: 1px solid #ccd7e0;
+    background: #fff;
+    color: var(--text-color);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.pagination .current {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+}
+
+.pagination .disabled {
+    pointer-events: none;
+    opacity: 0.5;
+}
+
 @media (max-width: 900px) {
     .grid-2 {
         grid-template-columns: 1fr;

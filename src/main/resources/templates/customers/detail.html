@@ -35,7 +35,7 @@
                 </tr>
                 </thead>
                 <tbody>
-                <tr th:each="transaction : ${transactions}">
+                <tr th:each="transaction : ${transactionsPage.content}">
                     <td th:text="${T(cl.casero.migration.util.DateUtil).format(transaction.date)}">01-01-2024</td>
                     <td th:text="${transaction.type.displayName}">Venta</td>
                     <td th:text="${transaction.detail}">Detalle</td>
@@ -50,12 +50,23 @@
                         </form>
                     </td>
                 </tr>
-                <tr th:if="${transactions.isEmpty()}">
+                <tr th:if="${transactionsPage.empty}">
                     <td colspan="6">Sin transacciones</td>
                 </tr>
                 </tbody>
             </table>
         </div>
+        <nav class="pagination"
+             th:if="${transactionsPage.totalPages > 1}"
+             th:with="prev=${T(java.lang.Math).max(0, transactionsPage.number - 1)}, next=${T(java.lang.Math).min(transactionsPage.totalPages - 1, transactionsPage.number + 1)}">
+            <a th:href="@{|/customers/${customer.id}?ascending=${ascending}&page=${prev}&size=${transactionsPage.size}|}"
+               th:classappend="${!transactionsPage.hasPrevious()} ? ' disabled'"
+               aria-label="Página anterior">Anterior</a>
+            <span class="current" th:text="${transactionsPage.number + 1} + ' / ' + ${transactionsPage.totalPages}">1 / 1</span>
+            <a th:href="@{|/customers/${customer.id}?ascending=${ascending}&page=${next}&size=${transactionsPage.size}|}"
+               th:classappend="${!transactionsPage.hasNext()} ? ' disabled'"
+               aria-label="Página siguiente">Siguiente</a>
+        </nav>
     </div>
 
     <div class="card">
@@ -65,7 +76,6 @@
             <li><a th:href="@{'/customers/' + ${customer.id} + '/actions/sale'}">Mantención</a></li>
             <li><a th:href="@{'/customers/' + ${customer.id} + '/actions/refund'}">Devolución</a></li>
             <li><a th:href="@{'/customers/' + ${customer.id} + '/actions/forgiveness'}">CONDONAR DEUDA</a></li>
-            <li><a th:href="@{'/customers/' + ${customer.id} + '/actions/address'}">Ver dirección</a></li>
             <li><a th:href="@{'/customers/' + ${customer.id} + '/actions/address/edit'}">Cambiar dirección</a></li>
         </ul>
     </div>

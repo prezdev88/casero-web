@@ -26,29 +26,31 @@
 
     <div class="card" th:if="${showResults}">
         <h3>Resultados</h3>
-        <table>
-            <thead>
-            <tr>
-                <th>Nombre</th>
-                <th>Sector</th>
-                <th>Dirección</th>
-                <th>Deuda</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:each="customer : ${customers}">
-                <td>
-                    <a th:href="@{'/customers/' + ${customer.id}}" th:text="${customer.name}">Nombre</a>
-                </td>
-                <td th:text="${customer.sector.name}">Sector</td>
-                <td th:text="${customer.address}">Dirección</td>
-                <td th:text="${T(cl.casero.migration.util.CurrencyUtil).format(customer.debt)}">$0</td>
-            </tr>
-            <tr th:if="${customers.isEmpty()}">
-                <td colspan="4">Sin resultados</td>
-            </tr>
-            </tbody>
-        </table>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Sector</th>
+                    <th>Dirección</th>
+                    <th>Deuda</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="customer : ${customers}">
+                    <td>
+                        <a th:href="@{'/customers/' + ${customer.id}}" th:text="${customer.name}">Nombre</a>
+                    </td>
+                    <td th:text="${customer.sector.name}">Sector</td>
+                    <td th:text="${customer.address}">Dirección</td>
+                    <td th:text="${T(cl.casero.migration.util.CurrencyUtil).format(customer.debt)}">$0</td>
+                </tr>
+                <tr th:if="${customers.isEmpty()}">
+                    <td colspan="4">Sin resultados</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 
 </div>

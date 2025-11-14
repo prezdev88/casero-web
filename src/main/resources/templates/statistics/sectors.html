@@ -6,23 +6,25 @@
 <div class="container">
     <div class="card">
         <h2>Clientes por sector</h2>
-        <table>
-            <thead>
-            <tr>
-                <th>Sector</th>
-                <th>Total clientes</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:each="sector : ${sectors}">
-                <td th:text="${sector.name}">Sector</td>
-                <td th:text="${sector.total}">0</td>
-            </tr>
-            <tr th:if="${sectors.isEmpty()}">
-                <td colspan="2">Sin datos</td>
-            </tr>
-            </tbody>
-        </table>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                <tr>
+                    <th>Sector</th>
+                    <th>Total clientes</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="sector : ${sectors}">
+                    <td th:text="${sector.name}">Sector</td>
+                    <td th:text="${sector.total}">0</td>
+                </tr>
+                <tr th:if="${sectors.isEmpty()}">
+                    <td colspan="2">Sin datos</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 </body>

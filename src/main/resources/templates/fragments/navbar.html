@@ -2,9 +2,15 @@
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <body th:fragment="navbar">
 <header>
-    <div class="container" style="padding:0;">
-        <h1>Casero Web</h1>
-        <nav>
+    <div class="container nav-container">
+        <div class="brand">
+            <h1>Casero Web</h1>
+            <button class="nav-toggle" type="button" aria-controls="main-menu" aria-expanded="false">
+                <span aria-hidden="true">☰</span>
+                <span class="sr-only">Mostrar u ocultar menú</span>
+            </button>
+        </div>
+        <nav id="main-menu" class="nav-links">
             <a th:href="@{/customers}">Clientes</a>
             <a th:href="@{/customers/new}">Crear Cliente</a>
             <a th:href="@{/statistics}">Resumen</a>

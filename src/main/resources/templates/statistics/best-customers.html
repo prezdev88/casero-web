@@ -6,25 +6,27 @@
 <div class="container">
     <div class="card">
         <h2>Mejores clientes</h2>
-        <table>
-            <thead>
-            <tr>
-                <th>Cliente</th>
-                <th>Sector</th>
-                <th>Deuda</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:each="customer : ${customers}">
-                <td th:text="${customer.name}">Cliente</td>
-                <td th:text="${customer.sector.name}">Sector</td>
-                <td th:text="${T(cl.casero.migration.util.CurrencyUtil).format(customer.debt)}">$0</td>
-            </tr>
-            <tr th:if="${customers.isEmpty()}">
-                <td colspan="3">Sin datos</td>
-            </tr>
-            </tbody>
-        </table>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                <tr>
+                    <th>Cliente</th>
+                    <th>Sector</th>
+                    <th>Deuda</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="customer : ${customers}">
+                    <td th:text="${customer.name}">Cliente</td>
+                    <td th:text="${customer.sector.name}">Sector</td>
+                    <td th:text="${T(cl.casero.migration.util.CurrencyUtil).format(customer.debt)}">$0</td>
+                </tr>
+                <tr th:if="${customers.isEmpty()}">
+                    <td colspan="3">Sin datos</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 </body>

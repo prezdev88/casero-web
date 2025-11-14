@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/head :: head('Cambiar dirección')"></head>
+<body>
+<div th:replace="fragments/navbar :: navbar"></div>
+<div class="container">
+    <div class="card">
+        <h2 th:text="'Cambiar dirección de ' + ${customer.name}">Cambiar dirección</h2>
+        <form th:object="${updateAddressForm}"
+              th:action="@{'/customers/' + ${customer.id} + '/address'}"
+              method="post">
+            <label>Nueva dirección</label>
+            <input type="text" th:field="*{newAddress}">
+            <div th:if="${#fields.hasErrors('newAddress')}" th:errors="*{newAddress}"></div>
+            <button type="submit">Actualizar</button>
+        </form>
+    </div>
+</div>
+</body>
+</html>

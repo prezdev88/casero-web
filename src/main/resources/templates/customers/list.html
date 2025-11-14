@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/head :: head('Clientes')"></head>
+<body>
+<div th:replace="fragments/navbar :: navbar"></div>
+<div class="container">
+    <div th:replace="fragments/messages :: messages"></div>
+
+    <div class="card">
+        <form th:action="@{/customers}" method="get">
+            <input type="text" id="query" name="q" th:value="${query}" placeholder="Buscar por nombre, dirección o sector">
+            <button type="submit">Buscar</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <h3>Opciones</h3>
+        <ul class="action-menu">
+            <li><a th:href="@{/customers/new}">Crear nuevo cliente</a></li>
+            <li><a th:href="@{/statistics}">Ver resumen</a></li>
+            <li><a th:href="@{/statistics/debtors}">Mayores deudores</a></li>
+            <li><a th:href="@{/statistics/best-customers}">Mejores clientes</a></li>
+            <li><a th:href="@{/statistics/sectors}">Clientes por sector</a></li>
+        </ul>
+    </div>
+
+    <div class="card" th:if="${showResults}">
+        <h3>Resultados</h3>
+        <table>
+            <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Sector</th>
+                <th>Dirección</th>
+                <th>Deuda</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="customer : ${customers}">
+                <td>
+                    <a th:href="@{'/customers/' + ${customer.id}}" th:text="${customer.name}">Nombre</a>
+                </td>
+                <td th:text="${customer.sector.name}">Sector</td>
+                <td th:text="${customer.address}">Dirección</td>
+                <td th:text="${T(cl.casero.migration.util.CurrencyUtil).format(customer.debt)}">$0</td>
+            </tr>
+            <tr th:if="${customers.isEmpty()}">
+                <td colspan="4">Sin resultados</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+</div>
+</body>
+</html>

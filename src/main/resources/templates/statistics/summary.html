@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/head :: head('Estadísticas')"></head>
+<body>
+<div th:replace="fragments/navbar :: navbar"></div>
+<div class="container">
+    <div class="card">
+        <h2>Resumen General</h2>
+        <p>Total clientes: <strong th:text="${customersCount}">0</strong></p>
+        <p>Deuda total: <strong th:text="${T(cl.casero.migration.util.CurrencyUtil).format(totalDebt)}">$0</strong></p>
+        <p>Deuda promedio: <strong th:text="${T(cl.casero.migration.util.CurrencyUtil).format(averageDebt)}">$0</strong></p>
+    </div>
+
+    <div class="grid-2">
+        <div class="card">
+            <h3>Mayores Deudores</h3>
+            <ol>
+                <li th:each="customer : ${topDebtors}">
+                    <span th:text="${customer.name}">Cliente</span>
+                    (<span th:text="${customer.sector.name}">Sector</span>) -
+                    <strong th:text="${T(cl.casero.migration.util.CurrencyUtil).format(customer.debt)}">$0</strong>
+                </li>
+            </ol>
+        </div>
+        <div class="card">
+            <h3>Mejores Clientes</h3>
+            <ol>
+                <li th:each="customer : ${bestCustomers}">
+                    <span th:text="${customer.name}">Cliente</span>
+                    (<span th:text="${customer.sector.name}">Sector</span>) -
+                    <strong th:text="${T(cl.casero.migration.util.CurrencyUtil).format(customer.debt)}">$0</strong>
+                </li>
+            </ol>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/head :: head('Ver dirección')"></head>
+<body>
+<div th:replace="fragments/navbar :: navbar"></div>
+<div class="container">
+    <div class="card">
+        <h2 th:text="'Dirección de ' + ${customer.name}">Dirección</h2>
+        <p><strong>Dirección:</strong> <span th:text="${customer.address}">Dirección</span></p>
+        <p><strong>Sector:</strong> <span th:text="${customer.sector.name}">Sector</span></p>
+        <p><strong>Deuda actual:</strong>
+            <span th:text="${T(cl.casero.migration.util.CurrencyUtil).format(customer.debt)}">$0</span>
+        </p>
+    </div>
+</div>
+</body>
+</html>

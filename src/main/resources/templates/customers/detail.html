@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/head :: head('Cliente')"></head>
+<body>
+<div th:replace="fragments/navbar :: navbar"></div>
+<div class="container">
+    <div th:replace="fragments/messages :: messages"></div>
+
+    <div class="card">
+        <h2 th:text="${customer.name}">Cliente</h2>
+        <p><strong>Sector:</strong> <span th:text="${customer.sector.name}">Sector</span></p>
+        <p><strong>Dirección:</strong> <span th:text="${customer.address}">Dirección</span></p>
+        <p><strong>Deuda actual:</strong>
+            <span th:text="${T(cl.casero.migration.util.CurrencyUtil).format(customer.debt)}">$0</span>
+        </p>
+    </div>
+
+    <div class="card">
+        <h3>Transacciones</h3>
+        <table>
+            <thead>
+            <tr>
+                <th>
+                    <a th:href="@{'/customers/' + ${customer.id} + '?ascending=' + ${!ascending}}"
+                       th:text="'Fecha ' + (ascending ? '(Asc)' : '(Desc)')">
+                        Fecha
+                    </a>
+                </th>
+                <th>Tipo</th>
+                <th>Detalle</th>
+                <th>Monto</th>
+                <th>Saldo</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="transaction : ${transactions}">
+                <td th:text="${T(cl.casero.migration.util.DateUtil).format(transaction.date)}">01-01-2024</td>
+                <td th:text="${transaction.type.displayName}">Venta</td>
+                <td th:text="${transaction.detail}">Detalle</td>
+                <td th:text="${T(cl.casero.migration.util.CurrencyUtil).format(transaction.amount)}">$0</td>
+                <td th:text="${T(cl.casero.migration.util.CurrencyUtil).format(transaction.balance)}">$0</td>
+                <td>
+                    <form th:action="@{'/customers/transactions/' + ${transaction.id} + '/delete'}"
+                          method="post"
+                          onsubmit="return confirm('¿Seguro que deseas eliminar esta transacción?');">
+                        <input type="hidden" name="customerId" th:value="${customer.id}">
+                        <button type="submit" class="btn-danger" title="Eliminar transacción">🗑</button>
+                    </form>
+                </td>
+            </tr>
+            <tr th:if="${transactions.isEmpty()}">
+                <td colspan="6">Sin transacciones</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card">
+        <h3>Menú de acciones</h3>
+        <ul class="action-menu">
+            <li><a th:href="@{'/customers/' + ${customer.id} + '/actions/payment'}">Abonar</a></li>
+            <li><a th:href="@{'/customers/' + ${customer.id} + '/actions/sale'}">Mantención</a></li>
+            <li><a th:href="@{'/customers/' + ${customer.id} + '/actions/refund'}">Devolución</a></li>
+            <li><a th:href="@{'/customers/' + ${customer.id} + '/actions/forgiveness'}">CONDONAR DEUDA</a></li>
+            <li><a th:href="@{'/customers/' + ${customer.id} + '/actions/address'}">Ver dirección</a></li>
+            <li><a th:href="@{'/customers/' + ${customer.id} + '/actions/address/edit'}">Cambiar dirección</a></li>
+            <li><a th:href="@{'/customers/' + ${customer.id}}">Transacciones</a></li>
+        </ul>
+    </div>
+</div>
+</body>
+</html>

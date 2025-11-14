@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/head :: head('Registrar venta')"></head>
+<body>
+<div th:replace="fragments/navbar :: navbar"></div>
+<div class="container">
+    <div class="card">
+        <h2 th:text="'Venta / mantención para ' + ${customer.name}">Venta</h2>
+        <form th:object="${saleForm}" th:action="@{'/customers/' + ${customer.id} + '/sales'}" method="post">
+            <label>Detalle</label>
+            <textarea th:field="*{detail}"></textarea>
+            <div th:if="${#fields.hasErrors('detail')}" th:errors="*{detail}"></div>
+
+            <label>Fecha</label>
+            <input type="date" th:field="*{date}">
+            <div th:if="${#fields.hasErrors('date')}" th:errors="*{date}"></div>
+
+            <label>Cantidad de prendas</label>
+            <input type="number" min="1" th:field="*{itemsCount}">
+            <div th:if="${#fields.hasErrors('itemsCount')}" th:errors="*{itemsCount}"></div>
+
+            <label>Monto</label>
+            <input type="number" min="1" th:field="*{amount}">
+            <div th:if="${#fields.hasErrors('amount')}" th:errors="*{amount}"></div>
+            <button type="submit">Registrar venta</button>
+        </form>
+    </div>
+</div>
+</body>
+</html>

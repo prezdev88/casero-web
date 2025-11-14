@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/head :: head('Registrar devolución')"></head>
+<body>
+<div th:replace="fragments/navbar :: navbar"></div>
+<div class="container">
+    <div class="card">
+        <h2 th:text="'Devolución para ' + ${customer.name}">Devolución</h2>
+        <form th:object="${refundForm}" th:action="@{'/customers/' + ${customer.id} + '/refunds'}" method="post">
+            <label>Detalle</label>
+            <input type="text" th:field="*{detail}">
+            <div th:if="${#fields.hasErrors('detail')}" th:errors="*{detail}"></div>
+
+            <label>Fecha</label>
+            <input type="date" th:field="*{date}">
+            <div th:if="${#fields.hasErrors('date')}" th:errors="*{date}"></div>
+
+            <label>Monto</label>
+            <input type="number" min="1" th:field="*{amount}">
+            <div th:if="${#fields.hasErrors('amount')}" th:errors="*{amount}"></div>
+
+            <button type="submit">Registrar devolución</button>
+        </form>
+    </div>
+</div>
+</body>
+</html>

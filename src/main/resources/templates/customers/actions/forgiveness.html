@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/head :: head('Condonar deuda')"></head>
+<body>
+<div th:replace="fragments/navbar :: navbar"></div>
+<div class="container">
+    <div class="card">
+        <h2 th:text="'Condonar deuda de ' + ${customer.name}">Condonar deuda</h2>
+        <p>Deuda actual: <strong th:text="${T(cl.casero.migration.util.CurrencyUtil).format(customer.debt)}">$0</strong></p>
+        <form th:object="${debtForgivenessForm}" th:action="@{'/customers/' + ${customer.id} + '/forgiveness'}" method="post">
+            <label>Motivo</label>
+            <input type="text" th:field="*{detail}">
+            <div th:if="${#fields.hasErrors('detail')}" th:errors="*{detail}"></div>
+
+            <label>Fecha</label>
+            <input type="date" th:field="*{date}">
+            <div th:if="${#fields.hasErrors('date')}" th:errors="*{date}"></div>
+
+            <button type="submit">Condonar deuda</button>
+        </form>
+    </div>
+</div>
+</body>
+</html>

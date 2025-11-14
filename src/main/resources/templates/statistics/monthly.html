@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/head :: head('Estadística Mensual')"></head>
+<body>
+<div th:replace="fragments/navbar :: navbar"></div>
+<div class="container">
+    <div class="card">
+        <h2>Estadísticas por rango</h2>
+        <form th:action="@{/statistics/monthly}" method="get">
+            <label>Inicio</label>
+            <input type="date" name="start" th:value="${start}">
+            <label>Fin</label>
+            <input type="date" name="end" th:value="${end}">
+            <button type="submit">Actualizar</button>
+        </form>
+    </div>
+
+    <div class="grid-2">
+        <div class="card">
+            <h3>Tarjetas</h3>
+            <p>Terminadas: <strong th:text="${stats.finishedCardsCount}">0</strong></p>
+            <p>Nuevas: <strong th:text="${stats.newCardsCount}">0</strong></p>
+            <p>Mantenciones: <strong th:text="${stats.maintenanceCount}">0</strong></p>
+        </div>
+        <div class="card">
+            <h3>Montos</h3>
+            <p>Prendas vendidas: <strong th:text="${stats.totalItemsCount}">0</strong></p>
+            <p>Total cobros:
+                <strong th:text="${T(cl.casero.migration.util.CurrencyUtil).format(stats.paymentsCount)}">$0</strong>
+            </p>
+            <p>Total ventas:
+                <strong th:text="${T(cl.casero.migration.util.CurrencyUtil).format(stats.salesCount)}">$0</strong>
+            </p>
+        </div>
+    </div>
+</div>
+</body>
+</html>

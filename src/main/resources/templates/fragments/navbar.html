@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<body th:fragment="navbar">
+<header>
+    <div class="container" style="padding:0;">
+        <h1>Casero Web</h1>
+        <nav>
+            <a th:href="@{/customers}">Clientes</a>
+            <a th:href="@{/customers/new}">Crear Cliente</a>
+            <a th:href="@{/statistics}">Resumen</a>
+            <a th:href="@{/statistics/debtors}">Mayores Deudores</a>
+            <a th:href="@{/statistics/best-customers}">Mejores Clientes</a>
+            <a th:href="@{/statistics/sectors}">Clientes por sector</a>
+            <a th:href="@{/statistics/monthly}">Mensual</a>
+        </nav>
+    </div>
+</header>
+</body>
+</html>

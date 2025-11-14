@@ -1,0 +1,37 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: casero
+      POSTGRES_USER: casero
+      POSTGRES_PASSWORD: casero
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./script.sql:/docker-entrypoint-initdb.d/10-init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U casero"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/casero
+      SPRING_DATASOURCE_USERNAME: casero
+      SPRING_DATASOURCE_PASSWORD: casero
+      CASERO_IMPORT_SQLITE_PATH: /app/casero.sqlite
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./casero.sqlite:/app/casero.sqlite:ro
+
+volumes:
+  postgres_data:

@@ -26,7 +26,6 @@ public class CaseroWebApplication {
         };
     }
 
-
     public static void main(String[] args) {
         SpringApplication.run(CaseroWebApplication.class, args);
     }

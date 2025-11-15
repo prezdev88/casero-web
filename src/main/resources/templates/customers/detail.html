@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="fragments/head :: head('Cliente')"></head>
+<head th:replace="~{fragments/head :: head('Cliente')}"></head>
 <body>
-<div th:replace="fragments/navbar :: navbar"></div>
+<div th:replace="~{fragments/navbar :: navbar}"></div>
 <div class="container">
-    <div th:replace="fragments/messages :: messages"></div>
+    <div th:replace="~{fragments/messages :: messages}"></div>
 
     <div class="card">
         <h2 th:text="${customer.name}">Cliente</h2>
@@ -88,7 +88,6 @@
         </nav>
     </div>
 
-    
 </div>
 </body>
 </html>

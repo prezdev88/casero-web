@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="fragments/head :: head('Estadística Mensual')"></head>
+<head th:replace="~{fragments/head :: head('Estadística Mensual')}"></head>
 <body>
-<div th:replace="fragments/navbar :: navbar"></div>
+<div th:replace="~{fragments/navbar :: navbar}"></div>
 <div class="container">
     <div class="card">
         <h2>Estadísticas por rango</h2>

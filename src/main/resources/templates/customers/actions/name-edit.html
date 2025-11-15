@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="fragments/head :: head('Editar nombre')"></head>
+<head th:replace="~{fragments/head :: head('Editar nombre')}"></head>
 <body>
-<div th:replace="fragments/navbar :: navbar"></div>
+<div th:replace="~{fragments/navbar :: navbar}"></div>
 <div class="container">
     <div class="card">
         <h2 th:text="'Editar nombre de ' + ${customer.name}">Editar nombre</h2>

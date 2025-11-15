@@ -3,7 +3,9 @@
 <head th:fragment="head(title)">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#1a73e8">
     <title th:text="${title}">Casero</title>
+    <link rel="manifest" th:href="@{/manifest.json}">
     <link rel="stylesheet" th:href="@{/css/styles.css(v=${version})}">
     <script defer th:src="@{/js/main.js}"></script>
 </head>

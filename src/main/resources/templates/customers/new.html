@@ -16,6 +16,7 @@
             <select th:field="*{sectorId}">
                 <option th:each="sector : ${sectors}"
                         th:value="${sector.id}"
+                        th:selected="${customerForm.sectorId == null ? sector.name.equals('Santa Cruz') : sector.id == customerForm.sectorId}"
                         th:text="${sector.name}">Sector</option>
             </select>
             <div th:if="${#fields.hasErrors('sectorId')}" th:errors="*{sectorId}"></div>
@@ -26,10 +27,6 @@
             <label>Dirección</label>
             <input type="text" th:field="*{address}">
             <div th:if="${#fields.hasErrors('address')}" th:errors="*{address}"></div>
-
-            <label>Deuda inicial</label>
-            <input type="number" min="0" th:field="*{initialDebt}">
-            <div th:if="${#fields.hasErrors('initialDebt')}" th:errors="*{initialDebt}"></div>
 
             <button type="submit">Crear</button>
         </form>

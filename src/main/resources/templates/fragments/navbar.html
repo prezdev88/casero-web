@@ -4,7 +4,7 @@
 <header>
     <div class="container nav-container">
         <div class="brand">
-            <h1>Casero Web</h1>
+            <h1><a th:href="@{/customers}" style="color:#fff;text-decoration:none;">Casero Web</a></h1>
             <button class="nav-toggle" type="button" aria-controls="main-menu" aria-expanded="false">
                 <span aria-hidden="true">☰</span>
                 <span class="sr-only">Mostrar u ocultar menú</span>
@@ -13,11 +13,8 @@
         <nav id="main-menu" class="nav-links">
             <a th:href="@{/customers}">Clientes</a>
             <a th:href="@{/customers/new}">Crear Cliente</a>
-            <a th:href="@{/statistics}">Resumen</a>
-            <a th:href="@{/statistics/debtors}">Mayores Deudores</a>
-            <a th:href="@{/statistics/best-customers}">Mejores Clientes</a>
-            <a th:href="@{/statistics/sectors}">Clientes por sector</a>
-            <a th:href="@{/statistics/monthly}">Mensual</a>
+            <a th:href="@{/statistics}">Deuda total</a>
+            <a th:href="@{/statistics/monthly}">Estadísticas</a>
         </nav>
     </div>
 </header>

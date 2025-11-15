@@ -184,8 +184,41 @@ button:hover {
     padding: 0.8rem 1rem;
     border-radius: 4px;
     margin-bottom: 1rem;
-    background: #e8f0fe;
     color: #0b5394;
+}
+
+.highlight-debt {
+    font-size: 1.2rem;
+    color: #c62828;
+}
+
+.text-red {
+    color: #c62828;
+}
+
+.text-blue {
+    color: #1976d2;
+}
+
+.icon-button {
+    margin-left: 0.5rem;
+    font-size: 0.9rem;
+    text-decoration: none;
+    color: #1a73e8;
+}
+
+.icon-button:hover {
+    color: #0f5ad3;
+}
+
+.alert-success {
+    background: #e6f4ea;
+    color: #1e8e3e;
+}
+
+.alert-error {
+    background: #fdecea;
+    color: #c62828;
 }
 
 .action-menu a,

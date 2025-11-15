@@ -42,7 +42,7 @@ public class CustomerServiceImpl implements CustomerService {
         customer.setName(form.getName().trim());
         customer.setSector(sectorService.get(form.getSectorId()));
         customer.setAddress(form.getAddress().trim());
-        customer.setDebt(form.getInitialDebt());
+        customer.setDebt(0);
         return customerRepository.save(customer);
     }
 
@@ -50,6 +50,13 @@ public class CustomerServiceImpl implements CustomerService {
     public void updateAddress(Long id, String address) {
         Customer customer = get(id);
         customer.setAddress(address);
+        customerRepository.save(customer);
+    }
+
+    @Override
+    public void updateName(Long id, String name) {
+        Customer customer = get(id);
+        customer.setName(name.trim());
         customerRepository.save(customer);
     }
 

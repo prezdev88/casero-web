@@ -7,15 +7,15 @@
     <div class="card">
         <h2 th:text="'Pago para ' + ${customer.name}">Pago</h2>
         <form th:object="${paymentForm}" th:action="@{'/customers/' + ${customer.id} + '/payments'}" method="post">
-            <label>Fecha</label>
-            <input type="date" th:field="*{date}">
-            <div th:if="${#fields.hasErrors('date')}" th:errors="*{date}"></div>
-
             <label>Monto</label>
             <input type="number" min="1" th:field="*{amount}">
             <div th:if="${#fields.hasErrors('amount')}" th:errors="*{amount}"></div>
 
-            <button type="submit">Registrar pago</button>
+            <label>Fecha</label>
+            <input type="date" th:field="*{date}" th:value="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}">
+            <div th:if="${#fields.hasErrors('date')}" th:errors="*{date}"></div>
+
+            <button type="submit">Abonar</button>
         </form>
     </div>
 </div>

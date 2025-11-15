@@ -12,7 +12,7 @@
             <div th:if="${#fields.hasErrors('detail')}" th:errors="*{detail}"></div>
 
             <label>Fecha</label>
-            <input type="date" th:field="*{date}">
+            <input type="date" th:field="*{date}" th:value="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}">
             <div th:if="${#fields.hasErrors('date')}" th:errors="*{date}"></div>
 
             <label>Cantidad de prendas</label>

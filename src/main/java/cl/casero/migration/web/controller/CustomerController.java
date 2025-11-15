@@ -12,7 +12,12 @@ import cl.casero.migration.service.dto.MoneyTransactionForm;
 import cl.casero.migration.service.dto.PaymentForm;
 import cl.casero.migration.service.dto.SaleForm;
 import cl.casero.migration.service.dto.UpdateAddressForm;
+import cl.casero.migration.service.dto.UpdateNameForm;
 import jakarta.validation.Valid;
+
+import java.time.LocalDate;
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -171,7 +176,7 @@ public class CustomerController {
             return redirectToAction(id, redirectAttributes, "updateAddressForm", form, result, "address/edit");
         }
         customerService.updateAddress(id, form.getNewAddress());
-        redirectAttributes.addFlashAttribute("message", "Dirección actualizada");
+        redirectAttributes.addFlashAttribute("successMessage", "Dirección actualizada");
         return "redirect:/customers/" + id;
     }
 
@@ -189,7 +194,9 @@ public class CustomerController {
         Customer customer = customerService.get(id);
         model.addAttribute("customer", customer);
         if (!model.containsAttribute("paymentForm")) {
-            model.addAttribute("paymentForm", new PaymentForm());
+            PaymentForm form = new PaymentForm();
+            form.setDate(LocalDate.now());
+            model.addAttribute("paymentForm", form);
         }
         return "customers/actions/payment";
     }
@@ -199,7 +206,9 @@ public class CustomerController {
         Customer customer = customerService.get(id);
         model.addAttribute("customer", customer);
         if (!model.containsAttribute("saleForm")) {
-            model.addAttribute("saleForm", new SaleForm());
+            SaleForm form = new SaleForm();
+            form.setDate(LocalDate.now());
+            model.addAttribute("saleForm", form);
         }
         return "customers/actions/sale";
     }
@@ -209,7 +218,9 @@ public class CustomerController {
         Customer customer = customerService.get(id);
         model.addAttribute("customer", customer);
         if (!model.containsAttribute("refundForm")) {
-            model.addAttribute("refundForm", new MoneyTransactionForm());
+            MoneyTransactionForm form = new MoneyTransactionForm();
+            form.setDate(LocalDate.now());
+            model.addAttribute("refundForm", form);
         }
         return "customers/actions/refund";
     }
@@ -219,7 +230,9 @@ public class CustomerController {
         Customer customer = customerService.get(id);
         model.addAttribute("customer", customer);
         if (!model.containsAttribute("debtForgivenessForm")) {
-            model.addAttribute("debtForgivenessForm", new DebtForgivenessForm());
+            DebtForgivenessForm form = new DebtForgivenessForm();
+            form.setDate(LocalDate.now());
+            model.addAttribute("debtForgivenessForm", form);
         }
         return "customers/actions/forgiveness";
     }
@@ -238,6 +251,29 @@ public class CustomerController {
             model.addAttribute("updateAddressForm", new UpdateAddressForm(customer.getAddress()));
         }
         return "customers/actions/address-edit";
+    }
+
+    @PostMapping("/{id}/name")
+    public String updateName(@PathVariable Long id,
+                             @Valid @ModelAttribute("updateNameForm") UpdateNameForm form,
+                             BindingResult result,
+                             RedirectAttributes redirectAttributes) {
+        if (result.hasErrors()) {
+            return redirectToAction(id, redirectAttributes, "updateNameForm", form, result, "name/edit");
+        }
+        customerService.updateName(id, form.getNewName());
+        redirectAttributes.addFlashAttribute("successMessage", "Nombre actualizado");
+        return "redirect:/customers/" + id;
+    }
+
+    @GetMapping("/{id}/actions/name/edit")
+    public String editName(@PathVariable Long id, Model model) {
+        Customer customer = customerService.get(id);
+        model.addAttribute("customer", customer);
+        if (!model.containsAttribute("updateNameForm")) {
+            model.addAttribute("updateNameForm", new UpdateNameForm(customer.getName()));
+        }
+        return "customers/actions/name-edit";
     }
 
     private String redirectToAction(Long id,

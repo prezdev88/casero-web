@@ -8,11 +8,30 @@
 
     <div class="card">
         <h2 th:text="${customer.name}">Cliente</h2>
-        <p><strong>Sector:</strong> <span th:text="${customer.sector.name}">Sector</span></p>
-        <p><strong>Dirección:</strong> <span th:text="${customer.address}">Dirección</span></p>
-        <p><strong>Deuda actual:</strong>
-            <span th:text="${T(cl.casero.migration.util.CurrencyUtil).format(customer.debt)}">$0</span>
+        <p class="highlight-debt"
+           th:classappend="${customer.debt > 0} ? ' text-red' : ' text-blue'">
+            <strong>Deuda actual:</strong>
+            <strong th:text="${T(cl.casero.migration.util.CurrencyUtil).format(customer.debt)}">$0</strong>
         </p>
+        <p><strong>Nombre:</strong> <span th:text="${customer.name}">Nombre</span>
+            <a class="icon-button" title="Editar nombre"
+               th:href="@{'/customers/' + ${customer.id} + '/actions/name/edit'}">✏️</a>
+        </p>
+        <p><strong>Sector:</strong> <span th:text="${customer.sector.name}">Sector</span></p>
+        <p><strong>Dirección:</strong> <span th:text="${customer.address}">Dirección</span>
+            <a class="icon-button" title="Editar dirección"
+               th:href="@{'/customers/' + ${customer.id} + '/actions/address/edit'}">✏️</a>
+        </p>
+    </div>
+
+    <div class="card">
+        <h3>Menú de acciones</h3>
+        <ul class="action-menu">
+            <li><a th:href="@{'/customers/' + ${customer.id} + '/actions/payment'}">Abonar</a></li>
+            <li><a th:href="@{'/customers/' + ${customer.id} + '/actions/sale'}">Mantención</a></li>
+            <li><a th:href="@{'/customers/' + ${customer.id} + '/actions/refund'}">Devolución</a></li>
+            <li><a th:href="@{'/customers/' + ${customer.id} + '/actions/forgiveness'}">CONDONAR DEUDA</a></li>
+        </ul>
     </div>
 
     <div class="card">
@@ -69,16 +88,7 @@
         </nav>
     </div>
 
-    <div class="card">
-        <h3>Menú de acciones</h3>
-        <ul class="action-menu">
-            <li><a th:href="@{'/customers/' + ${customer.id} + '/actions/payment'}">Abonar</a></li>
-            <li><a th:href="@{'/customers/' + ${customer.id} + '/actions/sale'}">Mantención</a></li>
-            <li><a th:href="@{'/customers/' + ${customer.id} + '/actions/refund'}">Devolución</a></li>
-            <li><a th:href="@{'/customers/' + ${customer.id} + '/actions/forgiveness'}">CONDONAR DEUDA</a></li>
-            <li><a th:href="@{'/customers/' + ${customer.id} + '/actions/address/edit'}">Cambiar dirección</a></li>
-        </ul>
-    </div>
+    
 </div>
 </body>
 </html>

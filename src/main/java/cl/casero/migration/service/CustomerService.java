@@ -16,6 +16,8 @@ public interface CustomerService {
 
     void updateAddress(Long id, String address);
 
+    void updateName(Long id, String name);
+
     Page<Customer> getTopDebtors(Pageable pageable);
 
     Page<Customer> getBestCustomers(Pageable pageable);

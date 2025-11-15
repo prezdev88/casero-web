@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <body th:fragment="messages">
-<div class="alert" th:if="${message}" th:text="${message}"></div>
+<div class="alert alert-success" th:if="${successMessage}" th:text="${successMessage}"></div>
+<div class="alert alert-error" th:if="${errorMessage}" th:text="${errorMessage}"></div>
 </body>
 </html>

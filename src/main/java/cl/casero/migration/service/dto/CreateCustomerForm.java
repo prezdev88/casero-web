@@ -15,9 +15,6 @@ public class CreateCustomerForm {
     @NotBlank
     private String address;
 
-    @Min(0)
-    private Integer initialDebt = 0;
-
     public String getName() {
         return name;
     }
@@ -42,11 +39,4 @@ public class CreateCustomerForm {
         this.address = address;
     }
 
-    public Integer getInitialDebt() {
-        return initialDebt;
-    }
-
-    public void setInitialDebt(Integer initialDebt) {
-        this.initialDebt = initialDebt;
-    }
 }

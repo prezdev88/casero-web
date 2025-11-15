@@ -7,17 +7,17 @@
     <div class="card">
         <h2 th:text="'Devolución para ' + ${customer.name}">Devolución</h2>
         <form th:object="${refundForm}" th:action="@{'/customers/' + ${customer.id} + '/refunds'}" method="post">
-            <label>Detalle</label>
-            <input type="text" th:field="*{detail}">
-            <div th:if="${#fields.hasErrors('detail')}" th:errors="*{detail}"></div>
-
-            <label>Fecha</label>
-            <input type="date" th:field="*{date}">
-            <div th:if="${#fields.hasErrors('date')}" th:errors="*{date}"></div>
-
             <label>Monto</label>
             <input type="number" min="1" th:field="*{amount}">
             <div th:if="${#fields.hasErrors('amount')}" th:errors="*{amount}"></div>
+
+            <label>Fecha</label>
+            <input type="date" th:field="*{date}" th:value="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}">
+            <div th:if="${#fields.hasErrors('date')}" th:errors="*{date}"></div>
+
+            <label>Detalle</label>
+            <input type="text" th:field="*{detail}">
+            <div th:if="${#fields.hasErrors('detail')}" th:errors="*{detail}"></div>
 
             <button type="submit">Registrar devolución</button>
         </form>

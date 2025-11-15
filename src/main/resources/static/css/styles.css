@@ -25,18 +25,17 @@ header {
 }
 
 .nav-container {
+    position: relative;
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
+    align-items: flex-start;
+    gap: 0.5rem;
 }
 
 .brand {
+    flex: 1;
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    gap: 0.75rem;
+    align-items: flex-start;
+    gap: 0.5rem;
 }
 
 .brand-title {
@@ -57,8 +56,12 @@ header h1 {
 }
 
 .nav-toggle {
-    display: none;
+    position: absolute;
+    top: 0.25rem;
+    right: 2rem;
+    display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 0.25rem;
     background: rgba(255, 255, 255, 0.15);
     border: 1px solid rgba(255, 255, 255, 0.4);
@@ -67,13 +70,13 @@ header h1 {
     padding: 0.35rem 0.6rem;
     font-size: 1.1rem;
     cursor: pointer;
+    width: auto;
 }
 
 .nav-links {
     display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
     justify-content: flex-end;
+    gap: 0.75rem;
 }
 
 nav a {
@@ -122,6 +125,21 @@ nav a:hover {
 .card h3 {
     margin-top: 0;
     margin-bottom: 1rem;
+}
+
+.customer-header {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+}
+
+.customer-header .icon-button {
+    font-size: 1.1rem;
+    line-height: 1;
+    padding: 0;
+    background: transparent;
+    border: none;
+    margin: 0;
 }
 
 .card-list {
@@ -252,6 +270,8 @@ button:hover {
 .highlight-debt {
     font-size: 1.2rem;
     color: #c62828;
+    margin-top: 0.1rem;
+    margin-bottom: 0.4rem;
 }
 
 .text-red {
@@ -260,6 +280,10 @@ button:hover {
 
 .text-blue {
     color: #1976d2;
+}
+
+.text-muted {
+    margin: 0.2rem 0;
 }
 
 .icon-button {

@@ -6,11 +6,11 @@
                 <span class="app-version"
                       th:text="${'v' + (@environment.getProperty('app.version') ?: '0.0.0')}">v1.0.1</span>
             </div>
-            <button class="nav-toggle" type="button" aria-controls="main-menu" aria-expanded="false">
-                <span aria-hidden="true">☰</span>
-                <span class="sr-only">Mostrar u ocultar menú</span>
-            </button>
         </div>
+        <button class="nav-toggle" type="button" aria-controls="main-menu" aria-expanded="false">
+            <span aria-hidden="true">☰</span>
+            <span class="sr-only">Mostrar u ocultar menú</span>
+        </button>
         <nav id="main-menu" class="nav-links">
             <a th:href="@{/customers}">Clientes</a>
             <a th:href="@{/customers/new}">Crear Cliente</a>

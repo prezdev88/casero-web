@@ -25,11 +25,17 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    const swUrl = document.documentElement.dataset.swUrl || '/sw.js';
-    navigator.serviceWorker.register(swUrl).catch((error) => {
-      console.error('Service worker registration failed', error);
+window.addEventListener('DOMContentLoaded', () => {
+  const forms = document.querySelectorAll('form[data-disable-on-submit="true"]');
+  forms.forEach((form) => {
+    form.addEventListener('submit', () => {
+      const submitButton = form.querySelector('button[type="submit"], input[type="submit"]');
+      if (submitButton) {
+        submitButton.disabled = true;
+        const originalText = submitButton.dataset.originalText || submitButton.textContent;
+        submitButton.dataset.originalText = originalText;
+        submitButton.textContent = submitButton.dataset.loadingText || 'Procesando...';
+      }
     });
   });
-}
+});

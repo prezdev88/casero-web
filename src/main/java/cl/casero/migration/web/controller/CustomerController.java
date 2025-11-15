@@ -14,6 +14,7 @@ import cl.casero.migration.service.dto.SaleForm;
 import cl.casero.migration.service.dto.UpdateAddressForm;
 import cl.casero.migration.service.dto.UpdateNameForm;
 import cl.casero.migration.util.CurrencyUtil;
+import cl.casero.migration.util.DateUtil;
 import jakarta.validation.Valid;
 
 import java.time.LocalDate;
@@ -133,6 +134,37 @@ public class CustomerController {
         model.addAttribute("ascending", ascending);
 
         return "customers/detail";
+    }
+
+    @GetMapping(value = "/{id}/transactions", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public TransactionPageResponse listTransactions(@PathVariable Long id,
+                                                    @RequestParam(value = "page", defaultValue = "0") int page,
+                                                    @RequestParam(value = "size", defaultValue = "10") int size,
+                                                    @RequestParam(value = "ascending", defaultValue = "false") boolean ascending) {
+        int sanitizedPage = Math.max(page, 0);
+        int sanitizedSize = Math.min(Math.max(size, 1), 50);
+        Sort sort = Sort.by(ascending ? Sort.Direction.ASC : Sort.Direction.DESC, "date");
+        Pageable pageable = PageRequest.of(sanitizedPage, sanitizedSize, sort);
+        Page<Transaction> transactions = transactionService.listByCustomer(id, pageable);
+        List<TransactionCard> content = transactions.getContent()
+                .stream()
+                .map(transaction -> new TransactionCard(
+                        transaction.getId(),
+                        DateUtil.format(transaction.getDate()),
+                        transaction.getType().getDisplayName(),
+                        transaction.getDetail(),
+                        CurrencyUtil.format(transaction.getAmount()),
+                        CurrencyUtil.format(transaction.getBalance())))
+                .toList();
+        return new TransactionPageResponse(
+                content,
+                transactions.getNumber(),
+                transactions.getTotalPages(),
+                transactions.getTotalElements(),
+                transactions.hasPrevious(),
+                transactions.hasNext()
+        );
     }
 
     @PostMapping("/{id}/sales")
@@ -325,5 +357,21 @@ public class CustomerController {
                                        long totalElements,
                                        boolean hasPrevious,
                                        boolean hasNext) {
+    }
+
+    public record TransactionCard(Long id,
+                                  String formattedDate,
+                                  String type,
+                                  String detail,
+                                  String formattedAmount,
+                                  String formattedBalance) {
+    }
+
+    public record TransactionPageResponse(List<TransactionCard> content,
+                                          int page,
+                                          int totalPages,
+                                          long totalElements,
+                                          boolean hasPrevious,
+                                          boolean hasNext) {
     }
 }

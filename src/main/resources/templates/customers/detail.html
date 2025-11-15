@@ -34,59 +34,181 @@
     </div>
 
     <div class="card">
-        <h3>Transacciones</h3>
-        <div class="table-wrapper">
-            <table>
-                <thead>
-                <tr>
-                    <th>
-                        <a th:href="@{'/customers/' + ${customer.id} + '?ascending=' + ${!ascending}}"
-                           th:text="'Fecha ' + (ascending ? '(Asc)' : '(Desc)')">
-                            Fecha
-                        </a>
-                    </th>
-                    <th>Tipo</th>
-                    <th>Detalle</th>
-                    <th>Monto</th>
-                    <th>Saldo</th>
-                    <th></th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="transaction : ${transactionsPage.content}">
-                    <td th:text="${T(cl.casero.migration.util.DateUtil).format(transaction.date)}">01-01-2024</td>
-                    <td th:text="${transaction.type.displayName}">Venta</td>
-                    <td th:text="${transaction.detail}">Detalle</td>
-                    <td th:text="${T(cl.casero.migration.util.CurrencyUtil).format(transaction.amount)}">$0</td>
-                    <td th:text="${T(cl.casero.migration.util.CurrencyUtil).format(transaction.balance)}">$0</td>
-                    <td>
-                        <form th:action="@{'/customers/transactions/' + ${transaction.id} + '/delete'}"
-                              method="post"
-                              onsubmit="return confirm('¿Seguro que deseas eliminar esta transacción?');">
-                            <input type="hidden" name="customerId" th:value="${customer.id}">
-                            <button type="submit" class="btn-danger" title="Eliminar transacción">🗑</button>
-                        </form>
-                    </td>
-                </tr>
-                <tr th:if="${transactionsPage.empty}">
-                    <td colspan="6">Sin transacciones</td>
-                </tr>
-                </tbody>
-            </table>
+        <div class="transactions-header">
+            <h3>Transacciones</h3>
+            <button type="button" id="transactions-sort" class="text-button">
+                <span id="transactions-sort-label"
+                      th:text="${ascending} ? 'Orden: Ascendente' : 'Orden: Descendente'">Orden</span>
+            </button>
         </div>
-        <nav class="pagination"
-             th:if="${transactionsPage.totalPages > 1}"
-             th:with="prev=${T(java.lang.Math).max(0, transactionsPage.number - 1)}, next=${T(java.lang.Math).min(transactionsPage.totalPages - 1, transactionsPage.number + 1)}">
-            <a th:href="@{|/customers/${customer.id}?ascending=${ascending}&page=${prev}&size=${transactionsPage.size}|}"
-               th:classappend="${!transactionsPage.hasPrevious()} ? ' disabled'"
-               aria-label="Página anterior">Anterior</a>
-            <span class="current" th:text="${transactionsPage.number + 1} + ' / ' + ${transactionsPage.totalPages}">1 / 1</span>
-            <a th:href="@{|/customers/${customer.id}?ascending=${ascending}&page=${next}&size=${transactionsPage.size}|}"
-               th:classappend="${!transactionsPage.hasNext()} ? ' disabled'"
-               aria-label="Página siguiente">Siguiente</a>
+        <div id="transactions-list" class="transaction-list"></div>
+        <p id="transactions-empty" class="card-list__empty">Cargando transacciones...</p>
+        <nav class="pagination" id="transactions-pagination" hidden>
+            <button type="button" id="transactions-prev">Anterior</button>
+            <span id="transactions-page-indicator" class="current">1 / 1</span>
+            <button type="button" id="transactions-next">Siguiente</button>
         </nav>
     </div>
 
 </div>
 </body>
+<script th:inline="javascript">
+/*<![CDATA[*/
+document.addEventListener('DOMContentLoaded', () => {
+    const customerId = /*[[${customer.id}]]*/ 0;
+    let ascending = /*[[${ascending}]]*/ false;
+    const pageSize = /*[[${transactionsPage.size}]]*/ 10;
+
+    const list = document.getElementById('transactions-list');
+    const emptyMessage = document.getElementById('transactions-empty');
+    const pagination = document.getElementById('transactions-pagination');
+    const prevBtn = document.getElementById('transactions-prev');
+    const nextBtn = document.getElementById('transactions-next');
+    const pageIndicator = document.getElementById('transactions-page-indicator');
+    const sortButton = document.getElementById('transactions-sort');
+    const sortLabel = document.getElementById('transactions-sort-label');
+
+    let currentPage = 0;
+    let totalPages = 0;
+    let currentQueryController = null;
+
+    const clearList = () => {
+        list.innerHTML = '';
+    };
+
+    const showEmpty = (message) => {
+        emptyMessage.textContent = message;
+        emptyMessage.hidden = false;
+    };
+
+    const hideEmpty = () => {
+        emptyMessage.hidden = true;
+    };
+
+    const updatePagination = (page, total, hasPrevious, hasNext) => {
+        pageIndicator.textContent = `${total === 0 ? 0 : page + 1} / ${total}`;
+        prevBtn.disabled = !hasPrevious || total <= 1;
+        nextBtn.disabled = !hasNext || total <= 1;
+        pagination.hidden = total <= 1;
+    };
+
+    const createTransactionCard = (transaction) => {
+        const card = document.createElement('div');
+        card.className = 'transaction-card';
+
+        const topRow = document.createElement('div');
+        topRow.className = 'transaction-card__row';
+
+        const date = document.createElement('span');
+        date.className = 'transaction-card__date';
+        date.textContent = transaction.formattedDate;
+        topRow.appendChild(date);
+
+        const type = document.createElement('span');
+        type.className = 'transaction-card__type';
+        type.textContent = transaction.type;
+        topRow.appendChild(type);
+
+        card.appendChild(topRow);
+
+        const detail = document.createElement('p');
+        detail.className = 'transaction-card__detail';
+        detail.textContent = transaction.detail;
+        card.appendChild(detail);
+
+        const amounts = document.createElement('div');
+        amounts.className = 'transaction-card__amounts';
+
+        const amount = document.createElement('span');
+        amount.textContent = transaction.formattedAmount;
+        amounts.appendChild(amount);
+
+        const balance = document.createElement('span');
+        balance.textContent = `Saldo: ${transaction.formattedBalance}`;
+        amounts.appendChild(balance);
+
+        card.appendChild(amounts);
+
+        const deleteForm = document.createElement('form');
+        deleteForm.method = 'post';
+        deleteForm.action = `/customers/transactions/${transaction.id}/delete`;
+        deleteForm.onsubmit = () => confirm('¿Seguro que deseas eliminar esta transacción?');
+
+        const customerField = document.createElement('input');
+        customerField.type = 'hidden';
+        customerField.name = 'customerId';
+        customerField.value = customerId;
+        deleteForm.appendChild(customerField);
+
+        const deleteButton = document.createElement('button');
+        deleteButton.type = 'submit';
+        deleteButton.className = 'btn-danger';
+        deleteButton.textContent = '🗑';
+        deleteButton.title = 'Eliminar transacción';
+        deleteForm.appendChild(deleteButton);
+
+        card.appendChild(deleteForm);
+
+        return card;
+    };
+
+    const applyResponse = (response) => {
+        currentPage = response.page;
+        totalPages = response.totalPages;
+        clearList();
+
+        if (!response.content.length) {
+            showEmpty('Sin transacciones');
+        } else {
+            hideEmpty();
+            response.content.forEach((transaction) => {
+                list.appendChild(createTransactionCard(transaction));
+            });
+        }
+        updatePagination(response.page, response.totalPages, response.hasPrevious, response.hasNext);
+    };
+
+    const fetchTransactions = (pageToLoad = 0) => {
+        if (currentQueryController) {
+            currentQueryController.abort();
+        }
+        currentQueryController = new AbortController();
+        fetch(`/customers/${customerId}/transactions?page=${pageToLoad}&size=${pageSize}&ascending=${ascending}`, {
+            headers: {'Accept': 'application/json'},
+            signal: currentQueryController.signal
+        })
+            .then((response) => response.ok ? response.json() : Promise.reject())
+            .then(applyResponse)
+            .catch((error) => {
+                if (error.name !== 'AbortError') {
+                    showEmpty('Error al cargar transacciones');
+                    pagination.hidden = true;
+                }
+            });
+    };
+
+    prevBtn.addEventListener('click', () => {
+        if (prevBtn.disabled) {
+            return;
+        }
+        fetchTransactions(Math.max(currentPage - 1, 0));
+    });
+
+    nextBtn.addEventListener('click', () => {
+        if (nextBtn.disabled) {
+            return;
+        }
+        fetchTransactions(currentPage + 1);
+    });
+
+    sortButton.addEventListener('click', () => {
+        ascending = !ascending;
+        sortLabel.textContent = ascending ? 'Orden: Ascendente' : 'Orden: Descendente';
+        fetchTransactions(0);
+    });
+
+    fetchTransactions(/*[[${transactionsPage.number}]]*/ 0);
+});
+/*]]>*/
+</script>
 </html>

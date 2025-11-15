@@ -7,48 +7,216 @@
     <div th:replace="~{fragments/messages :: messages}"></div>
 
     <div class="card">
-        <form th:action="@{/customers}" method="get">
-            <input type="text" id="query" name="q" th:value="${query}" placeholder="Buscar por nombre, dirección o sector" autofocus>
-            <button type="submit">Buscar</button>
+        <form th:action="@{/customers}" method="get" id="search-form">
+            <input type="text" id="query" name="q" th:value="${query}" placeholder="Buscar por nombre, dirección o sector" autofocus autocomplete="off">
+            <!-- <button type="submit">Buscar</button> -->
         </form>
     </div>
 
-    <div class="card" th:if="${showResults}">
-        <h3>Resultados</h3>
-        <div class="table-wrapper">
-            <table>
-                <thead>
-                <tr>
-                    <th>Nombre</th>
-                    <th>Deuda</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="customer : ${customersPage.content}">
-                    <td>
-                        <a th:href="@{'/customers/' + ${customer.id}}" th:text="${customer.name}">Nombre</a>
-                    </td>
-                    <td th:text="${T(cl.casero.migration.util.CurrencyUtil).format(customer.debt)}">$0</td>
-                </tr>
-                <tr th:if="${customersPage.empty}">
-                    <td colspan="2">Sin resultados</td>
-                </tr>
-                </tbody>
-            </table>
+    <div class="card" id="results-card" aria-live="polite" th:classappend="${!showResults} ? ' hidden'">
+        <h3 id="results-count" th:text="${customersPage.totalElements} + ' usuarios'">0 usuarios</h3>
+        <div class="card-list" id="results-list">
+            <a class="customer-card"
+               th:each="customer : ${customersPage.content}"
+               th:href="@{'/customers/' + ${customer.id}}">
+                <span class="customer-card__name" th:text="${customer.name}">Nombre</span>
+                <span class="customer-card__debt"
+                      th:text="${T(cl.casero.migration.util.CurrencyUtil).format(customer.debt)}">$0</span>
+            </a>
         </div>
+        <p class="card-list__empty"
+           id="results-empty"
+           th:text="${showResults} ? 'Sin resultados' : 'Escribe para ver clientes'"
+           th:attr="hidden=${!customersPage.empty}">
+            Sin resultados
+        </p>
         <nav class="pagination"
-             th:if="${customersPage.totalPages > 1}"
-             th:with="prev=${T(java.lang.Math).max(0, customersPage.number - 1)}, next=${T(java.lang.Math).min(customersPage.totalPages - 1, customersPage.number + 1)}">
-            <a th:href="@{/customers(q=${query}, page=${prev}, size=${customersPage.size})}"
-               th:classappend="${!customersPage.hasPrevious()} ? ' disabled'"
-               aria-label="Página anterior">Anterior</a>
-            <span class="current" th:text="${customersPage.number + 1} + ' / ' + ${customersPage.totalPages}">1 / 1</span>
-            <a th:href="@{/customers(q=${query}, page=${next}, size=${customersPage.size})}"
-               th:classappend="${!customersPage.hasNext()} ? ' disabled'"
-               aria-label="Página siguiente">Siguiente</a>
+             id="results-pagination"
+             th:attr="hidden=${customersPage.totalPages <= 1}">
+            <button type="button" id="results-prev" th:disabled="${!customersPage.hasPrevious()}">Anterior</button>
+            <span class="current"
+                  id="results-page-indicator"
+                  th:text="${customersPage.totalPages == 0 ? '0 / 0' : customersPage.number + 1 + ' / ' + customersPage.totalPages}">
+                1 / 1
+            </span>
+            <button type="button" id="results-next" th:disabled="${!customersPage.hasNext()}">Siguiente</button>
         </nav>
     </div>
 
 </div>
 </body>
+<script th:inline="javascript">
+/*<![CDATA[*/
+document.addEventListener('DOMContentLoaded', () => {
+    const input = document.getElementById('query');
+    const resultsCard = document.getElementById('results-card');
+    const resultsCount = document.getElementById('results-count');
+    const resultsList = document.getElementById('results-list');
+    const resultsEmpty = document.getElementById('results-empty');
+    const pagination = document.getElementById('results-pagination');
+    const prevButton = document.getElementById('results-prev');
+    const nextButton = document.getElementById('results-next');
+    const pageIndicator = document.getElementById('results-page-indicator');
+    const searchUrl = /*[[@{/customers}]]*/ '/customers';
+    const customerDetailBase = /*[[@{/customers/}]]*/ '/customers/';
+
+    let debounceId;
+    let currentController;
+    const pageSize = /*[[${customersPage.size}]]*/ 10;
+    let currentPage = /*[[${customersPage.number}]]*/ 0;
+    let totalPages = /*[[${customersPage.totalPages}]]*/ 0;
+    let totalElements = /*[[${customersPage.totalElements}]]*/ 0;
+    let currentQuery = input.value.trim();
+
+    const updateCount = (count) => {
+        resultsCount.textContent = `${count} usuarios`;
+    };
+
+    const showEmpty = (message) => {
+        resultsEmpty.textContent = message;
+        resultsEmpty.hidden = false;
+    };
+
+    const hideEmpty = () => {
+        resultsEmpty.hidden = true;
+    };
+
+    const buildCard = (customer) => {
+        const link = document.createElement('a');
+        link.className = 'customer-card';
+        link.href = `${customerDetailBase}${customer.id}`;
+
+        const name = document.createElement('span');
+        name.className = 'customer-card__name';
+        name.textContent = customer.name;
+        link.appendChild(name);
+
+        const debt = document.createElement('span');
+        debt.className = 'customer-card__debt';
+        debt.textContent = customer.formattedDebt;
+        link.appendChild(debt);
+
+        return link;
+    };
+
+    const renderList = (customers) => {
+        resultsList.innerHTML = '';
+        if (!customers.length) {
+            showEmpty('Sin resultados');
+            return;
+        }
+        hideEmpty();
+        resultsCard.classList.remove('hidden');
+        customers.forEach((customer) => resultsList.appendChild(buildCard(customer)));
+    };
+
+    const updatePagination = (page, total, hasPrevious, hasNext) => {
+        if (!total || total <= 1) {
+            pagination.hidden = true;
+            return;
+        }
+        pagination.hidden = false;
+        pageIndicator.textContent = `${page + 1} / ${total}`;
+        prevButton.disabled = !hasPrevious;
+        nextButton.disabled = !hasNext;
+    };
+
+    const applyResponse = (response) => {
+        currentPage = response.page;
+        totalPages = response.totalPages;
+        totalElements = response.totalElements;
+        updateCount(totalElements);
+        renderList(response.content);
+        updatePagination(response.page, response.totalPages, response.hasPrevious, response.hasNext);
+    };
+
+    const handleError = () => {
+        updateCount(0);
+        resultsList.innerHTML = '';
+        showEmpty('Sin resultados');
+        pagination.hidden = true;
+        resultsCard.classList.remove('hidden');
+    };
+
+    const requestPage = (query, pageToLoad) => {
+        if (currentController) {
+            currentController.abort();
+        }
+        const controller = new AbortController();
+        currentController = controller;
+        fetch(`${searchUrl}?q=${encodeURIComponent(query)}&page=${pageToLoad}&size=${pageSize}`, {
+            headers: {'Accept': 'application/json'},
+            signal: controller.signal
+        })
+            .then((response) => response.ok ? response.json() : Promise.reject())
+            .then(applyResponse)
+            .catch((error) => {
+                if (error.name !== 'AbortError') {
+                    handleError();
+                }
+            })
+            .finally(() => {
+                if (currentController === controller) {
+                    currentController = null;
+                }
+            });
+    };
+
+    const resetView = () => {
+        if (currentController) {
+            currentController.abort();
+            currentController = null;
+        }
+        currentQuery = '';
+        currentPage = 0;
+        totalPages = 0;
+        totalElements = 0;
+        resultsList.innerHTML = '';
+        updateCount(0);
+        showEmpty('Escribe para ver clientes');
+        pagination.hidden = true;
+        resultsCard.classList.add('hidden');
+    };
+
+    input.addEventListener('input', () => {
+        const query = input.value.trim();
+        if (debounceId) {
+            clearTimeout(debounceId);
+        }
+        if (!query) {
+            resetView();
+            return;
+        }
+        debounceId = setTimeout(() => {
+            currentQuery = query;
+            requestPage(query, 0);
+        }, 250);
+    });
+
+    prevButton.addEventListener('click', () => {
+        if (prevButton.disabled || !currentQuery) {
+            return;
+        }
+        requestPage(currentQuery, Math.max(currentPage - 1, 0));
+    });
+
+    nextButton.addEventListener('click', () => {
+        if (nextButton.disabled || !currentQuery) {
+            return;
+        }
+        requestPage(currentQuery, currentPage + 1);
+    });
+
+    if (!currentQuery) {
+        resetView();
+    } else if (!resultsList.children.length) {
+        showEmpty('Sin resultados');
+        resultsCard.classList.remove('hidden');
+    } else {
+        hideEmpty();
+        resultsCard.classList.remove('hidden');
+    }
+});
+/*]]>*/
+</script>
 </html>

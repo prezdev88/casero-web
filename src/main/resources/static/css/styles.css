@@ -114,10 +114,60 @@ nav a:hover {
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
 }
 
+.card.hidden {
+    display: none;
+}
+
 .card h2,
 .card h3 {
     margin-top: 0;
     margin-bottom: 1rem;
+}
+
+.card-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.customer-card {
+    border: 1px solid #d4dbe8;
+    border-radius: 10px;
+    padding: 1rem;
+    background: #f8fafc;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    min-height: 70px;
+    text-decoration: none;
+    color: var(--text-color);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.customer-card__name {
+    font-weight: 600;
+}
+
+.customer-card:hover {
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+    transform: translateY(-1px);
+}
+
+.customer-card__name {
+    font-weight: 600;
+}
+
+.customer-card__debt {
+    margin: 0;
+    font-size: 0.95rem;
+    color: #57606a;
+}
+
+.card-list__empty {
+    text-align: center;
+    color: #6b778c;
+    font-style: italic;
+    margin: 0;
 }
 
 .table-wrapper {
@@ -259,7 +309,8 @@ button:hover {
 }
 
 .pagination a,
-.pagination span {
+.pagination span,
+.pagination button {
     padding: 0.4rem 0.85rem;
     border-radius: 999px;
     border: 1px solid #ccd7e0;
@@ -268,6 +319,17 @@ button:hover {
     text-decoration: none;
     font-weight: 600;
     font-size: 0.95rem;
+    cursor: pointer;
+    width: auto;
+}
+
+.pagination button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.pagination--inline {
+    margin-top: 0.5rem;
 }
 
 .pagination .current {

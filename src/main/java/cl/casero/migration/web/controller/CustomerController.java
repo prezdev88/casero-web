@@ -13,6 +13,7 @@ import cl.casero.migration.service.dto.PaymentForm;
 import cl.casero.migration.service.dto.SaleForm;
 import cl.casero.migration.service.dto.UpdateAddressForm;
 import cl.casero.migration.service.dto.UpdateNameForm;
+import cl.casero.migration.util.CurrencyUtil;
 import jakarta.validation.Valid;
 
 import java.time.LocalDate;
@@ -22,6 +23,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -31,6 +33,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
@@ -52,22 +55,39 @@ public class CustomerController {
         this.sectorService = sectorService;
     }
 
-    @GetMapping
+    @GetMapping(produces = MediaType.TEXT_HTML_VALUE)
     public String listCustomers(@RequestParam(value = "q", required = false) String query,
                                 @RequestParam(value = "page", defaultValue = "0") int page,
                                 @RequestParam(value = "size", defaultValue = "10") int size,
                                 Model model) {
-        int sanitizedPage = Math.max(page, 0);
-        int sanitizedSize = Math.min(Math.max(size, 1), 50);
-        Pageable pageable = PageRequest.of(sanitizedPage, sanitizedSize);
         boolean hasQuery = query != null && !query.isBlank();
-        Page<Customer> customersPage = hasQuery
-                ? customerService.search(query.trim(), pageable)
-                : Page.empty(pageable);
+        Page<Customer> customersPage = searchCustomers(query, page, size);
         model.addAttribute("customersPage", customersPage);
         model.addAttribute("query", query == null ? "" : query);
         model.addAttribute("showResults", hasQuery);
         return "customers/list";
+    }
+
+    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public CustomerPageResponse listCustomersJson(@RequestParam(value = "q", required = false) String query,
+                                                  @RequestParam(value = "page", defaultValue = "0") int page,
+                                                  @RequestParam(value = "size", defaultValue = "10") int size) {
+        Page<Customer> result = searchCustomers(query, page, size);
+        List<CustomerSearchResult> content = result.getContent()
+                .stream()
+                .map(customer -> new CustomerSearchResult(
+                        customer.getId(),
+                        customer.getName(),
+                        CurrencyUtil.format(customer.getDebt())))
+                .toList();
+        return new CustomerPageResponse(
+                content,
+                result.getNumber(),
+                result.getTotalPages(),
+                result.getTotalElements(),
+                result.hasPrevious(),
+                result.hasNext());
     }
 
     @GetMapping("/new")
@@ -276,6 +296,14 @@ public class CustomerController {
         return "customers/actions/name-edit";
     }
 
+    private Page<Customer> searchCustomers(String query, int page, int size) {
+        int sanitizedPage = Math.max(page, 0);
+        int sanitizedSize = Math.min(Math.max(size, 1), 50);
+        Pageable pageable = PageRequest.of(sanitizedPage, sanitizedSize);
+        boolean hasQuery = query != null && !query.isBlank();
+        return hasQuery ? customerService.search(query.trim(), pageable) : Page.empty(pageable);
+    }
+
     private String redirectToAction(Long id,
                                     RedirectAttributes redirectAttributes,
                                     String attributeName,
@@ -286,5 +314,16 @@ public class CustomerController {
                 "org.springframework.validation.BindingResult." + attributeName, result);
         redirectAttributes.addFlashAttribute(attributeName, form);
         return "redirect:/customers/" + id + "/actions/" + actionPath;
+    }
+
+    public record CustomerSearchResult(Long id, String name, String formattedDebt) {
+    }
+
+    public record CustomerPageResponse(List<CustomerSearchResult> content,
+                                       int page,
+                                       int totalPages,
+                                       long totalElements,
+                                       boolean hasPrevious,
+                                       boolean hasNext) {
     }
 }

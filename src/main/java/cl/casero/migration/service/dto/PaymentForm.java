@@ -12,6 +12,7 @@ public class PaymentForm {
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate date;
 
+    @NotNull
     @Min(1)
     private Integer amount;
 

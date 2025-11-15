@@ -7,6 +7,6 @@
     <title th:text="${title}">Casero</title>
     <link rel="manifest" th:href="@{/manifest.json}">
     <link rel="stylesheet" th:href="@{/css/styles.css(v=${version})}">
-    <script defer th:src="@{/js/main.js}"></script>
+<script defer th:src="@{/js/main.js}" data-sw-url="/*[[@{/sw.js}]]*/"></script>
 </head>
 </html>

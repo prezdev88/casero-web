@@ -27,7 +27,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch((error) => {
+    const swUrl = document.documentElement.dataset.swUrl || '/sw.js';
+    navigator.serviceWorker.register(swUrl).catch((error) => {
       console.error('Service worker registration failed', error);
     });
   });

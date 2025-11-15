@@ -58,6 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const customerId = /*[[${customer.id}]]*/ 0;
     let ascending = /*[[${ascending}]]*/ false;
     const pageSize = /*[[${transactionsPage.size}]]*/ 10;
+    const customersBaseUrl = /*[[@{/customers}]]*/ '/customers';
 
     const list = document.getElementById('transactions-list');
     const emptyMessage = document.getElementById('transactions-empty');
@@ -153,7 +154,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             const form = document.createElement('form');
             form.method = 'post';
-            form.action = `/customers/transactions/${transaction.id}/delete`;
+            form.action = `${customersBaseUrl}/transactions/${transaction.id}/delete`;
             const customerField = document.createElement('input');
             customerField.type = 'hidden';
             customerField.name = 'customerId';
@@ -188,7 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
             currentQueryController.abort();
         }
         currentQueryController = new AbortController();
-        fetch(`/customers/${customerId}/transactions?page=${pageToLoad}&size=${pageSize}&ascending=${ascending}`, {
+        fetch(`${customersBaseUrl}/${customerId}/transactions?page=${pageToLoad}&size=${pageSize}&ascending=${ascending}`, {
             headers: {'Accept': 'application/json'},
             signal: currentQueryController.signal
         })

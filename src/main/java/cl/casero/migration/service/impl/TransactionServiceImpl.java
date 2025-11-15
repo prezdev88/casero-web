@@ -96,17 +96,15 @@ public class TransactionServiceImpl implements TransactionService {
         Transaction transaction = transactionRepository.findById(transactionId).orElseThrow();
         Customer customer = transaction.getCustomer();
 
-        int adjustment = transaction.getType() == TransactionType.SALE
-                ? -transaction.getAmount()
-                : transaction.getAmount();
-
-        customer.setDebt(Math.max(0, customer.getDebt() + adjustment));
-        customerRepository.save(customer);
-
         statisticRepository.deleteByTypeAndAmountAndDate(transaction.getType(),
                 transaction.getAmount(), transaction.getDate());
 
         transactionRepository.delete(transaction);
+
+        Transaction lastTransaction = transactionRepository.findTopByCustomerIdOrderByDateDescIdDesc(customer.getId());
+        int recalculatedDebt = lastTransaction != null ? lastTransaction.getBalance() : 0;
+        customer.setDebt(recalculatedDebt);
+        customerRepository.save(customer);
     }
 
     private void registerMoneyFlow(Long customerId, MoneyTransactionForm form, TransactionType type) {

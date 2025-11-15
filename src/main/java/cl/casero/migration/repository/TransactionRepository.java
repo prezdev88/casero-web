@@ -14,6 +14,8 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 
     Page<Transaction> findByCustomerId(Long customerId, Pageable pageable);
 
+    Transaction findTopByCustomerIdOrderByDateDescIdDesc(Long customerId);
+
     @Query("""
             SELECT COUNT(t)
             FROM Transaction t

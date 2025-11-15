@@ -94,7 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const createTransactionCard = (transaction) => {
         const card = document.createElement('div');
-        card.className = 'transaction-card';
+        card.className = `transaction-card transaction-card--${transaction.typeKey.toLowerCase()}`;
 
         const topRow = document.createElement('div');
         topRow.className = 'transaction-card__row';
@@ -106,7 +106,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const type = document.createElement('span');
         type.className = 'transaction-card__type';
-        type.textContent = transaction.type;
+        const typeIcon = document.createElement('span');
+        const iconMap = {
+            sale: '🛒',
+            payment: '💰',
+            refund: '↩️',
+            forgiveness: '❤️'
+        };
+        typeIcon.textContent = iconMap[transaction.typeKey.toLowerCase()] || '📄';
+        typeIcon.classList.add('transaction-card__type-icon');
+        type.appendChild(typeIcon);
+        const typeText = document.createElement('span');
+        typeText.textContent = ` ${transaction.type}`;
+        type.appendChild(typeText);
         topRow.appendChild(type);
 
         card.appendChild(topRow);
@@ -116,38 +128,41 @@ document.addEventListener('DOMContentLoaded', () => {
         detail.textContent = transaction.detail;
         card.appendChild(detail);
 
-        const amounts = document.createElement('div');
-        amounts.className = 'transaction-card__amounts';
-
-        const amount = document.createElement('span');
+        const amount = document.createElement('p');
+        amount.className = 'transaction-card__amount';
         amount.textContent = transaction.formattedAmount;
-        amounts.appendChild(amount);
+        card.appendChild(amount);
 
-        const balance = document.createElement('span');
+        const balance = document.createElement('p');
+        balance.className = 'transaction-card__balance';
         balance.textContent = `Saldo: ${transaction.formattedBalance}`;
-        amounts.appendChild(balance);
-
-        card.appendChild(amounts);
-
-        const deleteForm = document.createElement('form');
-        deleteForm.method = 'post';
-        deleteForm.action = `/customers/transactions/${transaction.id}/delete`;
-        deleteForm.onsubmit = () => confirm('¿Seguro que deseas eliminar esta transacción?');
-
-        const customerField = document.createElement('input');
-        customerField.type = 'hidden';
-        customerField.name = 'customerId';
-        customerField.value = customerId;
-        deleteForm.appendChild(customerField);
+        card.appendChild(balance);
 
         const deleteButton = document.createElement('button');
-        deleteButton.type = 'submit';
-        deleteButton.className = 'btn-danger';
-        deleteButton.textContent = '🗑';
+        deleteButton.type = 'button';
+        deleteButton.className = 'transaction-card__delete';
+        deleteButton.innerHTML = `
+            <svg aria-hidden="true" focusable="false" viewBox="0 0 448 512">
+                <path d="M160 0h128c17.7 0 32 14.3 32 32v32h96c8.8 0 16 7.2 16 16s-7.2 16-16 16h-16.1l-26.9 403.5c-1.6 24.4-21.9 44.5-46.4 44.5H105.4c-24.5 0-44.8-20.1-46.4-44.5L32.1 96H16C7.2 96 0 88.8 0 80s7.2-16 16-16h96V32C112 14.3 126.3 0 144 0h16zm128 64V32H160V64h128zm48.1 32H111.9l24.7 378.7c.6 9.5 8.5 17.3 18 17.3h142.7c9.5 0 17.4-7.8 18-17.3L336.1 96z"/>
+            </svg>
+        `;
         deleteButton.title = 'Eliminar transacción';
-        deleteForm.appendChild(deleteButton);
-
-        card.appendChild(deleteForm);
+        deleteButton.addEventListener('click', () => {
+            if (!confirm('¿Seguro que deseas eliminar esta transacción?')) {
+                return;
+            }
+            const form = document.createElement('form');
+            form.method = 'post';
+            form.action = `/customers/transactions/${transaction.id}/delete`;
+            const customerField = document.createElement('input');
+            customerField.type = 'hidden';
+            customerField.name = 'customerId';
+            customerField.value = customerId;
+            form.appendChild(customerField);
+            document.body.appendChild(form);
+            form.submit();
+        });
+        card.appendChild(deleteButton);
 
         return card;
     };

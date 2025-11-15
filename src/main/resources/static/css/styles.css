@@ -300,6 +300,32 @@ button:hover {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    position: relative;
+    padding-bottom: 1.5rem;
+}
+
+.transaction-card--sale {
+    border-color: rgba(13, 71, 161, 0.2);
+    background: #e8f1ff;
+}
+
+.transaction-card--payment {
+    border-color: rgba(76, 175, 80, 0.2);
+    background: #e9f7ec;
+}
+
+.transaction-card--refund {
+    border-color: rgba(255, 193, 7, 0.2);
+    background: #fff8e1;
+}
+
+.transaction-card--forgiveness {
+    border-color: rgba(244, 67, 54, 0.2);
+    background: #fdecea;
+}
+
+.transaction-card--default {
+    border-color: rgba(0, 0, 0, 0.1);
 }
 
 .transaction-card__row {
@@ -308,21 +334,52 @@ button:hover {
     font-weight: 600;
 }
 
+.transaction-card__type-icon {
+    margin-right: 0.25rem;
+}
+
 .transaction-card__detail {
     margin: 0;
     color: #4b4f58;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
-.transaction-card__amounts {
-    display: flex;
-    justify-content: space-between;
+.transaction-card__amount,
+.transaction-card__balance {
+    margin: 0;
     font-weight: 600;
     color: #1f1f1f;
 }
 
-.transaction-card form {
-    margin-top: 0.5rem;
-    align-self: flex-end;
+.transaction-card__balance {
+    padding-right: 1.5rem;
+}
+
+.transaction-card__delete {
+    position: absolute;
+    bottom: 0.75rem;
+    right: 0.75rem;
+    background: transparent;
+    border: none;
+    color: #c62828;
+    cursor: pointer;
+    padding: 0;
+    width: 1.5rem;
+    height: 1.5rem;
+    outline: none;
+}
+
+.transaction-card__delete:hover {
+    background: transparent;
+    border: none;
+    color: #a81f1f;
+}
+
+.transaction-card__delete svg {
+    width: 1rem;
+    height: 1rem;
+    fill: currentColor;
 }
 
 .transactions-header {

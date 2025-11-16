@@ -2,6 +2,7 @@ package cl.casero.migration.service;
 
 import cl.casero.migration.domain.Customer;
 import cl.casero.migration.service.dto.CreateCustomerForm;
+import cl.casero.migration.service.dto.OverdueCustomerSummary;
 
 import cl.casero.migration.repository.CustomerRepository;
 import org.springframework.data.domain.Page;
@@ -23,6 +24,8 @@ public interface CustomerService {
     Page<Customer> getTopDebtors(Pageable pageable);
 
     Page<Customer> getBestCustomers(Pageable pageable);
+
+    Page<OverdueCustomerSummary> getOverdueCustomers(Pageable pageable, int months);
 
     long count();
 

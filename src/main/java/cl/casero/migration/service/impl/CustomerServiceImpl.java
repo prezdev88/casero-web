@@ -5,6 +5,7 @@ import cl.casero.migration.repository.CustomerRepository;
 import cl.casero.migration.service.SectorService;
 import cl.casero.migration.service.CustomerService;
 import cl.casero.migration.service.dto.CreateCustomerForm;
+import cl.casero.migration.service.dto.OverdueCustomerSummary;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -75,6 +76,20 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public Page<Customer> getBestCustomers(Pageable pageable) {
         return customerRepository.findAllByOrderByDebtAsc(pageable);
+    }
+
+    @Override
+    public Page<OverdueCustomerSummary> getOverdueCustomers(Pageable pageable, int months) {
+        int sanitizedMonths = Math.max(months, 1);
+        return customerRepository.findOverdueCustomers(pageable, sanitizedMonths)
+                .map(view -> new OverdueCustomerSummary(
+                        view.getId(),
+                        view.getName(),
+                        view.getSector(),
+                        view.getDebt(),
+                        view.getLast_payment(),
+                        view.getMonths_overdue()
+                ));
     }
 
     @Override

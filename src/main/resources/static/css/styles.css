@@ -208,6 +208,11 @@ nav a:hover {
     margin: 0;
 }
 
+.delinquent-card__meta {
+    font-size: 0.85rem;
+    color: #5a6276;
+}
+
 .table-wrapper {
     width: 100%;
     overflow-x: auto;

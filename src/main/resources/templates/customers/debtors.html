@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('Morosos')}"></head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+<main class="container">
+    <section class="card">
+        <h2>Morosos</h2>
+        <form method="get" th:action="@{/debtors}">
+            <label for="months">Meses sin abonos</label>
+            <input type="number"
+                   id="months"
+                   name="months"
+                   min="1"
+                   required
+                   th:value="${months == null ? 1 : months}">
+            <button type="submit">Mostrar morosos</button>
+        </form>
+
+        <div th:if="${!hasFilter}">
+            <p>Ingresa los meses sin abonos que quieres evaluar para ver la lista.</p>
+        </div>
+
+        <div th:if="${hasFilter}">
+            <div th:if="${debtorsPage.empty}">
+                <p>No se encontraron morosos con al menos <span th:text="${months}">0</span> meses sin abonar.</p>
+            </div>
+
+            <div th:if="${!debtorsPage.empty}">
+                <a th:each="debtor : ${debtorsPage.content}"
+                   th:href="@{'/customers/' + ${debtor.id}}"
+                   style="display:block;border:1px solid #ccc;padding:1rem;margin-bottom:0.5rem;text-decoration:none;color:inherit;">
+                    <p><strong th:text="${debtor.name}">Cliente</strong></p>
+                    <p><strong style="color:#c62828;"
+                              th:text="${T(cl.casero.migration.util.CurrencyUtil).format(debtor.debt)}">$0</strong></p>
+                    <p>
+                        <span>Último abono:</span>
+                        <span style="color:#c62828;"
+                              th:text="${debtor.lastPayment == 'Nunca ha abonado' ? 'Nunca ha abonado' : T(cl.casero.migration.util.DateUtil).format(T(java.time.LocalDate).parse(debtor.lastPayment))}">Último abono</span>
+                    </p>
+                </a>
+            </div>
+
+            <div th:if="${debtorsPage.totalPages > 1}">
+                <p>
+                    <a th:href="@{/debtors(page=${T(java.lang.Math).max(0, debtorsPage.number - 1)}, size=${debtorsPage.size}, months=${months})}"
+                       th:if="${debtorsPage.hasPrevious()}">Anterior</a>
+                    <span th:text="${debtorsPage.number + 1} + ' / ' + ${debtorsPage.totalPages}">1 / 1</span>
+                    <a th:href="@{/debtors(page=${T(java.lang.Math).min(debtorsPage.totalPages - 1, debtorsPage.number + 1)}, size=${debtorsPage.size}, months=${months})}"
+                       th:if="${debtorsPage.hasNext()}">Siguiente</a>
+                </p>
+            </div>
+        </div>
+    </section>
+</main>
+</body>
+</html>

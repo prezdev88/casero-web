@@ -381,6 +381,16 @@ body.modal-open {
     margin: 0.2rem 0;
 }
 
+.sector-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.sector-row__label {
+    font-weight: 600;
+}
+
 .transaction-card {
     border: 1px solid #d4dbe8;
     border-radius: 12px;

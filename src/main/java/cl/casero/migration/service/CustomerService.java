@@ -17,6 +17,8 @@ public interface CustomerService {
     void updateAddress(Long id, String address);
 
     void updateName(Long id, String name);
+    
+    void updateSector(Long id, Long sectorId);
 
     Page<Customer> getTopDebtors(Pageable pageable);
 

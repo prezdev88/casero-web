@@ -13,6 +13,7 @@ import cl.casero.migration.service.dto.PaymentForm;
 import cl.casero.migration.service.dto.SaleForm;
 import cl.casero.migration.service.dto.UpdateAddressForm;
 import cl.casero.migration.service.dto.UpdateNameForm;
+import cl.casero.migration.service.dto.UpdateSectorForm;
 import cl.casero.migration.util.CurrencyUtil;
 import cl.casero.migration.util.DateUtil;
 import jakarta.validation.Valid;
@@ -233,6 +234,19 @@ public class CustomerController {
         return "redirect:/customers/" + id;
     }
 
+    @PostMapping("/{id}/sector")
+    public String updateSector(@PathVariable Long id,
+                               @Valid @ModelAttribute("updateSectorForm") UpdateSectorForm form,
+                               BindingResult result,
+                               RedirectAttributes redirectAttributes) {
+        if (result.hasErrors()) {
+            return redirectToAction(id, redirectAttributes, "updateSectorForm", form, result, "sector/edit");
+        }
+        customerService.updateSector(id, form.getSectorId());
+        redirectAttributes.addFlashAttribute("successMessage", "Sector actualizado");
+        return "redirect:/customers/" + id;
+    }
+
     @PostMapping("/transactions/{transactionId}/delete")
     public String deleteTransaction(@PathVariable Long transactionId,
                                     @RequestParam("customerId") Long customerId,
@@ -327,6 +341,19 @@ public class CustomerController {
             model.addAttribute("updateNameForm", new UpdateNameForm(customer.getName()));
         }
         return "customers/actions/name-edit";
+    }
+
+    @GetMapping("/{id}/actions/sector/edit")
+    public String editSector(@PathVariable Long id, Model model) {
+        Customer customer = customerService.get(id);
+        model.addAttribute("customer", customer);
+        if (!model.containsAttribute("updateSectorForm")) {
+            UpdateSectorForm form = new UpdateSectorForm();
+            form.setSectorId(customer.getSector().getId());
+            model.addAttribute("updateSectorForm", form);
+        }
+        model.addAttribute("sectors", sectorService.listAll());
+        return "customers/actions/sector-edit";
     }
 
     private Page<Customer> searchCustomers(String query, int page, int size) {

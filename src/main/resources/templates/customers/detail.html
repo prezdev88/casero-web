@@ -20,7 +20,11 @@
             <a class="icon-button" title="Editar dirección"
                th:href="@{'/customers/' + ${customer.id} + '/actions/address/edit'}">✏️</a>
         </p>
-        <p class="text-muted" th:text="${customer.sector.name}">Sector</p>
+        <p class="text-muted sector-row">
+            <span class="sector-row__value" th:text="${customer.sector.name}">Sector</span>
+            <a class="icon-button" title="Cambiar sector"
+               th:href="@{'/customers/' + ${customer.id} + '/actions/sector/edit'}">✏️</a>
+        </p>
     </div>
     <div class="card">
         <div class="transactions-header">

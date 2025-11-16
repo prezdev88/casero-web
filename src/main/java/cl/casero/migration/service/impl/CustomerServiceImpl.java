@@ -61,6 +61,13 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
+    public void updateSector(Long id, Long sectorId) {
+        Customer customer = get(id);
+        customer.setSector(sectorService.get(sectorId));
+        customerRepository.save(customer);
+    }
+
+    @Override
     public Page<Customer> getTopDebtors(Pageable pageable) {
         return customerRepository.findAllByOrderByDebtDesc(pageable);
     }

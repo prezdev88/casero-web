@@ -22,48 +22,6 @@
         </p>
         <p class="text-muted" th:text="${customer.sector.name}">Sector</p>
     </div>
-
-    <div class="card">
-        <ul class="action-menu">
-            <li>
-                <a class="action-menu__action action-menu__action--payment"
-                   th:href="@{'/customers/' + ${customer.id} + '/actions/payment'}">
-                    <span class="action-menu__icon" aria-hidden="true">💸</span>
-                    <span class="action-menu__text">
-                        <span class="action-menu__title">Abonar</span>
-                    </span>
-                </a>
-            </li>
-            <li>
-                <a class="action-menu__action action-menu__action--sale"
-                   th:href="@{'/customers/' + ${customer.id} + '/actions/sale'}">
-                    <span class="action-menu__icon" aria-hidden="true">🧾</span>
-                    <span class="action-menu__text">
-                        <span class="action-menu__title">Mantención</span>
-                    </span>
-                </a>
-            </li>
-            <li>
-                <a class="action-menu__action action-menu__action--refund"
-                   th:href="@{'/customers/' + ${customer.id} + '/actions/refund'}">
-                    <span class="action-menu__icon" aria-hidden="true">↩️</span>
-                    <span class="action-menu__text">
-                        <span class="action-menu__title">Devolución</span>
-                    </span>
-                </a>
-            </li>
-            <li>
-                <a class="action-menu__action action-menu__action--forgiveness"
-                   th:href="@{'/customers/' + ${customer.id} + '/actions/forgiveness'}">
-                    <span class="action-menu__icon" aria-hidden="true">❤️</span>
-                    <span class="action-menu__text">
-                        <span class="action-menu__title">Condonar deuda</span>
-                    </span>
-                </a>
-            </li>
-        </ul>
-    </div>
-
     <div class="card">
         <div class="transactions-header">
             <h3>Transacciones</h3>

@@ -166,6 +166,9 @@ nav a:hover {
     text-decoration: none;
     color: var(--text-color);
     transition: transform 0.15s ease, box-shadow 0.15s ease;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
 }
 
 .customer-card__name {
@@ -257,80 +260,99 @@ button:hover {
     gap: 1rem;
 }
 
-.action-menu {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 0.75rem;
+body.modal-open {
+    overflow: hidden;
 }
 
-.action-menu li {
-    list-style: none;
-}
-
-.action-menu__action {
+.customer-actions {
+    position: fixed;
+    inset: 0;
+    z-index: 999;
     display: flex;
     align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.customer-actions__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(6, 17, 41, 0.55);
+}
+
+.customer-actions__dialog {
+    position: relative;
+    background: #fff;
+    border-radius: 20px;
+    width: min(520px, 100%);
+    padding: 1.5rem;
+    box-shadow: 0 22px 50px rgba(11, 20, 40, 0.3);
+    max-height: 90vh;
+    overflow-y: auto;
+    z-index: 1;
+}
+
+.customer-actions[hidden] {
+    display: none;
+}
+
+.customer-actions__subtitle {
+    color: #2b3245;
+    margin-bottom: 1rem;
+    font-weight: 700;
+    text-align: center;
+    font-size: 1.35rem;
+}
+
+.customer-actions__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 0.85rem;
+}
+
+.customer-actions__action {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
     padding: 0.85rem 1rem;
-    border-radius: 12px;
-    border: 1px solid #dfe6f4;
-    background: linear-gradient(135deg, #f8faff, #eef3fb);
-    color: var(--text-color);
+    border-radius: 14px;
     text-decoration: none;
+    color: var(--text-color);
+    border: 1px solid #dfe4f3;
+    background: linear-gradient(135deg, #f9fbff, #edf2fb);
     transition: transform 0.15s ease, box-shadow 0.15s ease;
-    min-height: 84px;
 }
 
-.action-menu__action:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 8px 16px rgba(22, 53, 94, 0.12);
+.customer-actions__action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px rgba(13, 33, 77, 0.2);
 }
 
-.action-menu__icon {
-    width: 48px;
-    height: 48px;
+.customer-actions__icon {
+    width: 46px;
+    height: 46px;
     border-radius: 14px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.4rem;
+    font-size: 1.3rem;
     background: #fff;
-    box-shadow: inset 0 0 0 1px rgba(15, 58, 119, 0.08);
+    box-shadow: inset 0 0 0 1px rgba(17, 50, 100, 0.08);
 }
 
-.action-menu__text {
+.customer-actions__action-text {
     display: flex;
     flex-direction: column;
     line-height: 1.3;
 }
 
-.action-menu__title {
+.customer-actions__action-title {
     font-weight: 600;
-    font-size: 1.05rem;
 }
 
-.action-menu__subtitle {
+.customer-actions__action-desc {
     font-size: 0.85rem;
-    color: #5f6b7c;
-}
-
-.action-menu__action--payment .action-menu__icon {
-    color: #0f8c5a;
-}
-
-.action-menu__action--sale .action-menu__icon {
-    color: #0e4da4;
-}
-
-.action-menu__action--refund .action-menu__icon {
-    color: #bb6b00;
-}
-
-.action-menu__action--forgiveness .action-menu__icon {
-    color: #c62828;
+    color: #6c7488;
 }
 
 .alert {

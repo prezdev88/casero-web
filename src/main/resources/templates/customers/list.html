@@ -18,7 +18,9 @@
         <div class="card-list" id="results-list">
             <a class="customer-card"
                th:each="customer : ${customersPage.content}"
-               th:href="@{'/customers/' + ${customer.id}}">
+               th:href="@{'/customers/' + ${customer.id}}"
+               th:data-customer-id="${customer.id}"
+               th:data-customer-name="${customer.name}">
                 <span class="customer-card__name" th:text="${customer.name}">Nombre</span>
                 <span class="customer-card__debt"
                       th:text="${T(cl.casero.migration.util.CurrencyUtil).format(customer.debt)}">$0</span>
@@ -43,6 +45,14 @@
         </nav>
     </div>
 
+    <div id="customer-actions" class="customer-actions" hidden>
+        <div class="customer-actions__backdrop" id="customer-actions-backdrop" aria-hidden="true"></div>
+        <div class="customer-actions__dialog" role="dialog" aria-modal="true">
+            <p class="customer-actions__subtitle" id="customer-actions-subtitle">Selecciona una acción</p>
+            <div class="customer-actions__grid" id="customer-actions-list"></div>
+        </div>
+    </div>
+
 </div>
 </body>
 <script th:inline="javascript">
@@ -59,6 +69,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const pageIndicator = document.getElementById('results-page-indicator');
     const searchUrl = /*[[@{/customers}]]*/ '/customers';
     const customerDetailBase = /*[[@{/customers/}]]*/ '/customers/';
+    const actionsOverlay = document.getElementById('customer-actions');
+    const actionsBackdrop = document.getElementById('customer-actions-backdrop');
+    const actionsList = document.getElementById('customer-actions-list');
+    const actionsSubtitle = document.getElementById('customer-actions-subtitle');
 
     let debounceId;
     let currentController;
@@ -81,10 +95,132 @@ document.addEventListener('DOMContentLoaded', () => {
         resultsEmpty.hidden = true;
     };
 
+    const actionDefinitions = actionsOverlay ? [
+        {
+            key: 'payment',
+            label: 'Abonar',
+            description: 'Registrar un pago',
+            icon: '💸',
+            href: (id) => `${customerDetailBase}${id}/actions/payment`
+        },
+        {
+            key: 'sale',
+            label: 'Mantención',
+            description: 'Registrar venta o mantención',
+            icon: '🧾',
+            href: (id) => `${customerDetailBase}${id}/actions/sale`
+        },
+        {
+            key: 'refund',
+            label: 'Devolución',
+            description: 'Registrar un reembolso',
+            icon: '↩️',
+            href: (id) => `${customerDetailBase}${id}/actions/refund`
+        },
+        {
+            key: 'forgiveness',
+            label: 'Condonar deuda',
+            description: 'Dejar saldo en cero',
+            icon: '❤️',
+            href: (id) => `${customerDetailBase}${id}/actions/forgiveness`
+        },
+        {
+            key: 'transactions',
+            label: 'Ver transacciones',
+            description: 'Abrir el detalle del cliente',
+            icon: '📋',
+            href: (id) => `${customerDetailBase}${id}`
+        }
+    ] : [];
+
+    const hideActionsMenu = () => {
+        if (!actionsOverlay || actionsOverlay.hidden) {
+            return;
+        }
+        actionsOverlay.hidden = true;
+        document.body.classList.remove('modal-open');
+    };
+
+    const showActionsMenu = (customer) => {
+        if (!actionsOverlay) {
+            return;
+        }
+        actionsSubtitle.textContent = customer.name;
+        actionsList.innerHTML = '';
+        actionDefinitions.forEach((action) => {
+            const link = document.createElement('a');
+            link.className = `customer-actions__action customer-actions__action--${action.key}`;
+            link.href = action.href(customer.id);
+
+            const icon = document.createElement('span');
+            icon.className = 'customer-actions__icon';
+            icon.textContent = action.icon;
+            link.appendChild(icon);
+
+            const text = document.createElement('span');
+            text.className = 'customer-actions__action-text';
+            const title = document.createElement('span');
+            title.className = 'customer-actions__action-title';
+            title.textContent = action.label;
+            const desc = document.createElement('span');
+            desc.className = 'customer-actions__action-desc';
+            desc.textContent = action.description;
+            text.appendChild(title);
+            text.appendChild(desc);
+            link.appendChild(text);
+
+            actionsList.appendChild(link);
+        });
+        actionsOverlay.hidden = false;
+        document.body.classList.add('modal-open');
+    };
+
+    if (actionsOverlay) {
+        if (actionsBackdrop) {
+            actionsBackdrop.addEventListener('click', hideActionsMenu);
+        }
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                hideActionsMenu();
+            }
+        });
+    }
+
+    const attachActionsHandler = (element) => {
+        if (!actionsOverlay || element.dataset.actionHandler === 'true') {
+            return;
+        }
+        const customerId = element.dataset.customerId;
+        if (!customerId) {
+            return;
+        }
+        const nameElement = element.querySelector('.customer-card__name');
+        const customer = {
+            id: customerId,
+            name: element.dataset.customerName || (nameElement ? nameElement.textContent.trim() : '')
+        };
+
+        element.addEventListener('click', (event) => {
+            event.preventDefault();
+            showActionsMenu(customer);
+        });
+        element.addEventListener('contextmenu', (event) => {
+            event.preventDefault();
+            showActionsMenu(customer);
+        });
+        element.dataset.actionHandler = 'true';
+    };
+
+    const enhanceExistingCards = () => {
+        document.querySelectorAll('.customer-card').forEach((card) => attachActionsHandler(card));
+    };
+
     const buildCard = (customer) => {
         const link = document.createElement('a');
         link.className = 'customer-card';
         link.href = `${customerDetailBase}${customer.id}`;
+        link.dataset.customerId = customer.id;
+        link.dataset.customerName = customer.name;
 
         const name = document.createElement('span');
         name.className = 'customer-card__name';
@@ -95,6 +231,8 @@ document.addEventListener('DOMContentLoaded', () => {
         debt.className = 'customer-card__debt';
         debt.textContent = customer.formattedDebt;
         link.appendChild(debt);
+
+        attachActionsHandler(link);
 
         return link;
     };
@@ -216,6 +354,8 @@ document.addEventListener('DOMContentLoaded', () => {
         hideEmpty();
         resultsCard.classList.remove('hidden');
     }
+
+    enhanceExistingCards();
 });
 /*]]>*/
 </script>

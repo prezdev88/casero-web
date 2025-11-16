@@ -266,6 +266,73 @@ button:hover {
     gap: 0.75rem;
 }
 
+.action-menu li {
+    list-style: none;
+}
+
+.action-menu__action {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.85rem 1rem;
+    border-radius: 12px;
+    border: 1px solid #dfe6f4;
+    background: linear-gradient(135deg, #f8faff, #eef3fb);
+    color: var(--text-color);
+    text-decoration: none;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    min-height: 84px;
+}
+
+.action-menu__action:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 16px rgba(22, 53, 94, 0.12);
+}
+
+.action-menu__icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    background: #fff;
+    box-shadow: inset 0 0 0 1px rgba(15, 58, 119, 0.08);
+}
+
+.action-menu__text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.3;
+}
+
+.action-menu__title {
+    font-weight: 600;
+    font-size: 1.05rem;
+}
+
+.action-menu__subtitle {
+    font-size: 0.85rem;
+    color: #5f6b7c;
+}
+
+.action-menu__action--payment .action-menu__icon {
+    color: #0f8c5a;
+}
+
+.action-menu__action--sale .action-menu__icon {
+    color: #0e4da4;
+}
+
+.action-menu__action--refund .action-menu__icon {
+    color: #bb6b00;
+}
+
+.action-menu__action--forgiveness .action-menu__icon {
+    color: #c62828;
+}
+
 .alert {
     padding: 0.8rem 1rem;
     border-radius: 4px;
@@ -390,16 +457,50 @@ button:hover {
 }
 
 .text-button {
-    background: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
     border: none;
     color: #1a73e8;
     cursor: pointer;
-    font-weight: 600;
-    padding: 0.2rem 0;
+    padding: 0;
+    line-height: 1;
 }
 
-.text-button:hover {
-    text-decoration: underline;
+.text-button--order {
+    width: 2.35rem;
+    height: 2.35rem;
+    border-radius: 999px;
+    border: 1px solid #d7e3f6;
+    background: #f4f7ff;
+    transition: background 0.2s ease, box-shadow 0.2s ease;
+    align-self: flex-start;
+    margin-top: -0.2rem;
+}
+
+.text-button--order:hover {
+    background: #e9edfb;
+    box-shadow: 0 4px 10px rgba(26, 115, 232, 0.1);
+}
+
+.text-button__icon {
+    width: 1rem;
+    height: 1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.text-button__icon svg {
+    width: 100%;
+    height: 100%;
+    fill: currentColor;
+    transition: transform 0.2s ease;
+}
+
+.text-button__icon.is-ascending svg {
+    transform: rotate(180deg);
 }
 
 .icon-button {
@@ -421,23 +522,6 @@ button:hover {
 .alert-error {
     background: #fdecea;
     color: #c62828;
-}
-
-.action-menu a,
-.action-menu button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.6rem 1rem;
-    border-radius: 4px;
-    background: var(--primary);
-    color: #fff;
-    text-decoration: none;
-    font-weight: 600;
-}
-
-.action-menu a:hover {
-    background: #0f5ad3;
 }
 
 .pagination {

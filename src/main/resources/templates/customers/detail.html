@@ -24,20 +24,57 @@
     </div>
 
     <div class="card">
-        <h3>Menú de acciones</h3>
         <ul class="action-menu">
-            <li><a th:href="@{'/customers/' + ${customer.id} + '/actions/payment'}">Abonar</a></li>
-            <li><a th:href="@{'/customers/' + ${customer.id} + '/actions/sale'}">Mantención</a></li>
-            <li><a th:href="@{'/customers/' + ${customer.id} + '/actions/refund'}">Devolución</a></li>
-            <li><a th:href="@{'/customers/' + ${customer.id} + '/actions/forgiveness'}">CONDONAR DEUDA</a></li>
+            <li>
+                <a class="action-menu__action action-menu__action--payment"
+                   th:href="@{'/customers/' + ${customer.id} + '/actions/payment'}">
+                    <span class="action-menu__icon" aria-hidden="true">💸</span>
+                    <span class="action-menu__text">
+                        <span class="action-menu__title">Abonar</span>
+                    </span>
+                </a>
+            </li>
+            <li>
+                <a class="action-menu__action action-menu__action--sale"
+                   th:href="@{'/customers/' + ${customer.id} + '/actions/sale'}">
+                    <span class="action-menu__icon" aria-hidden="true">🧾</span>
+                    <span class="action-menu__text">
+                        <span class="action-menu__title">Mantención</span>
+                    </span>
+                </a>
+            </li>
+            <li>
+                <a class="action-menu__action action-menu__action--refund"
+                   th:href="@{'/customers/' + ${customer.id} + '/actions/refund'}">
+                    <span class="action-menu__icon" aria-hidden="true">↩️</span>
+                    <span class="action-menu__text">
+                        <span class="action-menu__title">Devolución</span>
+                    </span>
+                </a>
+            </li>
+            <li>
+                <a class="action-menu__action action-menu__action--forgiveness"
+                   th:href="@{'/customers/' + ${customer.id} + '/actions/forgiveness'}">
+                    <span class="action-menu__icon" aria-hidden="true">❤️</span>
+                    <span class="action-menu__text">
+                        <span class="action-menu__title">Condonar deuda</span>
+                    </span>
+                </a>
+            </li>
         </ul>
     </div>
 
     <div class="card">
         <div class="transactions-header">
             <h3>Transacciones</h3>
-            <button type="button" id="transactions-sort" class="text-button">
-                <span id="transactions-sort-label"
+            <button type="button" id="transactions-sort" class="text-button text-button--order"
+                    title="Cambiar orden de las transacciones">
+                <span id="transactions-sort-icon" class="text-button__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                        <path d="M7 4h2v11h3l-4 5-4-5h3zm10 15h-3l4-5 4 5h-3V8h-2z"/>
+                    </svg>
+                </span>
+                <span id="transactions-sort-label" class="sr-only"
                       th:text="${ascending} ? 'Orden: Ascendente' : 'Orden: Descendente'">Orden</span>
             </button>
         </div>
@@ -68,6 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const pageIndicator = document.getElementById('transactions-page-indicator');
     const sortButton = document.getElementById('transactions-sort');
     const sortLabel = document.getElementById('transactions-sort-label');
+    const sortIcon = document.getElementById('transactions-sort-icon');
 
     let currentPage = 0;
     let totalPages = 0;
@@ -184,6 +222,11 @@ document.addEventListener('DOMContentLoaded', () => {
         updatePagination(response.page, response.totalPages, response.hasPrevious, response.hasNext);
     };
 
+    const updateSortIndicator = () => {
+        sortLabel.textContent = ascending ? 'Orden: Ascendente' : 'Orden: Descendente';
+        sortIcon.classList.toggle('is-ascending', ascending);
+    };
+
     const fetchTransactions = (pageToLoad = 0) => {
         if (currentQueryController) {
             currentQueryController.abort();
@@ -219,9 +262,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     sortButton.addEventListener('click', () => {
         ascending = !ascending;
-        sortLabel.textContent = ascending ? 'Orden: Ascendente' : 'Orden: Descendente';
+        updateSortIndicator();
         fetchTransactions(0);
     });
+
+    updateSortIndicator();
 
     fetchTransactions(/*[[${transactionsPage.number}]]*/ 0);
 });

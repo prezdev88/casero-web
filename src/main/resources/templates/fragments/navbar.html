@@ -4,7 +4,7 @@
             <div class="brand-title">
                 <h1><a th:href="@{/customers}" style="color:#fff;text-decoration:none;">Casero Web</a></h1>
                 <span class="app-version"
-                      th:text="${'v' + (@environment.getProperty('app.version') ?: '0.0.0')}">v1.0.1</span>
+                      th:text="${'v' + (appVersion ?: '0.0.0')}">v1.0.1</span>
             </div>
         </div>
         <button class="nav-toggle" type="button" aria-controls="main-menu" aria-expanded="false">

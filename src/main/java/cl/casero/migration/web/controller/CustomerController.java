@@ -81,7 +81,8 @@ public class CustomerController {
                 .map(customer -> new CustomerSearchResult(
                         customer.getId(),
                         customer.getName(),
-                        CurrencyUtil.format(customer.getDebt())))
+                        CurrencyUtil.format(customer.getDebt()),
+                        customer.getDebt()))
                 .toList();
         return new CustomerPageResponse(
                 content,
@@ -376,7 +377,7 @@ public class CustomerController {
         return "redirect:/customers/" + id + "/actions/" + actionPath;
     }
 
-    public record CustomerSearchResult(Long id, String name, String formattedDebt) {
+    public record CustomerSearchResult(Long id, String name, String formattedDebt, Integer debtValue) {
     }
 
     public record CustomerPageResponse(List<CustomerSearchResult> content,

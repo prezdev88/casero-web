@@ -187,7 +187,18 @@ nav a:hover {
 .customer-card__debt {
     margin: 0;
     font-size: 0.95rem;
-    color: #57606a;
+    color: #1976d2;
+}
+
+.customer-card__debt--red {
+    color: #c62828;
+}
+.customer-card__debt--blue {
+    color: #1976d2;
+}
+
+.customer-card__debt--blue {
+    color: #1976d2;
 }
 
 .card-list__empty {
@@ -302,6 +313,19 @@ body.modal-open {
     font-weight: 700;
     text-align: center;
     font-size: 1.35rem;
+}
+
+.customer-actions__debt {
+    font-weight: 600;
+    margin-left: 0.3rem;
+}
+
+.customer-actions__debt--red {
+    color: #c62828;
+}
+
+.customer-actions__debt--blue {
+    color: #1976d2;
 }
 
 .customer-actions__grid {

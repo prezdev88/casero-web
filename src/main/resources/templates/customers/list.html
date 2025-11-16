@@ -7,10 +7,9 @@
     <div th:replace="~{fragments/messages :: messages}"></div>
 
     <div class="card">
-        <form th:action="@{/customers}" method="get" id="search-form">
-            <input type="text" id="query" name="q" th:value="${query}" placeholder="Buscar por nombre, dirección o sector" autofocus autocomplete="off">
-            <!-- <button type="submit">Buscar</button> -->
-        </form>
+        <div id="search-form">
+            <input type="search" id="query" name="q" th:value="${query}" placeholder="Buscar por nombre, dirección o sector" autofocus autocomplete="off">
+        </div>
     </div>
 
     <div class="card" id="results-card" aria-live="polite" th:classappend="${!showResults} ? ' hidden'">
@@ -18,12 +17,15 @@
         <div class="card-list" id="results-list">
             <a class="customer-card"
                th:each="customer : ${customersPage.content}"
+               th:with="formattedDebt=${T(cl.casero.migration.util.CurrencyUtil).format(customer.debt)}"
                th:href="@{'/customers/' + ${customer.id}}"
                th:data-customer-id="${customer.id}"
-               th:data-customer-name="${customer.name}">
+               th:data-customer-name="${customer.name}"
+               th:data-customer-debt="${formattedDebt}"
+               th:data-customer-debt-raw="${customer.debt}">
                 <span class="customer-card__name" th:text="${customer.name}">Nombre</span>
-                <span class="customer-card__debt"
-                      th:text="${T(cl.casero.migration.util.CurrencyUtil).format(customer.debt)}">$0</span>
+                <span th:class="|customer-card__debt ${customer.debt > 0 ? 'customer-card__debt--red' : 'customer-card__debt--blue'}|"
+                      th:text="${formattedDebt}">$0</span>
             </a>
         </div>
         <p class="card-list__empty"
@@ -145,7 +147,17 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!actionsOverlay) {
             return;
         }
-        actionsSubtitle.textContent = customer.name;
+        const hasDebt = customer.debtValue && Number(customer.debtValue) > 0;
+        actionsSubtitle.textContent = '';
+        const nameSpan = document.createElement('span');
+        nameSpan.textContent = customer.name;
+        actionsSubtitle.appendChild(nameSpan);
+        if (customer.formattedDebt) {
+            const debtSpan = document.createElement('span');
+            debtSpan.className = `customer-actions__debt ${hasDebt ? 'customer-actions__debt--red' : 'customer-actions__debt--blue'}`;
+            debtSpan.textContent = ` (${customer.formattedDebt})`;
+            actionsSubtitle.appendChild(debtSpan);
+        }
         actionsList.innerHTML = '';
         actionDefinitions.forEach((action) => {
             const link = document.createElement('a');
@@ -195,9 +207,13 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         const nameElement = element.querySelector('.customer-card__name');
+        const debtElement = element.querySelector('.customer-card__debt');
+        const debtRaw = element.dataset.customerDebtRaw;
         const customer = {
             id: customerId,
-            name: element.dataset.customerName || (nameElement ? nameElement.textContent.trim() : '')
+            name: element.dataset.customerName || (nameElement ? nameElement.textContent.trim() : ''),
+            formattedDebt: debtElement ? debtElement.textContent.trim() : (element.dataset.customerDebt || ''),
+            debtValue: debtRaw !== undefined ? Number(debtRaw) : (debtElement ? Number(debtElement.textContent.replace(/[^0-9.-]/g, '')) : 0)
         };
 
         element.addEventListener('click', (event) => {
@@ -221,6 +237,12 @@ document.addEventListener('DOMContentLoaded', () => {
         link.href = `${customerDetailBase}${customer.id}`;
         link.dataset.customerId = customer.id;
         link.dataset.customerName = customer.name;
+        if (customer.formattedDebt) {
+            link.dataset.customerDebt = customer.formattedDebt;
+        }
+        if (typeof customer.debtValue === 'number') {
+            link.dataset.customerDebtRaw = customer.debtValue;
+        }
 
         const name = document.createElement('span');
         name.className = 'customer-card__name';
@@ -229,6 +251,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const debt = document.createElement('span');
         debt.className = 'customer-card__debt';
+        if (customer.debtValue && Number(customer.debtValue) > 0) {
+            debt.classList.add('customer-card__debt--red');
+        } else {
+            debt.classList.add('customer-card__debt--blue');
+        }
         debt.textContent = customer.formattedDebt;
         link.appendChild(debt);
 

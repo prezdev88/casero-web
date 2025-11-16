@@ -38,6 +38,12 @@
                         <span style="color:#c62828;"
                               th:text="${debtor.lastPayment == 'Nunca ha abonado' ? 'Nunca ha abonado' : T(cl.casero.migration.util.DateUtil).format(T(java.time.LocalDate).parse(debtor.lastPayment))}">Último abono</span>
                     </p>
+                    <p>
+                        <span>Meses en mora:</span>
+                        <span th:if="${debtor.monthsOverdue != null}"
+                              th:text="${debtor.monthsOverdue}">0</span>
+                        <span th:if="${debtor.monthsOverdue == null}">Sin registro</span>
+                    </p>
                 </a>
             </div>
 

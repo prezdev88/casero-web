@@ -30,15 +30,12 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/casero
       SPRING_DATASOURCE_USERNAME: casero
       SPRING_DATASOURCE_PASSWORD: casero
-      CASERO_IMPORT_SQLITE_PATH: /app/casero.sqlite
       SERVER_SERVLET_CONTEXT_PATH: /casero
     # OJO: quitamos el mapeo de 8080 al host, ahora la entrada será por Nginx
     # ports:
     #   - "8080:8080"
     expose:
       - "8080"
-    volumes:
-      - ./casero.sqlite:/app/casero.sqlite:ro
     networks:
       - internal
       - proxy-net

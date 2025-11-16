@@ -14,7 +14,7 @@
         </div>
         <p class="highlight-debt"
            th:text="${T(cl.casero.migration.util.CurrencyUtil).format(customer.debt)}"
-           th:classappend="${customer.debt > 0} ? ' text-red' : ' text-blue'">$0</p>
+           th:classappend="${customer.debt > 0 ? ' text-red' : ' text-blue'}">$0</p>
         <p class="text-muted">
             <span th:text="${customer.address}">Dirección</span>
             <a class="icon-button" title="Editar dirección"
@@ -25,6 +25,42 @@
             <a class="icon-button" title="Cambiar sector"
                th:href="@{'/customers/' + ${customer.id} + '/actions/sector/edit'}">✏️</a>
         </p>
+    </div>
+    <div class="card customer-actions-card">
+        <div class="customer-actions__grid customer-actions__grid--inline">
+            <a class="customer-actions__action customer-actions__action--payment"
+               th:href="@{'/customers/' + ${customer.id} + '/actions/payment'}">
+                <span class="customer-actions__icon">💸</span>
+                <span class="customer-actions__action-text">
+                    <span class="customer-actions__action-title">Abonar</span>
+                    <span class="customer-actions__action-desc">Registrar un pago</span>
+                </span>
+            </a>
+            <a class="customer-actions__action customer-actions__action--sale"
+               th:href="@{'/customers/' + ${customer.id} + '/actions/sale'}">
+                <span class="customer-actions__icon">🧾</span>
+                <span class="customer-actions__action-text">
+                    <span class="customer-actions__action-title">Mantención</span>
+                    <span class="customer-actions__action-desc">Registrar venta o mantención</span>
+                </span>
+            </a>
+            <a class="customer-actions__action customer-actions__action--refund"
+               th:href="@{'/customers/' + ${customer.id} + '/actions/refund'}">
+                <span class="customer-actions__icon">↩️</span>
+                <span class="customer-actions__action-text">
+                    <span class="customer-actions__action-title">Devolución</span>
+                    <span class="customer-actions__action-desc">Registrar un reembolso</span>
+                </span>
+            </a>
+            <a class="customer-actions__action customer-actions__action--forgiveness"
+               th:href="@{'/customers/' + ${customer.id} + '/actions/forgiveness'}">
+                <span class="customer-actions__icon">❤️</span>
+                <span class="customer-actions__action-text">
+                    <span class="customer-actions__action-title">Condonar deuda</span>
+                    <span class="customer-actions__action-desc">Dejar saldo en cero</span>
+                </span>
+            </a>
+        </div>
     </div>
     <div class="card">
         <div class="transactions-header">

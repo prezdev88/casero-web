@@ -5,7 +5,7 @@
 <div th:replace="~{fragments/navbar :: navbar}"></div>
 <div class="container">
     <div class="card">
-        <h2>Registrar Cliente</h2>
+        <h2>Crear Cliente</h2>
         <p>Total de clientes actuales: <strong th:text="${customersCount}">0</strong></p>
         <form th:object="${customerForm}" th:action="@{/customers}" method="post">
             <label>Nombre</label>

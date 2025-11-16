@@ -1,5 +1,15 @@
 :root {
-    --primary: #1a73e8;
+    --primary: var(--primary-blue);
+    --primary-blue: #1a73e8;
+    --primary-green: #2e7d32;
+    --primary-red: #d32f2f;
+    --primary-orange: #f57c00;
+    --primary-purple: #6a1b9a;
+    --primary-teal: #00897b;
+    --primary-indigo: #3949ab;
+    --primary-amber: #ff8f00;
+    --primary-pink: #c2185b;
+    --primary-gray: #546e7a;
     --background: #f4f7fb;
     --card-bg: #ffffff;
     --text-color: #1f1f1f;

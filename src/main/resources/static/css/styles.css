@@ -20,22 +20,24 @@ body {
 header {
     background: var(--primary);
     color: #fff;
-    padding: 1rem 0;
+    padding: 0;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .nav-container {
     position: relative;
     display: flex;
-    align-items: flex-start;
-    gap: 0.5rem;
+    align-items: center;
+    gap: 0.05rem;
+    margin: 0 auto;
+    padding: 0 1.25rem;
 }
 
 .brand {
     flex: 1;
     display: flex;
-    align-items: flex-start;
-    gap: 0.5rem;
+    align-items: center;
+    gap: 0.05rem;
 }
 
 .brand-title {
@@ -51,15 +53,16 @@ header {
 }
 
 header h1 {
-    font-size: 1.5rem;
+    font-size: 1.15rem;
     margin: 0;
+    line-height: 1.2;
 }
 
 .nav-toggle {
     position: absolute;
     top: 0.25rem;
     right: 2rem;
-    display: inline-flex;
+    display: none;
     align-items: center;
     justify-content: center;
     gap: 0.25rem;
@@ -107,6 +110,12 @@ nav a:hover {
     max-width: 1200px;
     margin: 2rem auto;
     padding: 0 1.25rem;
+}
+
+header .container {
+    margin: 0 auto;
+    padding-top: 0;
+    padding-bottom: 0;
 }
 
 .card {

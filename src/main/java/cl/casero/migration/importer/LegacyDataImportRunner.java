@@ -25,6 +25,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -37,6 +39,7 @@ import java.util.Optional;
 public class LegacyDataImportRunner implements ApplicationRunner {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LegacyDataImportRunner.class);
+    private static final ZoneId DEFAULT_ZONE = ZoneId.of("America/Santiago");
 
     private final CustomerRepository customerRepository;
     private final SectorRepository sectorRepository;
@@ -149,6 +152,11 @@ public class LegacyDataImportRunner implements ApplicationRunner {
                 transaction.setAmount(rs.getInt("amount"));
                 transaction.setBalance(rs.getInt("saldo"));
                 transaction.setType(type);
+                LocalDate date = transaction.getDate();
+                OffsetDateTime createdAt = date != null
+                        ? date.atStartOfDay(DEFAULT_ZONE).toOffsetDateTime()
+                        : OffsetDateTime.now(DEFAULT_ZONE);
+                transaction.setCreatedAt(createdAt);
 
                 transactions.put(transaction.getId(), transaction);
             }
@@ -216,7 +224,7 @@ public class LegacyDataImportRunner implements ApplicationRunner {
 
     private void batchInsertTransactions(Collection<Transaction> transactions) {
         jdbcTemplate.batchUpdate(
-                "INSERT INTO transaction (id, customer_id, date, detail, amount, balance, type) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                "INSERT INTO transaction (id, customer_id, date, detail, amount, balance, type, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                 transactions,
                 100,
                 (ps, transaction) -> {
@@ -227,6 +235,7 @@ public class LegacyDataImportRunner implements ApplicationRunner {
                     ps.setInt(5, transaction.getAmount());
                     ps.setInt(6, transaction.getBalance());
                     ps.setString(7, transaction.getType().name());
+                    ps.setObject(8, transaction.getCreatedAt());
                 }
         );
     }

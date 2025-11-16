@@ -124,7 +124,7 @@ public class CustomerController {
                                Model model) {
         int sanitizedPage = Math.max(page, 0);
         int sanitizedSize = Math.min(Math.max(size, 1), 50);
-        Sort sort = Sort.by(ascending ? Sort.Direction.ASC : Sort.Direction.DESC, "date");
+        Sort sort = Sort.by(ascending ? Sort.Direction.ASC : Sort.Direction.DESC, "createdAt");
         Pageable pageable = PageRequest.of(sanitizedPage, sanitizedSize, sort);
         Customer customer = customerService.get(id);
         Page<Transaction> transactions = transactionService.listByCustomer(id, pageable);
@@ -144,7 +144,7 @@ public class CustomerController {
                                                     @RequestParam(value = "ascending", defaultValue = "false") boolean ascending) {
         int sanitizedPage = Math.max(page, 0);
         int sanitizedSize = Math.min(Math.max(size, 1), 50);
-        Sort sort = Sort.by(ascending ? Sort.Direction.ASC : Sort.Direction.DESC, "date");
+        Sort sort = Sort.by(ascending ? Sort.Direction.ASC : Sort.Direction.DESC, "createdAt");
         Pageable pageable = PageRequest.of(sanitizedPage, sanitizedSize, sort);
         Page<Transaction> transactions = transactionService.listByCustomer(id, pageable);
         List<TransactionCard> content = transactions.getContent()

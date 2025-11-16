@@ -19,10 +19,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 
 @Service
 @Transactional
 public class TransactionServiceImpl implements TransactionService {
+
+    private static final ZoneId DEFAULT_ZONE = ZoneId.of("America/Santiago");
 
     private final TransactionRepository transactionRepository;
     private final CustomerRepository customerRepository;
@@ -101,7 +105,8 @@ public class TransactionServiceImpl implements TransactionService {
 
         transactionRepository.delete(transaction);
 
-        Transaction lastTransaction = transactionRepository.findTopByCustomerIdOrderByDateDescIdDesc(customer.getId());
+        Transaction lastTransaction = transactionRepository
+                .findTopByCustomerIdOrderByCreatedAtDescIdDesc(customer.getId());
         int recalculatedDebt = lastTransaction != null ? lastTransaction.getBalance() : 0;
         customer.setDebt(recalculatedDebt);
         customerRepository.save(customer);
@@ -134,6 +139,7 @@ public class TransactionServiceImpl implements TransactionService {
         transaction.setAmount(amount);
         transaction.setType(type);
         transaction.setBalance(newBalance);
+        transaction.setCreatedAt(OffsetDateTime.now(DEFAULT_ZONE));
         return transaction;
     }
 

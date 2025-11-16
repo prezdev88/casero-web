@@ -29,10 +29,12 @@ CREATE TABLE IF NOT EXISTS transaction (
     detail TEXT NOT NULL,
     amount INTEGER NOT NULL,
     balance INTEGER NOT NULL,
-    type VARCHAR(32) NOT NULL
+    type VARCHAR(32) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX IF NOT EXISTS idx_transaction_customer_date ON transaction (customer_id, date);
+CREATE INDEX IF NOT EXISTS idx_transaction_customer_created_at ON transaction (customer_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_transaction_type ON transaction (type);
 
 CREATE TABLE IF NOT EXISTS statistic (

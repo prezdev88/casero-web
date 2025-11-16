@@ -1,0 +1,17 @@
+{
+  "bumpFiles": [
+    {
+      "filename": "package.json",
+      "type": "json"
+    },
+    {
+      "filename": "package-lock.json",
+      "type": "json"
+    },
+    {
+      "filename": "pom.xml",
+      "type": "xml",
+      "xpath": "/project/version"
+    }
+  ]
+}

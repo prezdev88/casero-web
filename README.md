@@ -31,6 +31,17 @@ mvn spring-boot:run
 
 La aplicación quedará disponible en `http://localhost:8080`.
 
+### Publicación de versiones
+
+Este repositorio usa [`standard-version`](https://github.com/conventional-changelog/standard-version) para generar changelog y bumps semánticos a partir de commits convencionales. Luego de preparar tus cambios:
+
+```bash
+npm run release        # patch
+npm run release:minor  # o release:major según corresponda
+```
+
+El comando actualiza `pom.xml`, `package.json`, el `CHANGELOG.md` (si existe) y crea un tag anotado. Solo queda revisar los cambios, hacer commit y `git push --follow-tags`.
+
 ### Funcionalidades cubiertas
 
 - CRUD de clientes con búsqueda acento-insensible (la lista solo se llena cuando usas el buscador).

@@ -46,3 +46,5 @@ Thumbs.db
 bin/
 out/
 
+# Node tooling
+node_modules/

@@ -1,0 +1,27 @@
+{
+  "name": "casero-web",
+  "version": "1.5.5",
+  "description": "Proyecto web que replica todas las funciones de la app Android original (gestión de clientes, ventas, pagos, devoluciones, condonaciones, saldos iniciales, consultas y estadísticas).",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "release": "standard-version",
+    "release:minor": "standard-version --release-as minor",
+    "release:major": "standard-version --release-as major"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/prezdev88/casero-web.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/prezdev88/casero-web/issues"
+  },
+  "homepage": "https://github.com/prezdev88/casero-web#readme",
+  "devDependencies": {
+    "standard-version": "^9.5.0"
+  }
+}

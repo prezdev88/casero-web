@@ -89,6 +89,15 @@ nav a {
     padding: 0.35rem 0.75rem;
     border-radius: 999px;
     transition: background 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.nav-link__icon {
+    display: none;
+    font-size: 1.1rem;
+    line-height: 1;
 }
 
 nav a:hover {
@@ -678,6 +687,10 @@ body.modal-open {
         border-radius: 6px;
         padding: 0.6rem;
         background: rgba(255, 255, 255, 0.12);
+    }
+
+    .nav-link__icon {
+        display: inline-flex;
     }
 
     .container {

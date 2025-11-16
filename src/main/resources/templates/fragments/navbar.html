@@ -12,11 +12,26 @@
             <span class="sr-only">Mostrar u ocultar menú</span>
         </button>
         <nav id="main-menu" class="nav-links">
-            <a th:href="@{/customers}">Clientes</a>
-            <a th:href="@{/customers/new}">Crear Cliente</a>
-            <a th:href="@{/statistics}">Deuda total</a>
-            <a th:href="@{/statistics/monthly}">Estadísticas</a>
-            <a th:href="@{/debtors}">Morosos</a>
+            <a th:href="@{/customers}">
+                <span class="nav-link__icon" aria-hidden="true">📇</span>
+                <span class="nav-link__text">Clientes</span>
+            </a>
+            <a th:href="@{/customers/new}">
+                <span class="nav-link__icon" aria-hidden="true">➕</span>
+                <span class="nav-link__text">Crear Cliente</span>
+            </a>
+            <a th:href="@{/statistics}">
+                <span class="nav-link__icon" aria-hidden="true">💰</span>
+                <span class="nav-link__text">Deuda total</span>
+            </a>
+            <a th:href="@{/statistics/monthly}">
+                <span class="nav-link__icon" aria-hidden="true">📈</span>
+                <span class="nav-link__text">Estadísticas</span>
+            </a>
+            <a th:href="@{/debtors}">
+                <span class="nav-link__icon" aria-hidden="true">⚠️</span>
+                <span class="nav-link__text">Morosos</span>
+            </a>
         </nav>
     </div>
 </header>

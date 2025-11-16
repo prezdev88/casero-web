@@ -12,7 +12,7 @@
 
     <groupId>cl.casero</groupId>
     <artifactId>casero-web</artifactId>
-    <version>1.4.3</version>
+    <version>1.5.0</version>
     <name>casero-web</name>
     <description>Reimplementación web de Casero con Spring Boot y Thymeleaf</description>
 

@@ -30,7 +30,9 @@ CREATE TABLE IF NOT EXISTS transaction (
     amount INTEGER NOT NULL,
     balance INTEGER NOT NULL,
     type VARCHAR(32) NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    item_count INTEGER,
+    backup_detail TEXT
 );
 
 CREATE INDEX IF NOT EXISTS idx_transaction_customer_date ON transaction (customer_id, date);

@@ -46,6 +46,9 @@ public class Transaction {
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
+    @Column(name = "item_count")
+    private Integer itemCount;
+
     public Long getId() {
         return id;
     }
@@ -108,5 +111,13 @@ public class Transaction {
 
     public void setCreatedAt(OffsetDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Integer getItemCount() {
+        return itemCount;
+    }
+
+    public void setItemCount(Integer itemCount) {
+        this.itemCount = itemCount;
     }
 }

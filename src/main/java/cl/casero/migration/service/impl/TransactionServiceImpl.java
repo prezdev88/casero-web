@@ -54,6 +54,7 @@ public class TransactionServiceImpl implements TransactionService {
 
         Transaction transaction = buildTransaction(customer, form.getDate(), form.getDetail(),
                 form.getAmount(), TransactionType.SALE, newBalance);
+        transaction.setItemCount(form.getItemsCount());
 
         persistTransaction(transaction, form.getItemsCount(), saleType);
     }

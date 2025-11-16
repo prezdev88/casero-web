@@ -34,12 +34,15 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Component
 public class LegacyDataImportRunner implements ApplicationRunner {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LegacyDataImportRunner.class);
     private static final ZoneId DEFAULT_ZONE = ZoneId.of("America/Santiago");
+    private static final Pattern ITEM_COUNT_PATTERN = Pattern.compile("\\[Prendas]:\\s*(\\d+)", Pattern.CASE_INSENSITIVE);
 
     private final CustomerRepository customerRepository;
     private final SectorRepository sectorRepository;
@@ -152,6 +155,7 @@ public class LegacyDataImportRunner implements ApplicationRunner {
                 transaction.setAmount(rs.getInt("amount"));
                 transaction.setBalance(rs.getInt("saldo"));
                 transaction.setType(type);
+                transaction.setItemCount(extractItemCount(transaction.getDetail()));
                 LocalDate date = transaction.getDate();
                 OffsetDateTime createdAt = date != null
                         ? date.atStartOfDay(DEFAULT_ZONE).toOffsetDateTime()
@@ -224,7 +228,7 @@ public class LegacyDataImportRunner implements ApplicationRunner {
 
     private void batchInsertTransactions(Collection<Transaction> transactions) {
         jdbcTemplate.batchUpdate(
-                "INSERT INTO transaction (id, customer_id, date, detail, amount, balance, type, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                "INSERT INTO transaction (id, customer_id, date, detail, amount, balance, type, created_at, item_count) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 transactions,
                 100,
                 (ps, transaction) -> {
@@ -236,6 +240,11 @@ public class LegacyDataImportRunner implements ApplicationRunner {
                     ps.setInt(6, transaction.getBalance());
                     ps.setString(7, transaction.getType().name());
                     ps.setObject(8, transaction.getCreatedAt());
+                    if (transaction.getItemCount() != null) {
+                        ps.setInt(9, transaction.getItemCount());
+                    } else {
+                        ps.setNull(9, java.sql.Types.INTEGER);
+                    }
                 }
         );
     }
@@ -262,6 +271,21 @@ public class LegacyDataImportRunner implements ApplicationRunner {
                     ps.setObject(6, statistic.getDate());
                 }
         );
+    }
+
+    private Integer extractItemCount(String detail) {
+        if (detail == null || detail.isBlank()) {
+            return null;
+        }
+        Matcher matcher = ITEM_COUNT_PATTERN.matcher(detail);
+        if (matcher.find()) {
+            try {
+                return Integer.parseInt(matcher.group(1));
+            } catch (NumberFormatException ignored) {
+                return null;
+            }
+        }
+        return null;
     }
 
     private Sector resolveSector(String sectorName) {

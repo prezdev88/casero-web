@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.7.0](https://github.com/prezdev88/casero-web/compare/v1.6.0...v1.7.0) (2025-11-17)
+
+
+### Features
+
+* add Mailgun integration scripts for automated backup notifications ([16c97e9](https://github.com/prezdev88/casero-web/commit/16c97e907367bb43e409acb455e6a2ea26a5b257))
+
 ## [1.6.0](https://github.com/prezdev88/casero-web/compare/v1.5.4...v1.6.0) (2025-11-16)
 
 

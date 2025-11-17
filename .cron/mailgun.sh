@@ -2,6 +2,9 @@
 # crontab -e
 # Todos los lunes a las 8am
 # 0 8 * * 1 $HOME/mailgun.sh
+
+. /home/ubuntu/.mailgun-env
+
 set -euo pipefail
 
 BACKUP_DIR="$HOME/backups/casero"

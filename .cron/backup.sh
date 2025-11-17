@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# crontab -e
+# 0 3 * * * $HOME/backup-casero.sh >> $HOME/backups/casero/backup.log 2>&1
 set -euo pipefail
 
 # Directorios de backup

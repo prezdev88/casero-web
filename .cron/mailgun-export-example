@@ -1,0 +1,4 @@
+export MAILGUN_DOMAIN=""
+export MAILGUN_API_KEY=""
+export MAILGUN_FROM=""
+export MAILGUN_TO="Patricio Perez Pinto <prezdev88@gmail.com>"

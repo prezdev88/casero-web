@@ -13,6 +13,27 @@
     --background: #f4f7fb;
     --card-bg: #ffffff;
     --text-color: #1f1f1f;
+    --muted-text: #6b778c;
+    --input-bg: #ffffff;
+    --input-border: #ccd7e0;
+    --link-color: #1a73e8;
+    --table-border: #d4dbe8;
+    --card-surface: #f8fafc;
+    --card-surface-contrast: #ffffff;
+}
+
+:root[data-theme='dark'] {
+    --primary: #2c3143;
+    --background: #0f141f;
+    --card-bg: #1c2333;
+    --text-color: #f5f8ff;
+    --muted-text: #a0aac6;
+    --input-bg: #151b29;
+    --input-border: #2f384f;
+    --link-color: #9fb6ff;
+    --table-border: #2e374d;
+    --card-surface: #161c2b;
+    --card-surface-contrast: #242f3d;
 }
 
 *, *::before, *::after {
@@ -25,6 +46,14 @@ body {
     background: var(--background);
     color: var(--text-color);
     line-height: 1.5;
+}
+
+a {
+    color: var(--link-color);
+}
+
+a:hover {
+    color: var(--primary-blue);
 }
 
 header {
@@ -92,6 +121,7 @@ header h1 {
     gap: 0.75rem;
 }
 
+
 nav a {
     color: #fff;
     text-decoration: none;
@@ -109,6 +139,25 @@ nav a {
     font-size: 1.1rem;
     line-height: 1;
 }
+
+.theme-toggle {
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 50%;
+    color: #fff;
+    width: 34px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    margin-left: 0.5rem;
+}
+
+.theme-toggle:hover {
+    background: rgba(255, 255, 255, 0.25);
+}
+
 
 nav a:hover {
     background: rgba(255, 255, 255, 0.2);
@@ -183,10 +232,10 @@ header .container {
 }
 
 .customer-card {
-    border: 1px solid #d4dbe8;
+    border: 1px solid var(--table-border);
     border-radius: 10px;
     padding: 1rem;
-    background: #f8fafc;
+    background: var(--card-surface);
     display: flex;
     flex-direction: column;
     gap: 0.35rem;
@@ -204,7 +253,7 @@ header .container {
 }
 
 .customer-card:hover {
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
     transform: translateY(-1px);
 }
 
@@ -215,23 +264,19 @@ header .container {
 .customer-card__debt {
     margin: 0;
     font-size: 0.95rem;
-    color: #1976d2;
+    color: var(--link-color);
 }
 
 .customer-card__debt--red {
     color: #c62828;
 }
 .customer-card__debt--blue {
-    color: #1976d2;
-}
-
-.customer-card__debt--blue {
-    color: #1976d2;
+    color: var(--link-color);
 }
 
 .card-list__empty {
     text-align: center;
-    color: #6b778c;
+    color: var(--muted-text);
     font-style: italic;
     margin: 0;
 }
@@ -255,7 +300,7 @@ table {
 
 th, td {
     padding: 0.8rem;
-    border-bottom: 1px solid #e3e3e3;
+    border-bottom: 1px solid var(--table-border);
     text-align: left;
 }
 
@@ -271,15 +316,16 @@ label {
 
 input, select, textarea, button {
     padding: 0.6rem;
-    border: 1px solid #ccd7e0;
+    border: 1px solid var(--input-border);
     border-radius: 4px;
     font-size: 1rem;
     width: 100%;
-    background: #fff;
+    background: var(--input-bg);
+    color: var(--text-color);
 }
 
 button {
-    background: var(--primary);
+    background: var(--primary-blue);
     color: #fff;
     cursor: pointer;
     border: none;
@@ -287,7 +333,7 @@ button {
 }
 
 button:hover {
-    background: #0f5ad3;
+    background: var(--primary);
 }
 
 .btn-danger {
@@ -326,7 +372,7 @@ body.modal-open {
 
 .customer-actions__dialog {
     position: relative;
-    background: #fff;
+    background: var(--card-surface-contrast);
     border-radius: 20px;
     width: min(520px, 100%);
     padding: 1.5rem;
@@ -341,7 +387,7 @@ body.modal-open {
 }
 
 .customer-actions__subtitle {
-    color: #2b3245;
+    color: var(--text-color);
     margin-bottom: 1rem;
     font-weight: 700;
     text-align: center;
@@ -375,8 +421,8 @@ body.modal-open {
     border-radius: 14px;
     text-decoration: none;
     color: var(--text-color);
-    border: 1px solid #dfe4f3;
-    background: linear-gradient(135deg, #f9fbff, #edf2fb);
+    border: 1px solid var(--table-border);
+    background: var(--card-surface);
     transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -393,7 +439,7 @@ body.modal-open {
     align-items: center;
     justify-content: center;
     font-size: 1.3rem;
-    background: #fff;
+    background: var(--card-bg);
     box-shadow: inset 0 0 0 1px rgba(17, 50, 100, 0.08);
 }
 
@@ -409,7 +455,7 @@ body.modal-open {
 
 .customer-actions__action-desc {
     font-size: 0.85rem;
-    color: #6c7488;
+    color: var(--muted-text);
 }
 
 .alert {
@@ -449,10 +495,10 @@ body.modal-open {
 }
 
 .transaction-card {
-    border: 1px solid #d4dbe8;
+    border: 1px solid var(--table-border);
     border-radius: 12px;
     padding: 1rem;
-    background: #fff;
+    background: var(--card-bg);
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
@@ -461,23 +507,23 @@ body.modal-open {
 }
 
 .transaction-card--sale {
-    border-color: rgba(13, 71, 161, 0.2);
-    background: #e8f1ff;
+    border-color: rgba(13, 71, 161, 0.25);
+    background: rgba(13, 71, 161, 0.08);
 }
 
 .transaction-card--payment {
-    border-color: rgba(76, 175, 80, 0.2);
-    background: #e9f7ec;
+    border-color: rgba(76, 175, 80, 0.25);
+    background: rgba(76, 175, 80, 0.08);
 }
 
 .transaction-card--refund {
-    border-color: rgba(255, 193, 7, 0.2);
-    background: #fff8e1;
+    border-color: rgba(255, 193, 7, 0.25);
+    background: rgba(255, 193, 7, 0.1);
 }
 
 .transaction-card--forgiveness {
-    border-color: rgba(244, 67, 54, 0.2);
-    background: #fdecea;
+    border-color: rgba(244, 67, 54, 0.25);
+    background: rgba(244, 67, 54, 0.08);
 }
 
 .transaction-card--default {
@@ -496,7 +542,7 @@ body.modal-open {
 
 .transaction-card__detail {
     margin: 0;
-    color: #4b4f58;
+    color: var(--muted-text);
     overflow-wrap: anywhere;
     word-break: break-word;
 }
@@ -505,7 +551,7 @@ body.modal-open {
 .transaction-card__balance {
     margin: 0;
     font-weight: 600;
-    color: #1f1f1f;
+    color: var(--text-color);
 }
 
 .transaction-card__balance {

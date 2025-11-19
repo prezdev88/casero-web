@@ -1,14 +1,19 @@
 version: "3.9"
 
 services:
+  # =========================
+  # DB PROD
+  # =========================
   db:
     image: postgres:15
+    container_name: casero-db
     environment:
       POSTGRES_DB: casero
       POSTGRES_USER: casero
       POSTGRES_PASSWORD: casero
+    # accesible solo desde el VPS (para backups y túnel SSH)
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./script.sql:/docker-entrypoint-initdb.d/10-init.sql
@@ -20,6 +25,9 @@ services:
     networks:
       - internal
 
+  # =========================
+  # APP PROD
+  # =========================
   app:
     build: .
     container_name: casero-app
@@ -31,9 +39,52 @@ services:
       SPRING_DATASOURCE_USERNAME: casero
       SPRING_DATASOURCE_PASSWORD: casero
       SERVER_SERVLET_CONTEXT_PATH: /casero
-    # OJO: quitamos el mapeo de 8080 al host, ahora la entrada será por Nginx
-    # ports:
-    #   - "8080:8080"
+      SPRING_PROFILES_ACTIVE: prod
+    expose:
+      - "8080"
+    networks:
+      - internal
+      - proxy-net
+
+  # =========================
+  # DB QA
+  # =========================
+  db-qa:
+    image: postgres:15
+    container_name: casero-db-qa
+    environment:
+      POSTGRES_DB: casero_qa
+      POSTGRES_USER: casero_qa
+      POSTGRES_PASSWORD: casero_qa
+    # igual que prod pero en otro puerto del host
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - postgres_data_qa:/var/lib/postgresql/data
+      - ./script-qa.sql:/docker-entrypoint-initdb.d/10-init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U casero_qa"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - internal
+
+  # =========================
+  # APP QA
+  # =========================
+  app-qa:
+    build: .
+    container_name: casero-app-qa
+    depends_on:
+      db-qa:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db-qa:5432/casero_qa
+      SPRING_DATASOURCE_USERNAME: casero_qa
+      SPRING_DATASOURCE_PASSWORD: casero_qa
+      SERVER_SERVLET_CONTEXT_PATH: /casero-qa
+      SPRING_PROFILES_ACTIVE: qa
     expose:
       - "8080"
     networks:
@@ -42,6 +93,7 @@ services:
 
 volumes:
   postgres_data:
+  postgres_data_qa:
 
 networks:
   internal:

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('Transacciones')}"></head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+<div class="container">
+    <div class="card">
+        <h2>Transacciones</h2>
+        <div class="table-wrapper" th:if="${!transactionsPage.empty}">
+            <table>
+                <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Cliente</th>
+                    <th>Tipo</th>
+                    <th>Detalle</th>
+                    <th>Monto</th>
+                    <th>Saldo</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="tx : ${transactionsPage.content}">
+                    <td th:text="${dateTimeUtil.format(tx.createdAt)}">01-ene-2024 10:30</td>
+                    <td>
+                        <a th:href="@{'/customers/' + ${tx.customer.id}}"
+                           th:text="${tx.customer.name}">Cliente</a>
+                    </td>
+                    <td>
+                        <span th:text="${tx.type.displayName}">Tipo</span>
+                    </td>
+                    <td th:text="${tx.detail}">Detalle</td>
+                    <td th:text="${currencyUtil.format(tx.amount)}">$0</td>
+                    <td th:text="${currencyUtil.format(tx.balance)}">$0</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <p th:if="${transactionsPage.empty}">No hay transacciones registradas.</p>
+        <nav class="pagination"
+             th:if="${transactionsPage.totalPages > 1}"
+             th:with="prev=${T(java.lang.Math).max(0, transactionsPage.number - 1)},
+                      next=${T(java.lang.Math).min(transactionsPage.totalPages - 1, transactionsPage.number + 1)}">
+            <a th:href="@{/transactions(page=${prev}, size=${transactionsPage.size})}"
+               th:classappend="${!transactionsPage.hasPrevious()} ? ' disabled'">
+                Anterior
+            </a>
+            <span class="current"
+                  th:text="${transactionsPage.number + 1} + ' / ' + ${transactionsPage.totalPages}">1 / 1</span>
+            <a th:href="@{/transactions(page=${next}, size=${transactionsPage.size})}"
+               th:classappend="${!transactionsPage.hasNext()} ? ' disabled'">
+                Siguiente
+            </a>
+        </nav>
+    </div>
+</div>
+</body>
+</html>

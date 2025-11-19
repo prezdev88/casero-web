@@ -10,6 +10,8 @@ import org.springframework.data.domain.Pageable;
 
 public interface TransactionService {
 
+    Page<Transaction> listAll(Pageable pageable);
+
     Page<Transaction> listByCustomer(Long customerId, Pageable pageable);
 
     void registerSale(Long customerId, SaleForm form);

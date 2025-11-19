@@ -41,6 +41,11 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
+    public Page<Transaction> listAll(Pageable pageable) {
+        return transactionRepository.findAll(pageable);
+    }
+
+    @Override
     public Page<Transaction> listByCustomer(Long customerId, Pageable pageable) {
         return transactionRepository.findByCustomerId(customerId, pageable);
     }

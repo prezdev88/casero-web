@@ -53,9 +53,9 @@ services:
     image: postgres:15
     container_name: casero-db-qa
     environment:
-      POSTGRES_DB: casero_qa
-      POSTGRES_USER: casero_qa
-      POSTGRES_PASSWORD: casero_qa
+      POSTGRES_DB: casero
+      POSTGRES_USER: casero
+      POSTGRES_PASSWORD: casero
     # igual que prod pero en otro puerto del host
     ports:
       - "127.0.0.1:5433:5432"
@@ -63,7 +63,7 @@ services:
       - postgres_data_qa:/var/lib/postgresql/data
       - ./script-qa.sql:/docker-entrypoint-initdb.d/10-init.sql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U casero_qa"]
+      test: ["CMD-SHELL", "pg_isready -U casero"]
       interval: 10s
       timeout: 5s
       retries: 5

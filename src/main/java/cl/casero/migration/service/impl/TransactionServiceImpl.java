@@ -41,8 +41,11 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
-    public Page<Transaction> listAll(Pageable pageable) {
-        return transactionRepository.findAll(pageable);
+    public Page<Transaction> listAll(TransactionType type, Pageable pageable) {
+        if (type == null) {
+            return transactionRepository.findAll(pageable);
+        }
+        return transactionRepository.findByType(type, pageable);
     }
 
     @Override

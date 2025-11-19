@@ -6,6 +6,17 @@
 <div class="container">
     <div class="card">
         <h2>Transacciones</h2>
+        <form method="get" class="transaction-filter">
+            <label for="type">Tipo</label>
+            <select id="type" name="type">
+                <option value="" th:selected="${selectedType == null}">Todos</option>
+                <option th:each="type : ${types}"
+                        th:value="${type.name()}"
+                        th:selected="${type == selectedType}"
+                        th:text="${type.displayName}">Tipo</option>
+            </select>
+            <button type="submit">Filtrar</button>
+        </form>
         <div class="table-wrapper" th:if="${!transactionsPage.empty}">
             <table>
                 <thead>
@@ -40,13 +51,13 @@
              th:if="${transactionsPage.totalPages > 1}"
              th:with="prev=${T(java.lang.Math).max(0, transactionsPage.number - 1)},
                       next=${T(java.lang.Math).min(transactionsPage.totalPages - 1, transactionsPage.number + 1)}">
-            <a th:href="@{/transactions(page=${prev}, size=${transactionsPage.size})}"
+            <a th:href="@{/transactions(page=${prev}, size=${transactionsPage.size}, type=${selectedType})}"
                th:classappend="${!transactionsPage.hasPrevious()} ? ' disabled'">
                 Anterior
             </a>
             <span class="current"
                   th:text="${transactionsPage.number + 1} + ' / ' + ${transactionsPage.totalPages}">1 / 1</span>
-            <a th:href="@{/transactions(page=${next}, size=${transactionsPage.size})}"
+            <a th:href="@{/transactions(page=${next}, size=${transactionsPage.size}, type=${selectedType})}"
                th:classappend="${!transactionsPage.hasNext()} ? ' disabled'">
                 Siguiente
             </a>

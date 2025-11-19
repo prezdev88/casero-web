@@ -1,6 +1,7 @@
 package cl.casero.migration.service;
 
 import cl.casero.migration.domain.Transaction;
+import cl.casero.migration.domain.enums.TransactionType;
 import cl.casero.migration.service.dto.DebtForgivenessForm;
 import cl.casero.migration.service.dto.MoneyTransactionForm;
 import cl.casero.migration.service.dto.PaymentForm;
@@ -10,7 +11,7 @@ import org.springframework.data.domain.Pageable;
 
 public interface TransactionService {
 
-    Page<Transaction> listAll(Pageable pageable);
+    Page<Transaction> listAll(TransactionType type, Pageable pageable);
 
     Page<Transaction> listByCustomer(Long customerId, Pageable pageable);
 

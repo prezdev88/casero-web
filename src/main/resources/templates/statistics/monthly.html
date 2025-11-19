@@ -7,10 +7,16 @@
     <div class="card">
         <h2>Estadísticas</h2>
         <form th:action="@{/statistics/monthly}" method="get">
-            <label>Inicio</label>
-            <input type="date" name="start" th:value="${start != null ? #temporals.format(start, 'yyyy-MM-dd') : #temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}">
-            <label>Fin</label>
-            <input type="date" name="end" th:value="${end != null ? #temporals.format(end, 'yyyy-MM-dd') : #temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}">
+            <div class="form-row">
+                <div class="form-field">
+                    <label>Inicio</label>
+                    <input type="date" name="start" th:value="${start != null ? #temporals.format(start, 'yyyy-MM-dd') : #temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}">
+                </div>
+                <div class="form-field">
+                    <label>Fin</label>
+                    <input type="date" name="end" th:value="${end != null ? #temporals.format(end, 'yyyy-MM-dd') : #temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}">
+                </div>
+            </div>
             <button type="submit">Actualizar</button>
         </form>
     </div>

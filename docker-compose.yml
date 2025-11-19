@@ -80,9 +80,9 @@ services:
       db-qa:
         condition: service_healthy
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db-qa:5432/casero_qa
-      SPRING_DATASOURCE_USERNAME: casero_qa
-      SPRING_DATASOURCE_PASSWORD: casero_qa
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db-qa:5432/casero
+      SPRING_DATASOURCE_USERNAME: casero
+      SPRING_DATASOURCE_PASSWORD: casero
       SERVER_SERVLET_CONTEXT_PATH: /casero-qa
       SPRING_PROFILES_ACTIVE: qa
     expose:

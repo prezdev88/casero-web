@@ -13,7 +13,7 @@ services:
       POSTGRES_PASSWORD: casero
     # accesible solo desde el VPS (para backups y túnel SSH)
     ports:
-      - "127.0.0.1:5432:5432"
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./script.sql:/docker-entrypoint-initdb.d/10-init.sql
@@ -58,7 +58,7 @@ services:
       POSTGRES_PASSWORD: casero
     # igual que prod pero en otro puerto del host
     ports:
-      - "127.0.0.1:5433:5432"
+      - "5433:5432"
     volumes:
       - postgres_data_qa:/var/lib/postgresql/data
       - ./script-qa.sql:/docker-entrypoint-initdb.d/10-init.sql

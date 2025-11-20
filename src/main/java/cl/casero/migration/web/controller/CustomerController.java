@@ -154,7 +154,6 @@ public class CustomerController {
                 .map(transaction -> new TransactionCard(
                         transaction.getId(),
                         DateUtil.format(transaction.getDate()),
-                        transaction.getType().getDisplayName(),
                         transaction.getType().name(),
                         transaction.getDetail(),
                         CurrencyUtil.format(transaction.getAmount()),
@@ -390,7 +389,6 @@ public class CustomerController {
 
     public record TransactionCard(Long id,
                                   String formattedDate,
-                                  String type,
                                   String typeKey,
                                   String detail,
                                   String formattedAmount,

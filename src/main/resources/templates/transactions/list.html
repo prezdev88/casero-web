@@ -4,7 +4,21 @@
 <body>
 <div th:replace="~{fragments/navbar :: navbar}"></div>
 <div class="container">
-    <div class="card">
+    <div class="card"
+         th:with="typeIcons=${T(java.util.Map).of(
+                 T(cl.casero.migration.domain.enums.TransactionType).SALE, '🛒',
+                 T(cl.casero.migration.domain.enums.TransactionType).PAYMENT, '💰',
+                 T(cl.casero.migration.domain.enums.TransactionType).REFUND, '↩️',
+                 T(cl.casero.migration.domain.enums.TransactionType).DEBT_FORGIVENESS, '❤️',
+                 T(cl.casero.migration.domain.enums.TransactionType).INITIAL_BALANCE, '⚖️'
+         )},
+         typeLabels=${T(java.util.Map).of(
+                 T(cl.casero.migration.domain.enums.TransactionType).SALE, 'Venta',
+                 T(cl.casero.migration.domain.enums.TransactionType).PAYMENT, 'Abono',
+                 T(cl.casero.migration.domain.enums.TransactionType).REFUND, 'Devolución',
+                 T(cl.casero.migration.domain.enums.TransactionType).DEBT_FORGIVENESS, 'Condonación de deuda',
+                 T(cl.casero.migration.domain.enums.TransactionType).INITIAL_BALANCE, 'Saldo inicial'
+         )}">
         <h2>Transacciones</h2>
         <form method="get" class="transaction-filter">
             <label for="type">Tipo</label>
@@ -13,7 +27,7 @@
                 <option th:each="type : ${types}"
                         th:value="${type.name()}"
                         th:selected="${type == selectedType}"
-                        th:text="${type.displayName}">Tipo</option>
+                        th:text="${typeIcons.getOrDefault(type, '📄') + ' ' + typeLabels.getOrDefault(type, type.name())}">Tipo</option>
             </select>
             <button type="submit">Filtrar</button>
         </form>
@@ -37,7 +51,11 @@
                            th:text="${tx.customer.name}">Cliente</a>
                     </td>
                     <td>
-                        <span th:text="${tx.type.displayName}">Tipo</span>
+                        <span class="transaction-type-cell">
+                            <span class="transaction-type-cell__icon"
+                                  th:text="${typeIcons.getOrDefault(tx.type, '📄')}">🛒</span>
+                            <span th:text="${typeLabels.getOrDefault(tx.type, tx.type.name())}">Tipo</span>
+                        </span>
                     </td>
                     <td th:text="${tx.detail}">Detalle</td>
                     <td th:text="${currencyUtil.format(tx.amount)}">$0</td>

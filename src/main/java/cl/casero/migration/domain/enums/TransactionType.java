@@ -28,20 +28,4 @@ public enum TransactionType {
         }
     }
 
-    public String getDisplayName() {
-        switch (this) {
-            case SALE:
-                return "Venta";
-            case PAYMENT:
-                return "Abono";
-            case REFUND:
-                return "Devolución";
-            case DEBT_FORGIVENESS:
-                return "Condonación de deuda";
-            case INITIAL_BALANCE:
-                return "Saldo inicial";
-            default:
-                return name();
-        }
-    }
 }

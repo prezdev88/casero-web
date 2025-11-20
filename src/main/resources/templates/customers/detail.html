@@ -104,6 +104,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const sortButton = document.getElementById('transactions-sort');
     const sortLabel = document.getElementById('transactions-sort-label');
     const sortIcon = document.getElementById('transactions-sort-icon');
+    const iconMap = {
+        sale: '🛒',
+        payment: '💰',
+        refund: '↩️',
+        debt_forgiveness: '❤️',
+        initial_balance: '⚖️'
+    };
+    const labelMap = {
+        sale: 'Venta',
+        payment: 'Abono',
+        refund: 'Devolución',
+        debt_forgiveness: 'Condonación de deuda',
+        initial_balance: 'Saldo inicial'
+    };
 
     let currentPage = 0;
     let totalPages = 0;
@@ -144,17 +158,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const type = document.createElement('span');
         type.className = 'transaction-card__type';
         const typeIcon = document.createElement('span');
-        const iconMap = {
-            sale: '🛒',
-            payment: '💰',
-            refund: '↩️',
-            forgiveness: '❤️'
-        };
-        typeIcon.textContent = iconMap[transaction.typeKey.toLowerCase()] || '📄';
+        const iconKey = transaction.typeKey ? transaction.typeKey.toLowerCase() : '';
+        typeIcon.textContent = iconMap[iconKey] || '📄';
         typeIcon.classList.add('transaction-card__type-icon');
         type.appendChild(typeIcon);
         const typeText = document.createElement('span');
-        typeText.textContent = ` ${transaction.type}`;
+        const typeLabel = labelMap[iconKey] || transaction.typeKey;
+        typeText.textContent = ` ${typeLabel}`;
         type.appendChild(typeText);
         topRow.appendChild(type);
 

@@ -304,6 +304,21 @@ th, td {
     text-align: left;
 }
 
+.transaction-type-cell {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    white-space: nowrap;
+}
+
+.transaction-type-cell__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    line-height: 1;
+}
+
 form {
     display: flex;
     flex-direction: column;

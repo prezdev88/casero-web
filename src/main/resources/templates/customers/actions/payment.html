@@ -8,7 +8,7 @@
         <h2 th:text="'Pago para ' + ${customer.name}">Pago</h2>
         <form th:object="${paymentForm}" th:action="@{'/customers/' + ${customer.id} + '/payments'}" method="post">
             <label>Monto</label>
-            <input type="number" min="1" th:field="*{amount}">
+            <input type="text" inputmode="numeric" data-money-input="true" th:field="*{amount}">
             <div th:if="${#fields.hasErrors('amount')}" th:errors="*{amount}"></div>
 
             <label>Fecha</label>

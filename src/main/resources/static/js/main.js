@@ -75,3 +75,55 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   });
 });
+
+window.addEventListener('DOMContentLoaded', () => {
+  const moneyInputs = document.querySelectorAll('input[data-money-input]');
+  if (moneyInputs.length === 0) {
+    return;
+  }
+
+  const formatter = new Intl.NumberFormat('es-CL');
+  const moneyForms = new Set();
+
+  const formatMoneyValue = (input) => {
+    const digitsOnly = input.value.replace(/\D/g, '');
+    const normalized = digitsOnly.replace(/^0+/, '');
+
+    if (!normalized) {
+      input.value = '';
+      input.dataset.rawValue = '';
+      return;
+    }
+
+    const numericValue = Number(normalized);
+    if (Number.isNaN(numericValue)) {
+      input.value = '';
+      input.dataset.rawValue = '';
+      return;
+    }
+
+    input.dataset.rawValue = normalized;
+    input.value = formatter.format(numericValue);
+  };
+
+  moneyInputs.forEach((input) => {
+    if (input.form) {
+      moneyForms.add(input.form);
+    }
+
+    if (input.value) {
+      formatMoneyValue(input);
+    }
+
+    input.addEventListener('input', () => formatMoneyValue(input));
+  });
+
+  moneyForms.forEach((form) => {
+    form.addEventListener('submit', () => {
+      const formMoneyInputs = form.querySelectorAll('input[data-money-input]');
+      formMoneyInputs.forEach((input) => {
+        input.value = input.dataset.rawValue || '';
+      });
+    });
+  });
+});

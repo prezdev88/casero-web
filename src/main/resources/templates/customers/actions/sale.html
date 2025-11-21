@@ -20,7 +20,7 @@
             <div th:if="${#fields.hasErrors('itemsCount')}" th:errors="*{itemsCount}"></div>
 
             <label>Monto</label>
-            <input type="number" min="1" th:field="*{amount}">
+            <input type="text" inputmode="numeric" data-money-input="true" th:field="*{amount}">
             <div th:if="${#fields.hasErrors('amount')}" th:errors="*{amount}"></div>
             <button type="submit">Registrar venta</button>
         </form>

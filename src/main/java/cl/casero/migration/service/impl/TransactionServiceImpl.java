@@ -96,6 +96,11 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
+    public void registerFaultDiscount(Long customerId, MoneyTransactionForm form) {
+        registerMoneyFlow(customerId, form, TransactionType.FAULT_DISCOUNT);
+    }
+
+    @Override
     public void forgiveDebt(Long customerId, DebtForgivenessForm form) {
         Customer customer = getCustomer(customerId);
         int amount = customer.getDebt();

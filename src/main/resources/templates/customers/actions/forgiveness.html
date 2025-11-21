@@ -10,9 +10,42 @@
             <strong th:text="${T(cl.casero.migration.util.CurrencyUtil).format(customer.debt)}"
                     th:classappend="${customer.debt > 0 ? ' text-blue' : ' text-red'}">$0</strong>
         </p>
-        <form th:object="${debtForgivenessForm}" th:action="@{'/customers/' + ${customer.id} + '/forgiveness'}" method="post">
-            <label>Motivo</label>
-            <input type="text" th:field="*{detail}">
+        <form th:object="${debtForgivenessForm}"
+              th:action="@{'/customers/' + ${customer.id} + '/forgiveness'}"
+              method="post"
+              data-debt-forgiveness-form="true">
+            <label for="forgiveness-reason">Motivo</label>
+            <select id="forgiveness-reason"
+                    data-forgiveness-reason="true"
+                    required>
+                <option value="" disabled selected>Selecciona un motivo</option>
+                <option value="Descuento por pago contado" data-icon="💵">💵 Descuento por pago contado</option>
+                <option value="Fallecimiento" data-icon="🕊️">🕊️ Fallecimiento</option>
+                <option value="No reconoce deuda" data-icon="❓">❓ No reconoce deuda</option>
+                <option value="Por enfermedad" data-icon="🩺">🩺 Por enfermedad</option>
+                <option value="Por problemas personales" data-icon="💬">💬 Por problemas personales</option>
+                <option value="Regalo" data-icon="🎁">🎁 Regalo</option>
+                <option value="Traspaso de deuda a"
+                        data-requires-extra="true"
+                        data-placeholder="Indica a quién se traspasa la deuda"
+                        data-icon="🔁">
+                    🔁 Traspaso de deuda a
+                </option>
+                <option value="Otro motivo"
+                        data-requires-extra="true"
+                        data-placeholder="Describe el motivo"
+                        data-icon="✳️">
+                    ✳️ Otro motivo
+                </option>
+            </select>
+            <div class="form-field" data-forgiveness-extra="true">
+                <label for="forgiveness-extra">Detalle adicional</label>
+                <input id="forgiveness-extra"
+                       type="text"
+                       data-forgiveness-extra-input="true"
+                       placeholder="Ingresa los detalles">
+            </div>
+            <input type="hidden" th:field="*{detail}" data-forgiveness-detail="true">
             <div th:if="${#fields.hasErrors('detail')}" th:errors="*{detail}"></div>
 
             <label>Fecha</label>
@@ -23,5 +56,87 @@
         </form>
     </div>
 </div>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const form = document.querySelector('[data-debt-forgiveness-form]');
+    if (!form) {
+        return;
+    }
+
+    const reasonSelect = form.querySelector('[data-forgiveness-reason]');
+    const detailInput = form.querySelector('[data-forgiveness-detail]');
+    const extraWrapper = form.querySelector('[data-forgiveness-extra]');
+    const extraInput = form.querySelector('[data-forgiveness-extra-input]');
+
+    if (!reasonSelect || !detailInput || !extraWrapper || !extraInput) {
+        return;
+    }
+
+    const getSelectedOption = () => reasonSelect.options[reasonSelect.selectedIndex] || null;
+
+    const updateExtraVisibility = () => {
+        const selectedOption = getSelectedOption();
+        const needsExtra = !!(selectedOption && selectedOption.dataset.requiresExtra === 'true');
+        extraWrapper.classList.toggle('is-visible', needsExtra);
+        extraInput.required = needsExtra;
+        if (needsExtra) {
+            extraInput.placeholder = selectedOption.dataset.placeholder || 'Ingresa más detalles';
+        } else {
+            extraInput.value = '';
+        }
+    };
+
+    const parseDetailValue = (value) => {
+        const trimmed = (value || '').trim();
+        if (!trimmed) {
+            return null;
+        }
+        const options = Array.from(reasonSelect.options).filter((option) => option.value);
+        for (const option of options) {
+            const optionValue = option.value;
+            if (trimmed === optionValue) {
+                return {reason: optionValue, extra: ''};
+            }
+            const prefix = `${optionValue} - `;
+            if (trimmed.startsWith(prefix)) {
+                return {reason: optionValue, extra: trimmed.slice(prefix.length).trim()};
+            }
+        }
+        const otherOption = options.find((option) => option.value === 'Otro motivo');
+        if (otherOption) {
+            return {reason: otherOption.value, extra: trimmed};
+        }
+        return null;
+    };
+
+    const applyExistingDetail = () => {
+        const parsed = parseDetailValue(detailInput.value);
+        if (parsed) {
+            reasonSelect.value = parsed.reason;
+            extraInput.value = parsed.extra || '';
+        }
+        updateExtraVisibility();
+    };
+
+    reasonSelect.addEventListener('change', updateExtraVisibility);
+
+    form.addEventListener('submit', () => {
+        const selectedOption = getSelectedOption();
+        const selectedReason = selectedOption ? selectedOption.value : '';
+        let finalDetail = selectedReason;
+
+        if (selectedOption && selectedOption.dataset.requiresExtra === 'true') {
+            const extraValue = extraInput.value.trim();
+            if (extraValue) {
+                finalDetail = `${selectedReason} - ${extraValue}`;
+            }
+        }
+
+        detailInput.value = finalDetail;
+    });
+
+    applyExistingDetail();
+});
+</script>
 </body>
 </html>

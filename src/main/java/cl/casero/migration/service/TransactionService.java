@@ -25,6 +25,8 @@ public interface TransactionService {
 
     void registerRefund(Long customerId, MoneyTransactionForm form);
 
+    void registerFaultDiscount(Long customerId, MoneyTransactionForm form);
+
     void forgiveDebt(Long customerId, DebtForgivenessForm form);
 
     void delete(Long transactionId);

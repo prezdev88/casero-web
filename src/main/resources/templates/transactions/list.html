@@ -10,14 +10,16 @@
                  T(cl.casero.migration.domain.enums.TransactionType).PAYMENT, '💰',
                  T(cl.casero.migration.domain.enums.TransactionType).REFUND, '↩️',
                  T(cl.casero.migration.domain.enums.TransactionType).DEBT_FORGIVENESS, '❤️',
-                 T(cl.casero.migration.domain.enums.TransactionType).INITIAL_BALANCE, '⚖️'
+                 T(cl.casero.migration.domain.enums.TransactionType).INITIAL_BALANCE, '⚖️',
+                 T(cl.casero.migration.domain.enums.TransactionType).FAULT_DISCOUNT, '🛠️'
          )},
          typeLabels=${T(java.util.Map).of(
                  T(cl.casero.migration.domain.enums.TransactionType).SALE, 'Venta',
                  T(cl.casero.migration.domain.enums.TransactionType).PAYMENT, 'Abono',
                  T(cl.casero.migration.domain.enums.TransactionType).REFUND, 'Devolución',
                  T(cl.casero.migration.domain.enums.TransactionType).DEBT_FORGIVENESS, 'Condonación de deuda',
-                 T(cl.casero.migration.domain.enums.TransactionType).INITIAL_BALANCE, 'Saldo inicial'
+                 T(cl.casero.migration.domain.enums.TransactionType).INITIAL_BALANCE, 'Saldo inicial',
+                 T(cl.casero.migration.domain.enums.TransactionType).FAULT_DISCOUNT, 'Descuento por falla'
          )}">
         <h2>Transacciones</h2>
         <form method="get" class="transaction-filter">

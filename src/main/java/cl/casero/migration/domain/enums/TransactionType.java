@@ -5,10 +5,11 @@ public enum TransactionType {
     PAYMENT,
     REFUND,
     DEBT_FORGIVENESS,
-    INITIAL_BALANCE;
+    INITIAL_BALANCE,
+    FAULT_DISCOUNT;
 
     public boolean isDebtDecreaser() {
-        return this == PAYMENT || this == REFUND || this == DEBT_FORGIVENESS;
+        return this == PAYMENT || this == REFUND || this == DEBT_FORGIVENESS || this == FAULT_DISCOUNT;
     }
 
     public static TransactionType fromLegacyId(int id) {
@@ -23,6 +24,8 @@ public enum TransactionType {
                 return DEBT_FORGIVENESS;
             case 4:
                 return INITIAL_BALANCE;
+            case 5:
+                return FAULT_DISCOUNT;
             default:
                 throw new IllegalArgumentException("Unsupported legacy transaction type id: " + id);
         }

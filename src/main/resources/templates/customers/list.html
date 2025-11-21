@@ -120,6 +120,13 @@ document.addEventListener('DOMContentLoaded', () => {
             href: (id) => `${customerDetailBase}${id}/actions/refund`
         },
         {
+            key: 'fault-discount',
+            label: 'Descuento por falla',
+            description: 'Aplicar rebaja por falla o daño',
+            icon: '🛠️',
+            href: (id) => `${customerDetailBase}${id}/actions/fault-discount`
+        },
+        {
             key: 'forgiveness',
             label: 'Condonar deuda',
             description: 'Dejar saldo en cero',

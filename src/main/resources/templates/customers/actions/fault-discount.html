@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('Registrar descuento por falla')}"></head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+<div class="container">
+    <div class="card">
+        <h2 th:text="'Descuento por falla para ' + ${customer.name}">Descuento por falla</h2>
+        <form th:object="${faultDiscountForm}"
+              th:action="@{'/customers/' + ${customer.id} + '/fault-discounts'}"
+              method="post">
+            <label>Motivo</label>
+            <textarea th:field="*{detail}" placeholder="Describe la falla o razón del descuento"></textarea>
+            <div th:if="${#fields.hasErrors('detail')}" th:errors="*{detail}"></div>
+
+            <label>Fecha</label>
+            <input type="date" th:field="*{date}"
+                   th:value="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}">
+            <div th:if="${#fields.hasErrors('date')}" th:errors="*{date}"></div>
+
+            <label>Monto</label>
+            <input type="text" inputmode="numeric" data-money-input="true" th:field="*{amount}">
+            <div th:if="${#fields.hasErrors('amount')}" th:errors="*{amount}"></div>
+
+            <button type="submit">Registrar descuento</button>
+        </form>
+    </div>
+</div>
+</body>
+</html>

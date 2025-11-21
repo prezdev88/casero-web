@@ -52,6 +52,14 @@
                     <span class="customer-actions__action-desc">Registrar un reembolso</span>
                 </span>
             </a>
+            <a class="customer-actions__action customer-actions__action--fault-discount"
+               th:href="@{'/customers/' + ${customer.id} + '/actions/fault-discount'}">
+                <span class="customer-actions__icon">🛠️</span>
+                <span class="customer-actions__action-text">
+                    <span class="customer-actions__action-title">Descuento por falla</span>
+                    <span class="customer-actions__action-desc">Aplicar rebaja por daño o falla</span>
+                </span>
+            </a>
             <a class="customer-actions__action customer-actions__action--forgiveness"
                th:href="@{'/customers/' + ${customer.id} + '/actions/forgiveness'}">
                 <span class="customer-actions__icon">❤️</span>
@@ -109,14 +117,16 @@ document.addEventListener('DOMContentLoaded', () => {
         payment: '💰',
         refund: '↩️',
         debt_forgiveness: '❤️',
-        initial_balance: '⚖️'
+        initial_balance: '⚖️',
+        fault_discount: '🛠️'
     };
     const labelMap = {
         sale: 'Venta',
         payment: 'Abono',
         refund: 'Devolución',
         debt_forgiveness: 'Condonación de deuda',
-        initial_balance: 'Saldo inicial'
+        initial_balance: 'Saldo inicial',
+        fault_discount: 'Descuento por falla'
     };
 
     let currentPage = 0;

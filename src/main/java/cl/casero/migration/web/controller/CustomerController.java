@@ -208,6 +208,19 @@ public class CustomerController {
         return "redirect:/customers/" + id;
     }
 
+    @PostMapping("/{id}/fault-discounts")
+    public String registerFaultDiscount(@PathVariable Long id,
+                                        @Valid @ModelAttribute("faultDiscountForm") MoneyTransactionForm form,
+                                        BindingResult result,
+                                        RedirectAttributes redirectAttributes) {
+        if (result.hasErrors()) {
+            return redirectToAction(id, redirectAttributes, "faultDiscountForm", form, result, "fault-discount");
+        }
+        transactionService.registerFaultDiscount(id, form);
+        redirectAttributes.addFlashAttribute("message", "Descuento por falla registrado");
+        return "redirect:/customers/" + id;
+    }
+
     @PostMapping("/{id}/forgiveness")
     public String forgiveDebt(@PathVariable Long id,
                               @Valid @ModelAttribute("debtForgivenessForm") DebtForgivenessForm form,
@@ -290,6 +303,18 @@ public class CustomerController {
             model.addAttribute("refundForm", form);
         }
         return "customers/actions/refund";
+    }
+
+    @GetMapping("/{id}/actions/fault-discount")
+    public String showFaultDiscountForm(@PathVariable Long id, Model model) {
+        Customer customer = customerService.get(id);
+        model.addAttribute("customer", customer);
+        if (!model.containsAttribute("faultDiscountForm")) {
+            MoneyTransactionForm form = new MoneyTransactionForm();
+            form.setDate(LocalDate.now());
+            model.addAttribute("faultDiscountForm", form);
+        }
+        return "customers/actions/fault-discount";
     }
 
     @GetMapping("/{id}/actions/forgiveness")

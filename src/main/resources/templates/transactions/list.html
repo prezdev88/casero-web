@@ -80,7 +80,203 @@
                 Siguiente
             </a>
         </nav>
+        <section class="transaction-chart">
+            <div class="transaction-chart__header">
+                <h3>Evolución mensual</h3>
+                <form id="transactions-chart-form" class="transaction-chart__filters">
+                    <div class="transaction-chart__range">
+                        <label class="transaction-chart__field">
+                            <span>Desde</span>
+                            <input type="date" id="chart-start" required>
+                        </label>
+                        <label class="transaction-chart__field">
+                            <span>Hasta</span>
+                            <input type="date" id="chart-end" required>
+                        </label>
+                    </div>
+                    <button type="submit">Actualizar</button>
+                </form>
+            </div>
+            <div class="transaction-chart__grid">
+                <div class="transaction-chart__panel" id="chart-sales-panel">
+                    <h4>Ventas por mes</h4>
+                    <div class="transaction-chart__canvas">
+                        <canvas id="transactions-chart-sales" height="220"></canvas>
+                        <p id="transactions-chart-sales-empty" class="transaction-chart__empty" hidden>
+                            No hay datos para el rango seleccionado.
+                        </p>
+                    </div>
+                </div>
+                <div class="transaction-chart__panel" id="chart-amounts-panel">
+                    <h4>Monto total vs abonos</h4>
+                    <div class="transaction-chart__canvas">
+                        <canvas id="transactions-chart-amounts" height="220"></canvas>
+                        <p id="transactions-chart-amounts-empty" class="transaction-chart__empty" hidden>
+                            No hay datos para el rango seleccionado.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
     </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script th:inline="javascript">
+document.addEventListener('DOMContentLoaded', () => {
+    const statsUrl = /*[[@{/transactions/monthly-stats}]]*/ '/transactions/monthly-stats';
+    const form = document.getElementById('transactions-chart-form');
+    const startInput = document.getElementById('chart-start');
+    const endInput = document.getElementById('chart-end');
+    const countsPanel = document.getElementById('chart-sales-panel');
+    const amountsPanel = document.getElementById('chart-amounts-panel');
+    const countsEmpty = document.getElementById('transactions-chart-sales-empty');
+    const amountsEmpty = document.getElementById('transactions-chart-amounts-empty');
+    const defaultCountsMessage = countsEmpty.textContent.trim();
+    const defaultAmountsMessage = amountsEmpty.textContent.trim();
+    const countsCtx = document.getElementById('transactions-chart-sales').getContext('2d');
+    const amountsCtx = document.getElementById('transactions-chart-amounts').getContext('2d');
+    const monthFormatter = new Intl.DateTimeFormat('es-CL', { month: 'short', year: 'numeric' });
+
+    const countsChart = new Chart(countsCtx, {
+        type: 'bar',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'Ventas',
+                data: [],
+                backgroundColor: 'rgba(26, 115, 232, 0.7)',
+                borderColor: '#1a73e8',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: (value) => new Intl.NumberFormat('es-CL').format(value)
+                    }
+                }
+            },
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Ventas por mes (CLP)',
+                    color: '#1f2a37',
+                    font: { size: 16, weight: '600' }
+                }
+            }
+        }
+    });
+
+    const amountsChart = new Chart(amountsCtx, {
+        type: 'bar',
+        data: {
+            labels: [],
+            datasets: [
+                {
+                    label: 'Total vendido',
+                    data: [],
+                    backgroundColor: '#43a047'
+                },
+                {
+                    label: 'Abonos',
+                    data: [],
+                    backgroundColor: '#1a73e8'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: { stacked: true },
+                y: {
+                    stacked: true,
+                    beginAtZero: true,
+                    ticks: {
+                        callback: (value) => new Intl.NumberFormat('es-CL').format(value)
+                    }
+                }
+            },
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Montos totales vs abonos (CLP)',
+                    color: '#1f2a37',
+                    font: { size: 16, weight: '600' }
+                }
+            }
+        }
+    });
+
+    const toISOString = (date) => date.toISOString().split('T')[0];
+
+    const setDefaultDates = () => {
+        const today = new Date();
+        const start = new Date(today);
+        start.setDate(1);
+        start.setMonth(start.getMonth() - 5);
+        endInput.value = toISOString(today);
+        startInput.value = toISOString(start);
+    };
+
+    const togglePanelState = (panel, messageElement, isEmpty, message) => {
+        messageElement.hidden = !isEmpty;
+        panel.classList.toggle('is-empty', isEmpty);
+        if (message) {
+            messageElement.textContent = message;
+        }
+    };
+
+    const updateCharts = (data) => {
+        if (!data.length) {
+            togglePanelState(countsPanel, countsEmpty, true, defaultCountsMessage);
+            togglePanelState(amountsPanel, amountsEmpty, true, defaultAmountsMessage);
+            countsChart.data.labels = [];
+            countsChart.data.datasets[0].data = [];
+            amountsChart.data.labels = [];
+            amountsChart.data.datasets.forEach((dataset) => dataset.data = []);
+            countsChart.update();
+            amountsChart.update();
+        } else {
+            const labels = data.map((item) => monthFormatter.format(new Date(`${item.month}T00:00:00`)));
+            countsChart.data.labels = labels;
+            countsChart.data.datasets[0].data = data.map((item) => item.salesAmount);
+            countsChart.update();
+
+            amountsChart.data.labels = labels;
+            amountsChart.data.datasets[0].data = data.map((item) => item.salesAmount);
+            amountsChart.data.datasets[1].data = data.map((item) => item.paymentsAmount);
+            amountsChart.update();
+
+            togglePanelState(countsPanel, countsEmpty, false);
+            togglePanelState(amountsPanel, amountsEmpty, false);
+        }
+    };
+
+    const fetchStats = () => {
+        const params = new URLSearchParams({
+            startDate: startInput.value,
+            endDate: endInput.value
+        });
+        fetch(`${statsUrl}?${params.toString()}`)
+            .then((response) => response.ok ? response.json() : Promise.reject())
+            .then(updateCharts)
+            .catch(() => {
+                togglePanelState(countsPanel, countsEmpty, true, 'No se pudo cargar el gráfico.');
+                togglePanelState(amountsPanel, amountsEmpty, true, 'No se pudo cargar el gráfico.');
+            });
+    };
+
+    form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        fetchStats();
+    });
+
+    setDefaultDates();
+    fetchStats();
+});
+</script>
 </body>
 </html>

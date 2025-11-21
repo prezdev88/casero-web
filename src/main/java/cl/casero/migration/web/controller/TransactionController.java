@@ -3,17 +3,24 @@ package cl.casero.migration.web.controller;
 import cl.casero.migration.domain.Transaction;
 import cl.casero.migration.domain.enums.TransactionType;
 import cl.casero.migration.service.TransactionService;
+import cl.casero.migration.service.dto.TransactionMonthlySummary;
 import cl.casero.migration.util.CurrencyUtil;
 import cl.casero.migration.util.DateTimeUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import java.time.LocalDate;
+import java.util.List;
 
 @Controller
 @RequestMapping("/transactions")
@@ -42,5 +49,15 @@ public class TransactionController {
         model.addAttribute("types", TransactionType.values());
         model.addAttribute("selectedType", type);
         return "transactions/list";
+    }
+
+    @GetMapping(value = "/monthly-stats", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public List<TransactionMonthlySummary> monthlyStats(
+            @RequestParam(value = "startDate", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(value = "endDate", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        return transactionService.getMonthlySummary(startDate, endDate);
     }
 }

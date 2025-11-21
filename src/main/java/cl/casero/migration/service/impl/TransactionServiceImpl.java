@@ -13,6 +13,7 @@ import cl.casero.migration.service.dto.DebtForgivenessForm;
 import cl.casero.migration.service.dto.MoneyTransactionForm;
 import cl.casero.migration.service.dto.PaymentForm;
 import cl.casero.migration.service.dto.SaleForm;
+import cl.casero.migration.service.dto.TransactionMonthlySummary;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,11 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.time.YearMonth;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -168,4 +174,36 @@ public class TransactionServiceImpl implements TransactionService {
         statisticRepository.save(statistic);
     }
 
+    @Override
+    public List<TransactionMonthlySummary> getMonthlySummary(LocalDate start, LocalDate end) {
+        LocalDate endBase = end != null ? end : LocalDate.now();
+        LocalDate startBase = start != null ? start : endBase.minusMonths(5);
+        if (startBase.isAfter(endBase)) {
+            LocalDate tmp = startBase;
+            startBase = endBase;
+            endBase = tmp;
+        }
+
+        LocalDate sanitizedStart = startBase.withDayOfMonth(1);
+        LocalDate sanitizedEnd = endBase.withDayOfMonth(endBase.lengthOfMonth());
+
+        List<Transaction> transactions = transactionRepository.findByDateBetween(sanitizedStart, sanitizedEnd);
+        Map<YearMonth, List<Transaction>> grouped = transactions.stream()
+                .collect(Collectors.groupingBy(tx -> YearMonth.from(tx.getDate())));
+
+        List<TransactionMonthlySummary> result = new ArrayList<>();
+        for (YearMonth ym = YearMonth.from(sanitizedStart); !ym.isAfter(YearMonth.from(sanitizedEnd)); ym = ym.plusMonths(1)) {
+            List<Transaction> monthTransactions = grouped.getOrDefault(ym, List.of());
+            long sales = monthTransactions.stream()
+                    .filter(tx -> tx.getType() == TransactionType.SALE)
+                    .mapToLong(Transaction::getAmount)
+                    .sum();
+            long payments = monthTransactions.stream()
+                    .filter(tx -> tx.getType() == TransactionType.PAYMENT)
+                    .mapToLong(Transaction::getAmount)
+                    .sum();
+            result.add(new TransactionMonthlySummary(ym.atDay(1), sales, payments));
+        }
+        return result;
+    }
 }

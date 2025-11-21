@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
+import java.util.List;
 
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
 
@@ -35,4 +36,6 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     Integer sumByTypeAndDateRange(@Param("type") TransactionType type,
                                   @Param("start") LocalDate start,
                                   @Param("end") LocalDate end);
+
+    List<Transaction> findByDateBetween(LocalDate start, LocalDate end);
 }

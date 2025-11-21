@@ -421,6 +421,13 @@ form {
     gap: 0.5rem;
 }
 
+.future-balance {
+    margin: 0.4rem 0 1rem;
+    font-size: 0.9rem;
+    color: #c62828;
+    font-weight: 600;
+}
+
 [data-forgiveness-extra] {
     display: none;
 }

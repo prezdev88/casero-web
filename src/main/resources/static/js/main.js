@@ -127,3 +127,53 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   });
 });
+
+window.addEventListener('DOMContentLoaded', () => {
+  const previews = document.querySelectorAll('[data-balance-preview]');
+  if (!previews.length) {
+    return;
+  }
+
+  const currencyFormatter = new Intl.NumberFormat('es-CL', {
+    style: 'currency',
+    currency: 'CLP',
+    minimumFractionDigits: 0
+  });
+
+  const parseAmount = (input) => {
+    if (!input) {
+      return 0;
+    }
+    if (input.dataset.rawValue) {
+      const parsed = Number(input.dataset.rawValue);
+      return Number.isNaN(parsed) ? 0 : parsed;
+    }
+    const digits = input.value ? input.value.replace(/\D/g, '') : '';
+    return digits ? Number(digits) : 0;
+  };
+
+  const updatePreview = (preview, input) => {
+    const current = Number(preview.dataset.balanceCurrent || 0);
+    const mode = preview.dataset.balanceMode === 'increase' ? 'increase' : 'decrease';
+    const label = preview.dataset.balanceLabel || 'Saldo luego de registrar:';
+    const amount = parseAmount(input);
+
+    let future = current;
+    if (amount > 0) {
+      future = mode === 'increase' ? current + amount : Math.max(0, current - amount);
+    }
+
+    preview.textContent = `${label} ${currencyFormatter.format(future)}`;
+  };
+
+  previews.forEach((preview) => {
+    const form = preview.closest('form');
+    const inputSelector = preview.dataset.balanceInput || 'input[data-money-input]';
+    const amountInput = form ? form.querySelector(inputSelector) : null;
+
+    if (amountInput) {
+      amountInput.addEventListener('input', () => updatePreview(preview, amountInput));
+    }
+    updatePreview(preview, amountInput);
+  });
+});

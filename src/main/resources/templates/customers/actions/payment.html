@@ -10,6 +10,13 @@
             <label>Monto</label>
             <input type="text" inputmode="numeric" data-money-input="true" th:field="*{amount}">
             <div th:if="${#fields.hasErrors('amount')}" th:errors="*{amount}"></div>
+            <p class="future-balance"
+               data-balance-preview
+               data-balance-mode="decrease"
+               th:attr="data-balance-current=${customer.debt}"
+               th:text="'Saldo luego de registrar: ' + ${T(cl.casero.migration.util.CurrencyUtil).format(customer.debt)}">
+                Saldo luego de registrar: $0
+            </p>
 
             <label>Fecha</label>
             <input type="date" th:field="*{date}" th:value="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}">

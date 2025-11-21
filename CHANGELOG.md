@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.9.0](https://github.com/prezdev88/casero-web/compare/v1.8.0...v1.9.0) (2025-11-21)
+
+
+### Features
+
+* add filtering by transaction type in transaction listing ([e87ef73](https://github.com/prezdev88/casero-web/commit/e87ef73ca1ba7ae8241e26e0ec313560b5485c79))
+* add monthly transaction summary feature with chart visualization ([327bfdf](https://github.com/prezdev88/casero-web/commit/327bfdf708c5b80fe151245c94543292aa35fa14))
+* add theme toggle functionality with dark/light mode support ([299d601](https://github.com/prezdev88/casero-web/commit/299d601b2ea26ca5e4790651ce2da49db375d2bd))
+* enhance form layout with flexbox for date inputs in monthly statistics ([e783586](https://github.com/prezdev88/casero-web/commit/e78358616bce3387f4908f3e2f86d08f89a562be))
+* enhance transaction type display with icons and labels in customer and transaction views ([90db587](https://github.com/prezdev88/casero-web/commit/90db587b34cb031cb8bdcaabc6b7df6bd5a00208))
+* implement Kafka setup and teardown scripts with configuration support ([a6c9b61](https://github.com/prezdev88/casero-web/commit/a6c9b61123f7c91a47b495853a26a35b5640408b))
+
+
+### Bug Fixes
+
+* update stylesheet link to use current timestamp for cache busting ([2d99df4](https://github.com/prezdev88/casero-web/commit/2d99df4ac7762951bbcf5c7f5b28861e39b2eff0))
+
 ## [1.8.0](https://github.com/prezdev88/casero-web/compare/v1.7.0...v1.8.0) (2025-11-19)
 
 

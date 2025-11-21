@@ -9,8 +9,8 @@
         <p><strong>Dirección:</strong> <span th:text="${customer.address}">Dirección</span></p>
         <p><strong>Sector:</strong> <span th:text="${customer.sector.name}">Sector</span></p>
         <p><strong>Deuda actual:</strong>
-            <span th:text="${T(cl.casero.migration.util.CurrencyUtil).format(customer.debt)}"
-                  th:classappend="${customer.debt > 0 ? ' text-blue' : ' text-red'}">$0</span>
+            <span class="text-red"
+                  th:text="${T(cl.casero.migration.util.CurrencyUtil).format(customer.debt)}">$0</span>
         </p>
     </div>
 </div>

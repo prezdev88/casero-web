@@ -12,9 +12,8 @@
             <a class="icon-button" title="Editar nombre"
                th:href="@{'/customers/' + ${customer.id} + '/actions/name/edit'}">✏️</a>
         </div>
-        <p class="highlight-debt"
-           th:text="${T(cl.casero.migration.util.CurrencyUtil).format(customer.debt)}"
-           th:classappend="${customer.debt > 0 ? ' text-blue' : ' text-red'}">$0</p>
+        <p class="highlight-debt text-red"
+           th:text="${T(cl.casero.migration.util.CurrencyUtil).format(customer.debt)}">$0</p>
         <p class="text-muted">
             <span th:text="${customer.address}">Dirección</span>
             <a class="icon-button" title="Editar dirección"

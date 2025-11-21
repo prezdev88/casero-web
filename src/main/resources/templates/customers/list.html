@@ -24,7 +24,7 @@
                th:data-customer-debt="${formattedDebt}"
                th:data-customer-debt-raw="${customer.debt}">
                 <span class="customer-card__name" th:text="${customer.name}">Nombre</span>
-                <span th:class="|customer-card__debt ${customer.debt > 0 ? 'customer-card__debt--blue' : 'customer-card__debt--red'}|"
+                <span class="customer-card__debt customer-card__debt--red"
                       th:text="${formattedDebt}">$0</span>
             </a>
         </div>
@@ -161,7 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
         actionsSubtitle.appendChild(nameSpan);
         if (customer.formattedDebt) {
             const debtSpan = document.createElement('span');
-            debtSpan.className = `customer-actions__debt ${hasDebt ? 'customer-actions__debt--blue' : 'customer-actions__debt--red'}`;
+            debtSpan.className = 'customer-actions__debt customer-actions__debt--red';
             debtSpan.textContent = ` (${customer.formattedDebt})`;
             actionsSubtitle.appendChild(debtSpan);
         }
@@ -257,12 +257,7 @@ document.addEventListener('DOMContentLoaded', () => {
         link.appendChild(name);
 
         const debt = document.createElement('span');
-        debt.className = 'customer-card__debt';
-        if (customer.debtValue && Number(customer.debtValue) > 0) {
-            debt.classList.add('customer-card__debt--blue');
-        } else {
-            debt.classList.add('customer-card__debt--red');
-        }
+        debt.className = 'customer-card__debt customer-card__debt--red';
         debt.textContent = customer.formattedDebt;
         link.appendChild(debt);
 

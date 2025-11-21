@@ -7,8 +7,8 @@
     <div class="card">
         <h2 th:text="'Condonar deuda de ' + ${customer.name}">Condonar deuda</h2>
         <p>Deuda actual:
-            <strong th:text="${T(cl.casero.migration.util.CurrencyUtil).format(customer.debt)}"
-                    th:classappend="${customer.debt > 0 ? ' text-blue' : ' text-red'}">$0</strong>
+            <strong class="text-red"
+                    th:text="${T(cl.casero.migration.util.CurrencyUtil).format(customer.debt)}">$0</strong>
         </p>
         <form th:object="${debtForgivenessForm}"
               th:action="@{'/customers/' + ${customer.id} + '/forgiveness'}"

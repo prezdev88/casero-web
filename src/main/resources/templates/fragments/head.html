@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="${title}">Casero</title>
     <link rel="stylesheet" th:href="@{/css/styles.css(v=${#dates.createNow().getTime()})}">
-    <script defer th:src="@{/js/main.js}"></script>
-    <script defer th:src="@{/js/sw-cleanup.js}"></script>
+    <script defer th:src="@{/js/main.js(v=${#dates.createNow().getTime()})}"></script>
+    <script defer th:src="@{/js/sw-cleanup.js(v=${#dates.createNow().getTime()})}"></script>
 </head>
 </html>

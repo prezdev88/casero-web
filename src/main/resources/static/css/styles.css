@@ -270,9 +270,6 @@ header .container {
 .customer-card__debt--red {
     color: #c62828;
 }
-.customer-card__debt--blue {
-    color: var(--link-color);
-}
 
 .card-list__empty {
     text-align: center;
@@ -527,10 +524,6 @@ body.modal-open {
 
 .customer-actions__debt--red {
     color: #c62828;
-}
-
-.customer-actions__debt--blue {
-    color: #1976d2;
 }
 
 .customer-actions__grid {

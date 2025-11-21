@@ -31,7 +31,7 @@
                    th:href="@{'/customers/' + ${debtor.id}}"
                    style="display:block;border:1px solid #ccc;padding:1rem;margin-bottom:0.5rem;text-decoration:none;color:inherit;">
                     <p><strong th:text="${debtor.name}">Cliente</strong></p>
-                    <p><strong style="color:#c62828;"
+                    <p><strong th:classappend="${debtor.debt > 0 ? ' text-blue' : ' text-red'}"
                               th:text="${T(cl.casero.migration.util.CurrencyUtil).format(debtor.debt)}">$0</strong></p>
                     <p>
                         <span>Último abono:</span>

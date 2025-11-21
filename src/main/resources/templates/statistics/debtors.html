@@ -19,7 +19,8 @@
                 <tr th:each="customer : ${debtorsPage.content}">
                     <td th:text="${customer.name}">Cliente</td>
                     <td th:text="${customer.sector.name}">Sector</td>
-                    <td th:text="${T(cl.casero.migration.util.CurrencyUtil).format(customer.debt)}">$0</td>
+                    <td th:text="${T(cl.casero.migration.util.CurrencyUtil).format(customer.debt)}"
+                        th:classappend="${customer.debt > 0 ? ' text-blue' : ' text-red'}">$0</td>
                 </tr>
                 <tr th:if="${debtorsPage.empty}">
                     <td colspan="3">Sin datos</td>

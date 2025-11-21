@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.10.0](https://github.com/prezdev88/casero-web/compare/v1.9.0...v1.10.0) (2025-11-21)
+
+
+### Features
+
+* add fault discount functionality and UI integration ([c3ef8c4](https://github.com/prezdev88/casero-web/commit/c3ef8c45714e94e7532dbffb6fa96bd22f85b249))
+* add font-family inheritance to textarea styling ([c80cf97](https://github.com/prezdev88/casero-web/commit/c80cf975cadffea507e285ec01028dda1be37bc9))
+* add future balance preview to payment, refund, and sale forms ([8ef5d42](https://github.com/prezdev88/casero-web/commit/8ef5d422e794fd0043474b62c8193ce944f85280))
+* add loading text and disable on submit functionality to forms in fault discount, forgiveness, payment, refund, and sale templates ([d74f64a](https://github.com/prezdev88/casero-web/commit/d74f64aafc8490ea53ea6d47578f5ddda079a022))
+* implement money input formatting for payment, refund, and sale forms ([3e5c36d](https://github.com/prezdev88/casero-web/commit/3e5c36d310e3565f9111523cbe6b9a87e66dba31))
+* standardize debt display styling to use red color for negative debts ([a659c85](https://github.com/prezdev88/casero-web/commit/a659c8524074d576eea033291ff1e8e8db6aca36))
+* update debt display styling to use color coding for positive and negative debts ([e65f083](https://github.com/prezdev88/casero-web/commit/e65f083a5538cf0101ac9acde83a4284d3fbb613))
+
 ## [1.9.0](https://github.com/prezdev88/casero-web/compare/v1.8.0...v1.9.0) (2025-11-21)
 
 

@@ -10,6 +10,7 @@ jobs:
   deploy-qa:
     if: github.ref == 'refs/heads/develop'
     runs-on: ubuntu-latest
+    environment: vps-env
     steps:
       - name: Deploy QA build
         uses: appleboy/ssh-action@v1.0.3
@@ -27,6 +28,7 @@ jobs:
   deploy-prod:
     if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
+    environment: vps-env
     steps:
       - name: Deploy production build
         uses: appleboy/ssh-action@v1.0.3

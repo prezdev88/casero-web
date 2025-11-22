@@ -16,11 +16,15 @@ Proyecto web que replica todas las funciones de la app Android original (gestió
    CREATE USER casero WITH PASSWORD 'casero';
    GRANT ALL PRIVILEGES ON DATABASE casero TO casero;
    ```
-2. Ejecutar `script.sql` para crear las tablas:
-   ```bash
-   psql -U casero -d casero -f script.sql
-   ```
-3. Ajusta credenciales en `src/main/resources/application.properties` si es necesario.
+2. Ajusta credenciales en `src/main/resources/application.properties` si es necesario.
+3. Al iniciar la aplicación, Flyway creará automáticamente el esquema inicial.
+
+### Migraciones (Flyway)
+
+Al iniciar la aplicación, Flyway ejecuta automáticamente los scripts en `src/main/resources/db/migration`.
+- `V1__initial_schema.sql` define las tablas base (sector, customer, statistic, transaction).
+- `V2__pin_security_config.sql` crea la tabla `pin_security_config` y carga el PIN por defecto (`0000`).
+- Agrega nuevos cambios como `V3__lo_que_sea.sql`, `V4__...` siguiendo la convención.
 
 ### Ejecución
 

@@ -16,7 +16,6 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./script.sql:/docker-entrypoint-initdb.d/10-init.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U casero"]
       interval: 10s
@@ -61,7 +60,6 @@ services:
       - "5433:5432"
     volumes:
       - postgres_data_qa:/var/lib/postgresql/data
-      - ./script-qa.sql:/docker-entrypoint-initdb.d/10-init.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U casero"]
       interval: 10s

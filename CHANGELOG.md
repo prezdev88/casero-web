@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.11.0](https://github.com/prezdev88/casero-web/compare/v1.10.0...v1.11.0) (2025-11-22)
+
+
+### Features
+
+* add GitHub Actions workflow for deploying to VPS on push to develop and master branches ([eba6efa](https://github.com/prezdev88/casero-web/commit/eba6efa9e7605b03a78bf4f7edec23bc7e75073e))
+
+
+### Bug Fixes
+
+* add environment to deploy.yml file ([d13fae6](https://github.com/prezdev88/casero-web/commit/d13fae661728e1b438e4b9c36d33a3e6711223b6))
+
 ## [1.10.0](https://github.com/prezdev88/casero-web/compare/v1.9.0...v1.10.0) (2025-11-21)
 
 

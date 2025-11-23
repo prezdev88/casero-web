@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('Iniciar sesión')}"></head>
+<body class="auth-body">
+<div class="auth-card card">
+    <h1>Casero Web</h1>
+    <p class="text-muted">Ingresa tu PIN único para continuar</p>
+    <div th:if="${showError}" class="message message--error" role="alert">
+        PIN incorrecto o usuario deshabilitado
+    </div>
+    <div th:if="${showLogout}" class="message message--success" role="status">
+        Sesión cerrada correctamente
+    </div>
+    <div th:if="${showTimeout}" class="message message--info" role="status">
+        Tu sesión expiró por inactividad, vuelve a ingresar tu PIN.
+    </div>
+    <form th:action="@{/login}" method="post" class="form" data-pin-login-form>
+        <label for="pin">PIN</label>
+        <input type="password"
+               id="pin"
+               name="pin"
+               pattern="[0-9]{4}"
+               minlength="4"
+               maxlength="4"
+               inputmode="numeric"
+               autocomplete="one-time-code"
+               autofocus
+               placeholder="••••"
+               required>
+        <button type="submit" class="sr-only">Ingresar</button>
+    </form>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const form = document.querySelector('[data-pin-login-form]');
+        const pinInput = document.getElementById('pin');
+        if (!form || !pinInput) {
+            return;
+        }
+
+        const sanitizeValue = (value) => value.replace(/\D/g, '').slice(0, 4);
+        const submitForm = () => {
+            if (typeof form.requestSubmit === 'function') {
+                form.requestSubmit();
+            } else {
+                form.submit();
+            }
+        };
+
+        pinInput.addEventListener('input', () => {
+            const sanitized = sanitizeValue(pinInput.value);
+            if (pinInput.value !== sanitized) {
+                pinInput.value = sanitized;
+            }
+            if (sanitized.length === 4) {
+                submitForm();
+            }
+        });
+    });
+</script>
+</body>
+</html>

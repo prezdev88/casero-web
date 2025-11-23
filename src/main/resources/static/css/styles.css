@@ -121,6 +121,32 @@ header h1 {
     gap: 0.75rem;
 }
 
+.nav-session {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-left: 1rem;
+}
+
+.nav-session__user {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.nav-session__logout {
+    background: rgba(0, 0, 0, 0.2);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 999px;
+    padding: 0.35rem 0.85rem;
+    cursor: pointer;
+}
+
+.nav-session__logout:hover {
+    background: rgba(0, 0, 0, 0.35);
+}
+
 
 nav a {
     color: #fff;
@@ -196,6 +222,155 @@ header .container {
 
 .card.hidden {
     display: none;
+}
+
+.auth-body {
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 2rem 1rem;
+    background: var(--background);
+}
+
+.auth-card {
+    width: min(360px, calc(100% - 2rem));
+    margin: 2rem auto;
+    text-align: center;
+}
+
+.auth-card form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.auth-card input[type="password"] {
+    padding: 0.85rem 1rem;
+    border-radius: 10px;
+    border: 1px solid var(--input-border);
+    background: var(--card-surface);
+    font-size: 1.15rem;
+    text-align: center;
+    letter-spacing: 0.4rem;
+}
+
+.auth-card button {
+    background: var(--primary);
+    border: none;
+    color: #fff;
+    padding: 0.9rem;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 12px;
+    cursor: pointer;
+}
+
+.message {
+    padding: 0.65rem 1rem;
+    border-radius: 10px;
+    margin-bottom: 0.75rem;
+}
+
+.message--error {
+    background: rgba(211, 47, 47, 0.15);
+    color: #b71c1c;
+}
+
+.message--success {
+    background: rgba(46, 125, 50, 0.15);
+    color: #1b5e20;
+}
+
+.message--info {
+    background: rgba(26, 115, 232, 0.15);
+    color: #1a237e;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    align-items: end;
+}
+
+.form-grid label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    font-weight: 600;
+}
+
+.form-grid input,
+.form-grid select {
+    padding: 0.65rem;
+    border: 1px solid var(--input-border);
+    border-radius: 10px;
+    background: var(--card-surface);
+}
+
+.form-actions {
+    margin-top: 0.5rem;
+}
+
+.form-actions button {
+    background: var(--primary);
+    border: none;
+    color: #fff;
+    padding: 0.75rem 1.5rem;
+    border-radius: 999px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.form-error {
+    color: #d32f2f;
+    font-size: 0.85rem;
+}
+
+.badge {
+    background: var(--primary);
+    color: #fff;
+    border-radius: 999px;
+    padding: 0.2rem 0.75rem;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+}
+
+.admin-users-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1rem;
+}
+
+.admin-user-card {
+    border: 1px solid var(--table-border);
+    border-radius: 12px;
+    padding: 1rem;
+    background: var(--card-surface-contrast);
+}
+
+.admin-user-card__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.admin-pin-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+
+.admin-pin-form input {
+    padding: 0.65rem;
+    border: 1px solid var(--input-border);
+    border-radius: 8px;
+    text-align: center;
+    letter-spacing: 0.4rem;
 }
 
 .card h2,

@@ -36,9 +36,20 @@
                 <span class="nav-link__icon" aria-hidden="true">⚠️</span>
                 <span class="nav-link__text">Morosos</span>
             </a>
+            <a th:if="${currentUser != null and currentUser.admin}" th:href="@{/admin/users}">
+                <span class="nav-link__icon" aria-hidden="true">🛠️</span>
+                <span class="nav-link__text">Admin Settings</span>
+            </a>
             <button class="theme-toggle nav-theme-toggle" id="theme-toggle" type="button" aria-label="Cambiar tema">
                 🌙
             </button>
+            <div class="nav-session" th:if="${currentUser != null}">
+                <span class="nav-session__user"
+                      th:text="${currentUser.name + ' · ' + currentUser.role.name()}">Usuario</span>
+                <form th:action="@{/logout}" method="post">
+                    <button type="submit" class="nav-session__logout">Cerrar sesión</button>
+                </form>
+            </div>
         </nav>
     </div>
 </header>

@@ -177,3 +177,48 @@ window.addEventListener('DOMContentLoaded', () => {
     updatePreview(preview, amountInput);
   });
 });
+
+window.addEventListener('DOMContentLoaded', () => {
+  const timeoutMeta = document.querySelector('meta[name="session-timeout-seconds"]');
+  const logoutForm = document.querySelector('.nav-session form');
+  if (!timeoutMeta || !logoutForm) {
+    return;
+  }
+
+  const timeoutSeconds = Number(timeoutMeta.content);
+  if (!Number.isFinite(timeoutSeconds) || timeoutSeconds <= 0) {
+    return;
+  }
+
+  const timeoutMs = timeoutSeconds * 1000;
+  let inactivityTimer = null;
+
+  const submitLogout = () => {
+    const timeoutField = logoutForm.querySelector('input[name="timeout"]');
+    if (!timeoutField) {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = 'timeout';
+      input.value = 'true';
+      logoutForm.appendChild(input);
+    }
+    logoutForm.submit();
+  };
+
+  const resetTimer = () => {
+    window.clearTimeout(inactivityTimer);
+    inactivityTimer = window.setTimeout(submitLogout, timeoutMs);
+  };
+
+  ['click', 'mousemove', 'keydown', 'scroll', 'touchstart'].forEach((eventName) => {
+    document.addEventListener(eventName, resetTimer, { passive: true });
+  });
+  window.addEventListener('focus', resetTimer);
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+      resetTimer();
+    }
+  });
+
+  resetTimer();
+});

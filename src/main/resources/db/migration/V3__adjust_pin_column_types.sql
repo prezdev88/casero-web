@@ -1,0 +1,4 @@
+ALTER TABLE app_user
+    ALTER COLUMN pin_hash TYPE VARCHAR(64),
+    ALTER COLUMN pin_salt TYPE VARCHAR(16),
+    ALTER COLUMN pin_fingerprint TYPE VARCHAR(64);

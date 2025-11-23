@@ -19,11 +19,37 @@ Proyecto web que replica todas las funciones de la app Android original (gestió
 2. Ajusta credenciales en `src/main/resources/application.properties` si es necesario.
 3. Al iniciar la aplicación, Flyway creará automáticamente el esquema inicial.
 
+### Autenticación con PIN único
+
+- El acceso web exige iniciar sesión con un PIN único (sin usuarios/contraseñas convencionales).
+- El sistema trae dos perfiles creados desde Flyway:
+  - **Administrador**: PIN `1111` (`role: ADMIN`), con permisos completos y acceso al panel “Admin Settings”.
+  - **Normal**: PIN `2222` (`role: NORMAL`), con las mismas funciones del sistema pero sin acceso al panel administrativo.
+- Puedes cambiar los PIN registrando nuevos usuarios en la tabla `app_user` (columnas `pin_hash`, `pin_salt` y `pin_fingerprint`).
+
+#### Duración de sesión configurable
+
+El tiempo de sesión se controla con la propiedad estándar de Spring Boot:
+
+```properties
+server.servlet.session.timeout=1m
+```
+
+Puedes reemplazar ese valor por el período que necesites (`45m`, `12h`, `2d`, etc.) en el `application.properties` o en el archivo de perfil correspondiente.***
+
+### Panel “Admin Settings”
+
+Los usuarios con rol `ADMIN` verán una opción extra en la barra superior para administrar PIN y perfiles:
+- Listar usuarios existentes con su rol.
+- Crear nuevos usuarios con rol `ADMIN` o `NORMAL`.
+- Cambiar el PIN de cualquier usuario desde la web (el sistema regenera automáticamente la sal y el fingerprint).
+
 ### Migraciones (Flyway)
 
 Al iniciar la aplicación, Flyway ejecuta automáticamente los scripts en `src/main/resources/db/migration`.
 - `V1__initial_schema.sql` define las tablas base (sector, customer, statistic, transaction).
-- `V2__pin_security_config.sql` crea la tabla `pin_security_config` y carga el PIN por defecto (`0000`).
+- `V2__app_user_security.sql` crea los usuarios con PIN y roles (`ADMIN` y `NORMAL`).
+- `V3__adjust_pin_column_types.sql` homologa los tipos de columnas de PIN a `VARCHAR` para que coincidan con el mapeo JPA.
 - Agrega nuevos cambios como `V3__lo_que_sea.sql`, `V4__...` siguiendo la convención.
 
 ### Ejecución

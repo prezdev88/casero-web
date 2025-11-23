@@ -57,7 +57,9 @@ public class SecurityConfig {
                         .logoutUrl("/logout")
                         .logoutSuccessHandler((request, response, authentication) -> {
                             boolean timeout = request.getParameter("timeout") != null;
-                            response.sendRedirect(timeout ? "/login?timeout" : "/login?logout");
+                            String contextPath = request.getContextPath();
+                            String target = timeout ? "/login?timeout" : "/login?logout";
+                            response.sendRedirect(contextPath + target);
                         })
                         .deleteCookies("JSESSIONID")
                         .clearAuthentication(true)

@@ -1,6 +1,6 @@
 {
   "name": "casero-web",
-  "version": "1.11.0",
+  "version": "1.12.0",
   "description": "Proyecto web que replica todas las funciones de la app Android original (gestión de clientes, ventas, pagos, devoluciones, condonaciones, saldos iniciales, consultas y estadísticas).",
   "main": "index.js",
   "scripts": {

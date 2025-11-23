@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.12.0](https://github.com/prezdev88/casero-web/compare/v1.11.0...v1.12.0) (2025-11-23)
+
+
+### Features
+
+* Implement user management and authentication via PIN ([f845240](https://github.com/prezdev88/casero-web/commit/f845240ff4cec5d57f89ac41df7d4c4e4d617aca))
+* integrate Flyway for database migrations and update README with migration instructions ([9da9398](https://github.com/prezdev88/casero-web/commit/9da939889576b640d504bd74bfdf5230f72b0459))
+
+
+### Bug Fixes
+
+* update logout redirect to include context path ([4656a7a](https://github.com/prezdev88/casero-web/commit/4656a7ac18a77a664f7ff0ac3caae938f50a8aa4))
+
 ## [1.11.0](https://github.com/prezdev88/casero-web/compare/v1.10.0...v1.11.0) (2025-11-22)
 
 

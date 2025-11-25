@@ -8,6 +8,15 @@
         <h2>Deuda total</h2>
         <p><strong th:text="${T(cl.casero.migration.util.CurrencyUtil).format(totalDebt)}">$0</strong></p>
     </div>
+    <div class="card stats-tools-card">
+        <h3>Acciones</h3>
+        <div class="stats-links">
+            <a class="stats-link" th:href="@{/customers/ranking}">
+                <span aria-hidden="true">🏅</span>
+                <span>Ranking de clientes</span>
+            </a>
+        </div>
+    </div>
 </div>
 </body>
 </html>

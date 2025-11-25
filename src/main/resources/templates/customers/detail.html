@@ -8,9 +8,15 @@
 
     <div class="card">
         <div class="customer-header">
-            <h2 th:text="${customer.name}">Cliente</h2>
-            <a class="icon-button" title="Editar nombre"
-               th:href="@{'/customers/' + ${customer.id} + '/actions/name/edit'}">✏️</a>
+            <div class="customer-header__title">
+                <h2 th:text="${customer.name}">Cliente</h2>
+                <a class="icon-button" title="Editar nombre"
+                   th:href="@{'/customers/' + ${customer.id} + '/actions/name/edit'}">✏️</a>
+            </div>
+            <div class="customer-score-badge" title="Nota del cliente">
+                <span class="customer-score-badge__value"
+                      th:text="${customerScore != null ? #numbers.formatDecimal(customerScore, 1, 'DEFAULT', 2, 'DEFAULT') : '--'}">7.00</span>
+            </div>
         </div>
         <p class="highlight-debt text-red"
            th:text="${T(cl.casero.migration.util.CurrencyUtil).format(customer.debt)}">$0</p>

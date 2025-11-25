@@ -381,6 +381,14 @@ header .container {
 
 .customer-header {
     display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.customer-header__title {
+    display: flex;
     align-items: baseline;
     gap: 0.5rem;
 }
@@ -398,6 +406,113 @@ header .container {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
+}
+
+.ranking-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.ranking-table th:first-child,
+.ranking-table td:first-child {
+    width: 60px;
+    text-align: center;
+}
+
+.ranking-table th:last-child,
+.ranking-table td:last-child {
+    text-align: right;
+    min-width: 140px;
+}
+
+.ranking-name-link {
+    color: var(--link-color);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.ranking-name-link:hover {
+    text-decoration: underline;
+}
+
+.ranking-sort-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    text-decoration: none;
+    color: inherit;
+}
+
+.ranking-sort-link:hover {
+    text-decoration: underline;
+}
+
+.ranking-sort-indicator {
+    font-size: 0.9rem;
+}
+
+.ranking-empty {
+    text-align: center;
+    color: var(--muted-text);
+    font-style: italic;
+}
+
+.ranking-explanation {
+    margin-bottom: 1rem;
+    padding: 0.85rem;
+    border: 1px dashed var(--table-border);
+    border-radius: 10px;
+    background: rgba(26, 115, 232, 0.05);
+    font-size: 0.95rem;
+    color: var(--text-color);
+}
+
+.stats-tools-card {
+    margin-top: 1rem;
+}
+
+.stats-links {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+
+.stats-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.65rem 0.9rem;
+    border: 1px solid var(--table-border);
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 600;
+    color: var(--text-color);
+    background: var(--card-surface);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.stats-link:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 18px rgba(0, 0, 0, 0.15);
+}
+
+.customer-score-badge {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.25rem;
+    padding: 0.35rem 0.8rem;
+    border-radius: 999px;
+    background: #e3f2fd;
+    color: #0d47a1;
+    font-weight: 600;
+}
+
+.customer-score-badge__value {
+    font-size: 1.4rem;
+    line-height: 1;
 }
 
 .transaction-list {
@@ -423,6 +538,13 @@ header .container {
     user-select: none;
 }
 
+.customer-card__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.65rem;
+}
+
 .customer-card__name {
     font-weight: 600;
 }
@@ -444,6 +566,28 @@ header .container {
 
 .customer-card__debt--red {
     color: #c62828;
+}
+
+.customer-score-chip {
+    background: #f1f5f9;
+    border-radius: 999px;
+    padding: 0.15rem 0.6rem;
+    font-size: 0.78rem;
+    color: #0f355a;
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.15rem;
+    font-weight: 600;
+}
+
+.customer-score-chip strong {
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.customer-score-chip span {
+    font-size: 0.8rem;
+    opacity: 0.85;
 }
 
 .card-list__empty {
@@ -1088,4 +1232,7 @@ body.modal-open {
     margin-top: 2rem;
     font-style: italic;
     color: #666;
+}
+.ranking-score-cell {
+    text-align: right;
 }

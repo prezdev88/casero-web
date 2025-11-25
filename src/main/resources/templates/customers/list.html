@@ -17,13 +17,19 @@
         <div class="card-list" id="results-list">
             <a class="customer-card"
                th:each="customer : ${customersPage.content}"
-               th:with="formattedDebt=${T(cl.casero.migration.util.CurrencyUtil).format(customer.debt)}"
+               th:with="formattedDebt=${T(cl.casero.migration.util.CurrencyUtil).format(customer.debt)},score=${customerScores[customer.id]}"
                th:href="@{'/customers/' + ${customer.id}}"
                th:data-customer-id="${customer.id}"
                th:data-customer-name="${customer.name}"
-               th:data-customer-debt="${formattedDebt}"
-               th:data-customer-debt-raw="${customer.debt}">
-                <span class="customer-card__name" th:text="${customer.name}">Nombre</span>
+                th:data-customer-debt="${formattedDebt}"
+                th:data-customer-debt-raw="${customer.debt}"
+               th:attr="data-customer-score=${score}">
+                <div class="customer-card__row">
+                    <span class="customer-card__name" th:text="${customer.name}">Nombre</span>
+                    <span class="customer-score-chip">
+                        <strong th:text="${score != null ? #numbers.formatDecimal(score, 1, 'DEFAULT', 2, 'DEFAULT') : '--'}">7.00</strong>
+                    </span>
+                </div>
                 <span class="customer-card__debt customer-card__debt--red"
                       th:text="${formattedDebt}">$0</span>
             </a>
@@ -216,11 +222,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const nameElement = element.querySelector('.customer-card__name');
         const debtElement = element.querySelector('.customer-card__debt');
         const debtRaw = element.dataset.customerDebtRaw;
+        const scoreRaw = element.dataset.customerScore;
+        const parsedScore = scoreRaw ? Number(scoreRaw) : NaN;
         const customer = {
             id: customerId,
             name: element.dataset.customerName || (nameElement ? nameElement.textContent.trim() : ''),
             formattedDebt: debtElement ? debtElement.textContent.trim() : (element.dataset.customerDebt || ''),
-            debtValue: debtRaw !== undefined ? Number(debtRaw) : (debtElement ? Number(debtElement.textContent.replace(/[^0-9.-]/g, '')) : 0)
+            debtValue: debtRaw !== undefined ? Number(debtRaw) : (debtElement ? Number(debtElement.textContent.replace(/[^0-9.-]/g, '')) : 0),
+            score: Number.isNaN(parsedScore) ? null : parsedScore
         };
 
         element.addEventListener('click', (event) => {
@@ -250,11 +259,25 @@ document.addEventListener('DOMContentLoaded', () => {
         if (typeof customer.debtValue === 'number') {
             link.dataset.customerDebtRaw = customer.debtValue;
         }
+        if (typeof customer.score === 'number') {
+            link.dataset.customerScore = customer.score.toFixed(2);
+        }
+
+        const row = document.createElement('div');
+        row.className = 'customer-card__row';
 
         const name = document.createElement('span');
         name.className = 'customer-card__name';
         name.textContent = customer.name;
-        link.appendChild(name);
+        row.appendChild(name);
+
+        const score = document.createElement('span');
+        score.className = 'customer-score-chip';
+        const scoreValue = document.createElement('strong');
+        scoreValue.textContent = typeof customer.score === 'number' ? customer.score.toFixed(2) : '--';
+        score.appendChild(scoreValue);
+        row.appendChild(score);
+        link.appendChild(row);
 
         const debt = document.createElement('span');
         debt.className = 'customer-card__debt customer-card__debt--red';

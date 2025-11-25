@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('Ranking de clientes')}"></head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+<div class="container">
+    <div th:replace="~{fragments/messages :: messages}"></div>
+    <div class="card">
+        <div class="ranking-header">
+            <div>
+                <h2>Ranking de clientes</h2>
+                <p class="text-muted">Ordenados del mejor al peor score</p>
+            </div>
+        </div>
+        <div class="ranking-explanation">
+            <p>
+                Cada nota pondera cuatro cosas:
+                <strong>deuda actual</strong> (menos deuda, mejor),
+                <strong>cobros vs. pagos históricos</strong> (si ha pagado la mayoría de lo que se le ha cobrado),
+                <strong>tiempo desde el último abono</strong> y
+                <strong>tiempo desde la última actividad registrada</strong>.
+                Los factores se combinan para dar una nota entre 1.00 (muy riesgoso) y 7.00 (excelente).
+            </p>
+        </div>
+        <div class="table-wrapper">
+            <table class="ranking-table">
+                <thead>
+                <tr>
+                    <th>#</th>
+                    <th>
+                        <a class="ranking-sort-link"
+                           th:href="@{'/customers/ranking?page=0&size=' + ${rankingPage.size} + '&direction=' + ${nextDirection}}">
+                            Cliente
+                            <span class="ranking-sort-indicator"
+                                  th:text="${direction == 'asc'} ? '⬆️' : '⬇️'">⬇️</span>
+                        </a>
+                    </th>
+                    <th>Nota</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="entry, iterStat : ${rankingPage.content}">
+                    <td th:text="${rankingPage.number * rankingPage.size + iterStat.index + 1}">1</td>
+                    <td>
+                        <a class="ranking-name-link"
+                           th:href="@{'/customers/' + ${entry.id}}"
+                           th:text="${entry.name}">Cliente</a>
+                    </td>
+                    <td class="ranking-score-cell">
+                        <span class="customer-score-chip">
+                            <strong th:text="${entry.score != null ? #numbers.formatDecimal(entry.score, 1, 'DEFAULT', 2, 'DEFAULT') : '--'}">7.00</strong>
+                        </span>
+                    </td>
+                </tr>
+                <tr th:if="${rankingPage.empty}">
+                    <td colspan="3" class="ranking-empty">No hay clientes disponibles</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <nav class="pagination"
+             th:attr="hidden=${rankingPage.totalPages <= 1}">
+            <span th:if="${!rankingPage.hasPrevious()}" class="disabled">Anterior</span>
+            <a th:if="${rankingPage.hasPrevious()}"
+               th:href="@{'/customers/ranking?page=' + ${rankingPage.number - 1} + '&size=' + ${rankingPage.size} + '&direction=' + ${direction}}">Anterior</a>
+            <span class="current"
+                  th:text="${rankingPage.totalPages == 0 ? '0 / 0' : rankingPage.number + 1 + ' / ' + rankingPage.totalPages}">1 / 1</span>
+            <span th:if="${!rankingPage.hasNext()}" class="disabled">Siguiente</span>
+            <a th:if="${rankingPage.hasNext()}"
+               th:href="@{'/customers/ranking?page=' + ${rankingPage.number + 1} + '&size=' + ${rankingPage.size} + '&direction=' + ${direction}}">Siguiente</a>
+        </nav>
+    </div>
+</div>
+</body>
+</html>

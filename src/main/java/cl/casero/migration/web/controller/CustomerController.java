@@ -2,6 +2,7 @@ package cl.casero.migration.web.controller;
 
 import cl.casero.migration.domain.Customer;
 import cl.casero.migration.domain.Transaction;
+import cl.casero.migration.service.CustomerScoreService;
 import cl.casero.migration.service.CustomerService;
 import cl.casero.migration.service.SectorService;
 import cl.casero.migration.service.StatisticsService;
@@ -15,11 +16,13 @@ import cl.casero.migration.service.dto.UpdateAddressForm;
 import cl.casero.migration.service.dto.UpdateNameForm;
 import cl.casero.migration.service.dto.UpdateSectorForm;
 import cl.casero.migration.util.CurrencyUtil;
+import cl.casero.migration.util.CustomerScoreCalculator;
 import cl.casero.migration.util.DateUtil;
 import jakarta.validation.Valid;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -43,15 +46,18 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class CustomerController {
 
     private final CustomerService customerService;
+    private final CustomerScoreService customerScoreService;
     private final TransactionService transactionService;
     private final StatisticsService statisticsService;
     private final SectorService sectorService;
 
     public CustomerController(CustomerService customerService,
+                              CustomerScoreService customerScoreService,
                               TransactionService transactionService,
                               StatisticsService statisticsService,
                               SectorService sectorService) {
         this.customerService = customerService;
+        this.customerScoreService = customerScoreService;
         this.transactionService = transactionService;
         this.statisticsService = statisticsService;
         this.sectorService = sectorService;
@@ -64,10 +70,27 @@ public class CustomerController {
                                 Model model) {
         boolean hasQuery = query != null && !query.isBlank();
         Page<Customer> customersPage = searchCustomers(query, page, size);
+        model.addAttribute("customerScores", customerScoreService.calculateScores(customersPage.getContent()));
         model.addAttribute("customersPage", customersPage);
         model.addAttribute("query", query == null ? "" : query);
         model.addAttribute("showResults", hasQuery);
         return "customers/list";
+    }
+
+    @GetMapping("/ranking")
+    public String ranking(@RequestParam(value = "page", defaultValue = "0") int page,
+                          @RequestParam(value = "size", defaultValue = "20") int size,
+                          @RequestParam(value = "direction", defaultValue = "desc") String direction,
+                          Model model) {
+        int sanitizedPage = Math.max(page, 0);
+        int sanitizedSize = Math.min(Math.max(size, 1), 50);
+        boolean ascending = "asc".equalsIgnoreCase(direction);
+        Pageable pageable = PageRequest.of(sanitizedPage, sanitizedSize);
+        Page<CustomerScoreService.RankingEntry> rankingPage = customerScoreService.getRanking(pageable, ascending);
+        model.addAttribute("rankingPage", rankingPage);
+        model.addAttribute("direction", ascending ? "asc" : "desc");
+        model.addAttribute("nextDirection", ascending ? "desc" : "asc");
+        return "customers/ranking";
     }
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
@@ -76,13 +99,15 @@ public class CustomerController {
                                                   @RequestParam(value = "page", defaultValue = "0") int page,
                                                   @RequestParam(value = "size", defaultValue = "10") int size) {
         Page<Customer> result = searchCustomers(query, page, size);
+        Map<Long, Double> scores = customerScoreService.calculateScores(result.getContent());
         List<CustomerSearchResult> content = result.getContent()
                 .stream()
                 .map(customer -> new CustomerSearchResult(
                         customer.getId(),
                         customer.getName(),
                         CurrencyUtil.format(customer.getDebt()),
-                        customer.getDebt()))
+                        customer.getDebt(),
+                        scores.getOrDefault(customer.getId(), CustomerScoreCalculator.minScore())))
                 .toList();
         return new CustomerPageResponse(
                 content,
@@ -129,6 +154,7 @@ public class CustomerController {
         Sort sort = Sort.by(ascending ? Sort.Direction.ASC : Sort.Direction.DESC, "createdAt");
         Pageable pageable = PageRequest.of(sanitizedPage, sanitizedSize, sort);
         Customer customer = customerService.get(id);
+        model.addAttribute("customerScore", customerScoreService.calculateScore(customer));
         Page<Transaction> transactions = transactionService.listByCustomer(id, pageable);
 
         model.addAttribute("customer", customer);
@@ -401,7 +427,11 @@ public class CustomerController {
         return "redirect:/customers/" + id + "/actions/" + actionPath;
     }
 
-    public record CustomerSearchResult(Long id, String name, String formattedDebt, Integer debtValue) {
+    public record CustomerSearchResult(Long id,
+                                       String name,
+                                       String formattedDebt,
+                                       Integer debtValue,
+                                       Double score) {
     }
 
     public record CustomerPageResponse(List<CustomerSearchResult> content,

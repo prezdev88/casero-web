@@ -38,4 +38,25 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
                                   @Param("end") LocalDate end);
 
     List<Transaction> findByDateBetween(LocalDate start, LocalDate end);
+
+    @Query(value = """
+            SELECT
+                t.customer_id AS customerId,
+                COALESCE(SUM(CASE WHEN t.type IN ('SALE', 'INITIAL_BALANCE') THEN t.amount ELSE 0 END), 0) AS totalCharges,
+                COALESCE(SUM(CASE WHEN t.type IN ('PAYMENT', 'REFUND', 'DEBT_FORGIVENESS', 'FAULT_DISCOUNT') THEN t.amount ELSE 0 END), 0) AS totalPayments,
+                MAX(CASE WHEN t.type IN ('PAYMENT', 'REFUND', 'DEBT_FORGIVENESS', 'FAULT_DISCOUNT') THEN t.date ELSE NULL END) AS lastPaymentDate,
+                MAX(t.date) AS lastActivityDate
+            FROM transaction t
+            WHERE t.customer_id IN (:customerIds)
+            GROUP BY t.customer_id
+            """, nativeQuery = true)
+    List<CustomerScoreProjection> findCustomerScoreStats(@Param("customerIds") List<Long> customerIds);
+
+    interface CustomerScoreProjection {
+        Long getCustomerId();
+        Integer getTotalCharges();
+        Integer getTotalPayments();
+        LocalDate getLastPaymentDate();
+        LocalDate getLastActivityDate();
+    }
 }

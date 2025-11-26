@@ -2,6 +2,8 @@ package cl.casero.migration.web.controller;
 
 import cl.casero.migration.domain.Customer;
 import cl.casero.migration.domain.Transaction;
+import cl.casero.migration.domain.enums.TransactionType;
+import cl.casero.migration.service.CustomerReportService;
 import cl.casero.migration.service.CustomerScoreService;
 import cl.casero.migration.service.CustomerService;
 import cl.casero.migration.service.SectorService;
@@ -19,11 +21,13 @@ import cl.casero.migration.util.CurrencyUtil;
 import cl.casero.migration.util.CustomerScoreCalculator;
 import cl.casero.migration.util.CustomerScoreSummary;
 import cl.casero.migration.util.DateUtil;
+import cl.casero.migration.util.TransactionTypeUtil;
 import jakarta.validation.Valid;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -31,7 +35,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -53,17 +59,20 @@ public class CustomerController {
     private final TransactionService transactionService;
     private final StatisticsService statisticsService;
     private final SectorService sectorService;
+    private final CustomerReportService customerReportService;
 
     public CustomerController(CustomerService customerService,
                               CustomerScoreService customerScoreService,
                               TransactionService transactionService,
                               StatisticsService statisticsService,
-                              SectorService sectorService) {
+                              SectorService sectorService,
+                              CustomerReportService customerReportService) {
         this.customerService = customerService;
         this.customerScoreService = customerScoreService;
         this.transactionService = transactionService;
         this.statisticsService = statisticsService;
         this.sectorService = sectorService;
+        this.customerReportService = customerReportService;
     }
 
     @GetMapping
@@ -168,6 +177,7 @@ public class CustomerController {
         model.addAttribute("customer", customer);
         model.addAttribute("transactionsPage", transactions);
         model.addAttribute("ascending", ascending);
+        model.addAttribute("transactionReportTypeOptions", buildReportTypeOptions());
 
         return "customers/detail";
     }
@@ -201,6 +211,82 @@ public class CustomerController {
                 transactions.hasPrevious(),
                 transactions.hasNext()
         );
+    }
+
+    @GetMapping(value = "/{id}/reports/transactions", produces = MediaType.APPLICATION_PDF_VALUE)
+    @ResponseBody
+    public ResponseEntity<byte[]> downloadTransactionsReport(@PathVariable Long id,
+                                                             @RequestParam(value = "range", defaultValue = "ALL")
+                                                             String rangeParam,
+                                                             @RequestParam(value = "months", required = false)
+                                                             Integer monthsParam,
+                                                             @RequestParam(value = "type", defaultValue = "ALL")
+                                                             String typeParam) {
+        Customer customer = customerService.get(id);
+        TransactionType filterType = parseReportType(typeParam);
+        List<Transaction> transactions = transactionService.listAllByCustomer(id);
+        String rangeLabel;
+        if (isMonthsRange(rangeParam)) {
+            int months = sanitizeMonths(monthsParam);
+            transactions = filterTransactionsByMonths(transactions, months);
+            rangeLabel = "Últimos " + months + (months == 1 ? " mes" : " meses");
+        } else {
+            rangeLabel = "Todas las transacciones";
+        }
+        if (filterType != null) {
+            transactions = transactions.stream()
+                    .filter(tx -> tx.getType() == filterType)
+                    .toList();
+        }
+        byte[] pdf = customerReportService.generateTransactionsReport(customer, transactions, rangeLabel, filterType);
+        String safeName = customer.getName() != null ? customer.getName().replaceAll("[^a-zA-Z0-9]+", "-") : "cliente";
+        String filename = "casero-informe-" + safeName + ".pdf";
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                .body(pdf);
+    }
+
+    private Map<String, String> buildReportTypeOptions() {
+        Map<String, String> options = new LinkedHashMap<>();
+        options.put("ALL", "Todos los tipos");
+        for (TransactionType type : TransactionType.values()) {
+            options.put(type.name(), TransactionTypeUtil.label(type));
+        }
+        return options;
+    }
+
+    private TransactionType parseReportType(String raw) {
+        if (raw == null || raw.isBlank() || "ALL".equalsIgnoreCase(raw)) {
+            return null;
+        }
+        try {
+            return TransactionType.valueOf(raw.toUpperCase());
+        } catch (IllegalArgumentException ex) {
+            return null;
+        }
+    }
+
+    private boolean isMonthsRange(String rangeParam) {
+        return "MONTHS".equalsIgnoreCase(rangeParam);
+    }
+
+    private int sanitizeMonths(Integer monthsParam) {
+        if (monthsParam == null || monthsParam < 1) {
+            return 12;
+        }
+        return Math.min(monthsParam, 60);
+    }
+
+    private List<Transaction> filterTransactionsByMonths(List<Transaction> transactions, int months) {
+        if (transactions == null || transactions.isEmpty()) {
+            return List.of();
+        }
+        LocalDate reference = LocalDate.now().withDayOfMonth(1);
+        LocalDate cutoff = reference.minusMonths(months - 1);
+        return transactions.stream()
+                .filter(tx -> tx.getDate() != null && !tx.getDate().isBefore(cutoff))
+                .toList();
     }
 
     @PostMapping("/{id}/sales")

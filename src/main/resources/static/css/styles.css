@@ -544,22 +544,103 @@ header .container {
     flex: 1;
 }
 
-.customer-actions__action--cycles {
+.customer-actions__action-text--grow {
+    flex: 1;
+}
+
+.customer-actions__action--toggle {
     cursor: pointer;
 }
 
-.customer-actions__action--cycles .score-cycles-toggle__icon {
+.customer-actions__action--toggle .score-cycles-toggle__icon {
     font-size: 1.25rem;
     color: var(--muted-text);
     transition: transform 0.2s ease;
 }
 
-.customer-actions__action--cycles[aria-expanded="true"] .score-cycles-toggle__icon {
+.customer-actions__action--toggle[aria-expanded="true"] .score-cycles-toggle__icon {
     transform: rotate(180deg);
 }
 
 .score-cycles-panel {
     margin-top: 1rem;
+}
+
+.customer-report-panel {
+    margin-top: 1rem;
+    border: 1px dashed var(--table-border);
+    border-radius: 12px;
+    padding: 1rem;
+    background: var(--card-surface);
+}
+
+.customer-report-panel__hint {
+    margin-top: 0;
+    margin-bottom: 0.75rem;
+    color: var(--muted-text);
+    font-size: 0.9rem;
+}
+
+.customer-report-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.customer-report-form label:not(.customer-report-option) {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.customer-report-form select {
+    font-weight: 400;
+}
+
+.customer-report-range {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.customer-report-range__title {
+    margin: 0;
+}
+
+.customer-report-range__options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.customer-report-option {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-weight: 400;
+}
+
+.customer-report-option input[type="radio"] {
+    margin: 0;
+    width: auto;
+}
+
+.customer-report-option input[type="number"] {
+    width: 80px;
+}
+
+.customer-report-option--months {
+    flex-wrap: wrap;
+}
+
+.customer-report-form button {
+    width: auto;
+    align-self: flex-start;
+    padding: 0.6rem 1.25rem;
 }
 
 .score-cycle-list {

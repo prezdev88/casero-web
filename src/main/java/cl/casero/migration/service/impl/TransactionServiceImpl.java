@@ -65,6 +65,15 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
+    public List<Transaction> listRecentByCustomer(Long customerId, int limit) {
+        List<Transaction> transactions = transactionRepository.findByCustomerIdOrderByDateDescIdDesc(customerId);
+        if (limit <= 0 || transactions.size() <= limit) {
+            return transactions;
+        }
+        return new ArrayList<>(transactions.subList(0, limit));
+    }
+
+    @Override
     public void registerSale(Long customerId, SaleForm form) {
         Customer customer = getCustomer(customerId);
         int previousBalance = customer.getDebt();

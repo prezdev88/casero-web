@@ -21,6 +21,8 @@ public interface TransactionService {
 
     List<Transaction> listAllByCustomer(Long customerId);
 
+    List<Transaction> listRecentByCustomer(Long customerId, int limit);
+
     void registerSale(Long customerId, SaleForm form);
 
     void registerPayment(Long customerId, PaymentForm form);

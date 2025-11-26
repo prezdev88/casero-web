@@ -108,7 +108,7 @@
                 </span>
             </a>
             <button type="button"
-                    class="customer-actions__action customer-actions__action--cycles"
+                    class="customer-actions__action customer-actions__action--toggle customer-actions__action--cycles"
                     data-score-toggle="customer-score-cycles"
                     aria-expanded="false">
                 <span class="customer-actions__icon">📊</span>
@@ -118,6 +118,17 @@
                           th:text="${#lists.isEmpty(customerScoreCycles) ? 'Sin ciclos' : #lists.size(customerScoreCycles) + (#lists.size(customerScoreCycles) == 1 ? ' ciclo' : ' ciclos')}">
                         Sin ciclos
                     </span>
+                </span>
+                <span class="score-cycles-toggle__icon" aria-hidden="true">⌄</span>
+            </button>
+            <button type="button"
+                    class="customer-actions__action customer-actions__action--toggle customer-actions__action--report"
+                    data-score-toggle="customer-report-panel"
+                    aria-expanded="false">
+                <span class="customer-actions__icon">📄</span>
+                <span class="customer-actions__action-text customer-actions__action-text--grow">
+                    <span class="customer-actions__action-title">Informe en PDF</span>
+                    <span class="customer-actions__action-desc">Descargar movimientos</span>
                 </span>
                 <span class="score-cycles-toggle__icon" aria-hidden="true">⌄</span>
             </button>
@@ -176,6 +187,45 @@
                 </div>
             </div>
         </div>
+        <div class="customer-report-panel"
+             id="customer-report-panel"
+             hidden>
+            <p class="customer-report-panel__hint">
+                Genera un informe para enviar al cliente con los movimientos seleccionados.
+            </p>
+            <form class="customer-report-form"
+                  method="get"
+                  th:action="@{'/customers/' + ${customer.id} + '/reports/transactions'}"
+                  target="_blank">
+                <div class="customer-report-range">
+                    <span class="customer-report-range__title">Movimientos a incluir</span>
+                    <div class="customer-report-range__options">
+                        <label class="customer-report-option">
+                            <input type="radio" name="range" value="ALL" checked>
+                            <span>Todos los movimientos</span>
+                        </label>
+                        <label class="customer-report-option customer-report-option--months">
+                            <input type="radio" name="range" value="MONTHS">
+                            <span>Últimos</span>
+                            <input type="number" name="months" min="1" max="60" value="12" inputmode="numeric" aria-label="Cantidad de meses">
+                            <span>meses</span>
+                        </label>
+                    </div>
+                </div>
+                <label>
+                    <span>Tipo de movimiento</span>
+                    <select name="type">
+                        <option th:each="entry : ${transactionReportTypeOptions.entrySet()}"
+                                th:value="${entry.key}"
+                                th:text="${entry.value}"
+                                th:selected="${entry.key == 'ALL'}">
+                            Todos los tipos
+                        </option>
+                    </select>
+                </label>
+                <button type="submit">Ver PDF</button>
+            </form>
+        </div>
     </div>
     <div class="card">
         <div class="transactions-header">
@@ -223,6 +273,24 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
+
+    const reportForm = document.querySelector('.customer-report-form');
+    if (reportForm) {
+        const rangeRadios = reportForm.querySelectorAll('input[name="range"]');
+        const monthsInput = reportForm.querySelector('input[name="months"]');
+        const updateMonthsState = () => {
+            if (!monthsInput) {
+                return;
+            }
+            const selected = reportForm.querySelector('input[name="range"]:checked');
+            const shouldEnable = selected && selected.value === 'MONTHS';
+            monthsInput.disabled = !shouldEnable;
+        };
+        rangeRadios.forEach((radio) => {
+            radio.addEventListener('change', updateMonthsState);
+        });
+        updateMonthsState();
+    }
 
     const customerId = /*[[${customer.id}]]*/ 0;
     let ascending = /*[[${ascending}]]*/ false;

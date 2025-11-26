@@ -151,13 +151,14 @@ public class CustomerReportService {
         addHeaderCell(table, "Saldo", headerFont);
 
         for (Transaction transaction : transactions) {
+            boolean isSale = transaction.getType() == TransactionType.SALE;
             table.addCell(buildCell(transaction.getDate() != null
                     ? transaction.getDate().format(DATE_FORMAT)
-                    : "—", font));
-            table.addCell(buildCell(formatType(transaction.getType()), font));
-            table.addCell(buildCell(safe(transaction.getDetail()), font));
-            table.addCell(buildCell(formatAmount(transaction), font));
-            table.addCell(buildCell(formatCurrency(transaction.getBalance()), font));
+                    : "—", font, isSale));
+            table.addCell(buildCell(formatType(transaction.getType()), font, isSale));
+            table.addCell(buildCell(safe(transaction.getDetail()), font, isSale));
+            table.addCell(buildCell(formatAmount(transaction), font, isSale));
+            table.addCell(buildCell(formatCurrency(transaction.getBalance()), font, isSale));
         }
 
         return table;
@@ -172,10 +173,25 @@ public class CustomerReportService {
     }
 
     private static PdfPCell buildCell(String text, Font font) {
-        PdfPCell cell = new PdfPCell(new Phrase(text, font));
+        return buildCell(text, font, false);
+    }
+
+    private static PdfPCell buildCell(String text, Font font, boolean highlight) {
+        Font effectiveFont = highlight ? makeBold(font) : font;
+        PdfPCell cell = new PdfPCell(new Phrase(text, effectiveFont));
         cell.setPadding(5f);
         cell.setHorizontalAlignment(Element.ALIGN_LEFT);
+        if (highlight) {
+            cell.setBackgroundColor(new Color(255, 249, 229));
+            cell.setBorderColor(new Color(255, 215, 141));
+        }
         return cell;
+    }
+
+    private static Font makeBold(Font baseFont) {
+        Font bold = new Font(baseFont);
+        bold.setStyle(Font.BOLD);
+        return bold;
     }
 
     private static String formatType(TransactionType type) {

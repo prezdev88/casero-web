@@ -65,22 +65,63 @@
             </div>
         </div>
     </div>
-    <div class="card score-cycles-card">
-        <button type="button"
-                class="score-cycles-toggle"
-                data-score-toggle="customer-score-cycles"
-                aria-expanded="false">
-            <div class="score-cycles-header">
-                <div>
-                    <h3>Historial de ciclos</h3>
-                    <span class="text-muted"
+    <div class="card customer-actions-card">
+        <div class="customer-actions__grid customer-actions__grid--inline">
+            <a class="customer-actions__action customer-actions__action--payment"
+               th:href="@{'/customers/' + ${customer.id} + '/actions/payment'}">
+                <span class="customer-actions__icon">💸</span>
+                <span class="customer-actions__action-text">
+                    <span class="customer-actions__action-title">Abonar</span>
+                    <span class="customer-actions__action-desc">Registrar un pago</span>
+                </span>
+            </a>
+            <a class="customer-actions__action customer-actions__action--sale"
+               th:href="@{'/customers/' + ${customer.id} + '/actions/sale'}">
+                <span class="customer-actions__icon">🧾</span>
+                <span class="customer-actions__action-text">
+                    <span class="customer-actions__action-title">Mantención</span>
+                    <span class="customer-actions__action-desc">Registrar venta o mantención</span>
+                </span>
+            </a>
+            <a class="customer-actions__action customer-actions__action--refund"
+               th:href="@{'/customers/' + ${customer.id} + '/actions/refund'}">
+                <span class="customer-actions__icon">↩️</span>
+                <span class="customer-actions__action-text">
+                    <span class="customer-actions__action-title">Devolución</span>
+                    <span class="customer-actions__action-desc">Registrar un reembolso</span>
+                </span>
+            </a>
+            <a class="customer-actions__action customer-actions__action--fault-discount"
+               th:href="@{'/customers/' + ${customer.id} + '/actions/fault-discount'}">
+                <span class="customer-actions__icon">🛠️</span>
+                <span class="customer-actions__action-text">
+                    <span class="customer-actions__action-title">Descuento por falla</span>
+                    <span class="customer-actions__action-desc">Aplicar rebaja por daño o falla</span>
+                </span>
+            </a>
+            <a class="customer-actions__action customer-actions__action--forgiveness"
+               th:href="@{'/customers/' + ${customer.id} + '/actions/forgiveness'}">
+                <span class="customer-actions__icon">❤️</span>
+                <span class="customer-actions__action-text">
+                    <span class="customer-actions__action-title">Condonar deuda</span>
+                    <span class="customer-actions__action-desc">Dejar saldo en cero</span>
+                </span>
+            </a>
+            <button type="button"
+                    class="customer-actions__action customer-actions__action--cycles"
+                    data-score-toggle="customer-score-cycles"
+                    aria-expanded="false">
+                <span class="customer-actions__icon">📊</span>
+                <span class="customer-actions__action-text customer-actions__action-text--grow">
+                    <span class="customer-actions__action-title">Historial de ciclos</span>
+                    <span class="customer-actions__action-desc"
                           th:text="${#lists.isEmpty(customerScoreCycles) ? 'Sin ciclos' : #lists.size(customerScoreCycles) + (#lists.size(customerScoreCycles) == 1 ? ' ciclo' : ' ciclos')}">
                         Sin ciclos
                     </span>
-                </div>
+                </span>
                 <span class="score-cycles-toggle__icon" aria-hidden="true">⌄</span>
-            </div>
-        </button>
+            </button>
+        </div>
         <div class="score-cycles-panel"
              id="customer-score-cycles"
              hidden>
@@ -134,50 +175,6 @@
                     </p>
                 </div>
             </div>
-        </div>
-    </div>
-    <div class="card customer-actions-card">
-        <div class="customer-actions__grid customer-actions__grid--inline">
-            <a class="customer-actions__action customer-actions__action--payment"
-               th:href="@{'/customers/' + ${customer.id} + '/actions/payment'}">
-                <span class="customer-actions__icon">💸</span>
-                <span class="customer-actions__action-text">
-                    <span class="customer-actions__action-title">Abonar</span>
-                    <span class="customer-actions__action-desc">Registrar un pago</span>
-                </span>
-            </a>
-            <a class="customer-actions__action customer-actions__action--sale"
-               th:href="@{'/customers/' + ${customer.id} + '/actions/sale'}">
-                <span class="customer-actions__icon">🧾</span>
-                <span class="customer-actions__action-text">
-                    <span class="customer-actions__action-title">Mantención</span>
-                    <span class="customer-actions__action-desc">Registrar venta o mantención</span>
-                </span>
-            </a>
-            <a class="customer-actions__action customer-actions__action--refund"
-               th:href="@{'/customers/' + ${customer.id} + '/actions/refund'}">
-                <span class="customer-actions__icon">↩️</span>
-                <span class="customer-actions__action-text">
-                    <span class="customer-actions__action-title">Devolución</span>
-                    <span class="customer-actions__action-desc">Registrar un reembolso</span>
-                </span>
-            </a>
-            <a class="customer-actions__action customer-actions__action--fault-discount"
-               th:href="@{'/customers/' + ${customer.id} + '/actions/fault-discount'}">
-                <span class="customer-actions__icon">🛠️</span>
-                <span class="customer-actions__action-text">
-                    <span class="customer-actions__action-title">Descuento por falla</span>
-                    <span class="customer-actions__action-desc">Aplicar rebaja por daño o falla</span>
-                </span>
-            </a>
-            <a class="customer-actions__action customer-actions__action--forgiveness"
-               th:href="@{'/customers/' + ${customer.id} + '/actions/forgiveness'}">
-                <span class="customer-actions__icon">❤️</span>
-                <span class="customer-actions__action-text">
-                    <span class="customer-actions__action-title">Condonar deuda</span>
-                    <span class="customer-actions__action-desc">Dejar saldo en cero</span>
-                </span>
-            </a>
         </div>
     </div>
     <div class="card">

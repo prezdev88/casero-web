@@ -38,30 +38,20 @@
                     <th>
                         <a class="ranking-sort-link"
                            th:href="@{|/customers/ranking?page=0&size=${rankingPage.size}&direction=${nextDirection}${range != null ? '&range=' + range : ''}|}">
-                            Cliente
+                            Nota
                             <span class="ranking-sort-indicator"
                                   th:text="${direction == 'asc'} ? '⬆️' : '⬇️'">⬇️</span>
                         </a>
                     </th>
+                    <th>Cliente</th>
                     <th>Ciclos</th>
                     <th>Deuda</th>
-                    <th>Nota</th>
                 </tr>
                 </thead>
                 <tbody>
                 <th:block th:each="entry, iterStat : ${rankingPage.content}">
                 <tr>
                     <td th:text="${rankingPage.number * rankingPage.size + iterStat.index + 1}">1</td>
-                    <td>
-                        <a class="ranking-name-link"
-                           th:href="@{'/customers/' + ${entry.id}}"
-                           th:text="${entry.name}">Cliente</a>
-                    </td>
-                    <td th:text="${entry.cycleCount}">0</td>
-                    <td class="ranking-debt-cell"
-                        th:text="${T(cl.casero.migration.util.CurrencyUtil).format(entry.debt != null ? entry.debt : 0)}">
-                        $0
-                    </td>
                     <td class="ranking-score-cell">
                         <button type="button"
                                 class="customer-score-chip customer-score-chip--button"
@@ -71,6 +61,16 @@
                             <strong th:text="${entry.score != null ? #numbers.formatDecimal(entry.score, 1, 'DEFAULT', 2, 'DEFAULT') : '--'}"
                                     th:classappend="${entry.score != null ? ' score-value--' + T(cl.casero.migration.util.CustomerScoreColor).bucket(entry.score) : ''}">7.00</strong>
                         </button>
+                    </td>
+                    <td>
+                        <a class="ranking-name-link"
+                           th:href="@{'/customers/' + ${entry.id}}"
+                           th:text="${entry.name}">Cliente</a>
+                    </td>
+                    <td th:text="${entry.cycleCount}">0</td>
+                    <td class="ranking-debt-cell"
+                        th:text="${T(cl.casero.migration.util.CurrencyUtil).format(entry.debt != null ? entry.debt : 0)}">
+                        $0
                     </td>
                 </tr>
                 <tr class="ranking-explanation-row"

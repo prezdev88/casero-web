@@ -540,38 +540,26 @@ header .container {
     color: var(--muted-text);
 }
 
-.score-cycles-card {
-    margin-top: 1rem;
+.customer-actions__action-text--grow {
+    flex: 1;
 }
 
-.score-cycles-toggle {
-    width: 100%;
-    background: none;
-    border: none;
-    padding: 0;
-    text-align: left;
+.customer-actions__action--cycles {
     cursor: pointer;
-    color: var(--text-color);
 }
 
-.score-cycles-header {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 0.5rem;
-}
-
-.score-cycles-toggle__icon {
+.customer-actions__action--cycles .score-cycles-toggle__icon {
     font-size: 1.25rem;
+    color: var(--muted-text);
     transition: transform 0.2s ease;
 }
 
-.score-cycles-toggle[aria-expanded="true"] .score-cycles-toggle__icon {
+.customer-actions__action--cycles[aria-expanded="true"] .score-cycles-toggle__icon {
     transform: rotate(180deg);
 }
 
 .score-cycles-panel {
-    margin-top: 0.75rem;
+    margin-top: 1rem;
 }
 
 .score-cycle-list {

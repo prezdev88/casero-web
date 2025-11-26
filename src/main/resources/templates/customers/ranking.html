@@ -18,6 +18,17 @@
                 Cada día adicional sin abonos reduce la nota de manera proporcional hasta acercarse a 1.0 cuando pasan muchos meses sin pagar.
             </p>
         </div>
+        <nav class="pagination pagination--top"
+             th:attr="hidden=${rankingPage.totalPages <= 1}">
+            <span th:if="${!rankingPage.hasPrevious()}" class="disabled">Anterior</span>
+            <a th:if="${rankingPage.hasPrevious()}"
+               th:href="@{|/customers/ranking?page=${rankingPage.number - 1}&size=${rankingPage.size}&direction=${direction}${range != null ? '&range=' + range : ''}|}">Anterior</a>
+            <span class="current"
+                  th:text="${rankingPage.totalPages == 0 ? '0 / 0' : rankingPage.number + 1 + ' / ' + rankingPage.totalPages}">1 / 1</span>
+            <span th:if="${!rankingPage.hasNext()}" class="disabled">Siguiente</span>
+            <a th:if="${rankingPage.hasNext()}"
+               th:href="@{|/customers/ranking?page=${rankingPage.number + 1}&size=${rankingPage.size}&direction=${direction}${range != null ? '&range=' + range : ''}|}">Siguiente</a>
+        </nav>
         <div class="table-wrapper">
             <table class="ranking-table">
                 <thead>
@@ -72,12 +83,12 @@
              th:attr="hidden=${rankingPage.totalPages <= 1}">
             <span th:if="${!rankingPage.hasPrevious()}" class="disabled">Anterior</span>
             <a th:if="${rankingPage.hasPrevious()}"
-               th:href="@{'/customers/ranking?page=' + ${rankingPage.number - 1} + '&size=' + ${rankingPage.size} + '&direction=' + ${direction}}">Anterior</a>
+               th:href="@{|/customers/ranking?page=${rankingPage.number - 1}&size=${rankingPage.size}&direction=${direction}${range != null ? '&range=' + range : ''}|}">Anterior</a>
             <span class="current"
                   th:text="${rankingPage.totalPages == 0 ? '0 / 0' : rankingPage.number + 1 + ' / ' + rankingPage.totalPages}">1 / 1</span>
             <span th:if="${!rankingPage.hasNext()}" class="disabled">Siguiente</span>
             <a th:if="${rankingPage.hasNext()}"
-               th:href="@{'/customers/ranking?page=' + ${rankingPage.number + 1} + '&size=' + ${rankingPage.size} + '&direction=' + ${direction}}">Siguiente</a>
+               th:href="@{|/customers/ranking?page=${rankingPage.number + 1}&size=${rankingPage.size}&direction=${direction}${range != null ? '&range=' + range : ''}|}">Siguiente</a>
         </nav>
     </div>
 </div>

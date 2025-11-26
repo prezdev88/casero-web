@@ -1151,6 +1151,11 @@ body.modal-open {
     margin-top: 1rem;
 }
 
+.pagination--top {
+    margin-bottom: 1rem;
+    margin-top: 0;
+}
+
 .pagination a,
 .pagination span,
 .pagination button {
@@ -1184,6 +1189,24 @@ body.modal-open {
 .pagination .disabled {
     pointer-events: none;
     opacity: 0.5;
+}
+
+:root[data-theme='dark'] .pagination a,
+:root[data-theme='dark'] .pagination span,
+:root[data-theme='dark'] .pagination button {
+    background: #2c3440;
+    border-color: #3e4756;
+    color: #e4e9f2;
+}
+
+:root[data-theme='dark'] .pagination .current {
+    background: #3d4554;
+    color: #fff;
+    border-color: #4a5569;
+}
+
+:root[data-theme='dark'] .pagination a.disabled {
+    color: #5c6579;
 }
 
 @media (max-width: 900px) {

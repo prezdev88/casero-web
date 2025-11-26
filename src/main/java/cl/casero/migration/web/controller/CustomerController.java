@@ -63,7 +63,7 @@ public class CustomerController {
         this.sectorService = sectorService;
     }
 
-    @GetMapping(produces = MediaType.TEXT_HTML_VALUE)
+    @GetMapping
     public String listCustomers(@RequestParam(value = "q", required = false) String query,
                                 @RequestParam(value = "page", defaultValue = "0") int page,
                                 @RequestParam(value = "size", defaultValue = "10") int size,
@@ -79,11 +79,11 @@ public class CustomerController {
 
     @GetMapping("/ranking")
     public String ranking(@RequestParam(value = "page", defaultValue = "0") int page,
-                          @RequestParam(value = "size", defaultValue = "20") int size,
+                          @RequestParam(value = "size", defaultValue = "100") int size,
                           @RequestParam(value = "direction", defaultValue = "desc") String direction,
                           Model model) {
         int sanitizedPage = Math.max(page, 0);
-        int sanitizedSize = Math.min(Math.max(size, 1), 50);
+        int sanitizedSize = Math.min(Math.max(size, 1), 100);
         boolean ascending = "asc".equalsIgnoreCase(direction);
         Pageable pageable = PageRequest.of(sanitizedPage, sanitizedSize);
         Page<CustomerScoreService.RankingEntry> rankingPage = customerScoreService.getRanking(pageable, ascending);
@@ -154,7 +154,9 @@ public class CustomerController {
         Sort sort = Sort.by(ascending ? Sort.Direction.ASC : Sort.Direction.DESC, "createdAt");
         Pageable pageable = PageRequest.of(sanitizedPage, sanitizedSize, sort);
         Customer customer = customerService.get(id);
-        model.addAttribute("customerScore", customerScoreService.calculateScore(customer));
+        CustomerScoreService.ScorePresentation scorePresentation = customerScoreService.getScorePresentation(customer);
+        model.addAttribute("customerScore", scorePresentation.score());
+        model.addAttribute("customerScoreExplanation", scorePresentation.explanation());
         Page<Transaction> transactions = transactionService.listByCustomer(id, pageable);
 
         model.addAttribute("customer", customer);
@@ -457,4 +459,5 @@ public class CustomerController {
                                           boolean hasPrevious,
                                           boolean hasNext) {
     }
+
 }

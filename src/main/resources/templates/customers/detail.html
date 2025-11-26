@@ -13,13 +13,24 @@
                 <a class="icon-button" title="Editar nombre"
                    th:href="@{'/customers/' + ${customer.id} + '/actions/name/edit'}">✏️</a>
             </div>
-            <div class="customer-score-badge" title="Nota del cliente">
+            <button type="button"
+                    class="customer-score-badge customer-score-badge--button"
+                    data-score-toggle="customer-score-explanation"
+                    aria-expanded="false"
+                    title="Ver detalle de la nota">
                 <span class="customer-score-badge__value"
                       th:text="${customerScore != null ? #numbers.formatDecimal(customerScore, 1, 'DEFAULT', 2, 'DEFAULT') : '--'}">7.00</span>
-            </div>
+            </button>
         </div>
         <p class="highlight-debt text-red"
            th:text="${T(cl.casero.migration.util.CurrencyUtil).format(customer.debt)}">$0</p>
+        <p class="customer-score-explanation"
+           id="customer-score-explanation"
+           th:if="${customerScoreExplanation}"
+           th:text="${customerScoreExplanation}"
+           hidden>
+            Explicación del comportamiento de pago del cliente.
+        </p>
         <p class="text-muted">
             <span th:text="${customer.address}">Dirección</span>
             <a class="icon-button" title="Editar dirección"
@@ -103,6 +114,25 @@
 <script th:inline="javascript">
 /*<![CDATA[*/
 document.addEventListener('DOMContentLoaded', () => {
+    const scoreToggle = document.querySelector('[data-score-toggle]');
+    if (scoreToggle) {
+        const targetId = scoreToggle.getAttribute('data-score-toggle');
+        const target = document.getElementById(targetId);
+        scoreToggle.addEventListener('click', () => {
+            if (!target) {
+                return;
+            }
+            const isHidden = target.hasAttribute('hidden');
+            if (isHidden) {
+                target.removeAttribute('hidden');
+                scoreToggle.setAttribute('aria-expanded', 'true');
+            } else {
+                target.setAttribute('hidden', '');
+                scoreToggle.setAttribute('aria-expanded', 'false');
+            }
+        });
+    }
+
     const customerId = /*[[${customer.id}]]*/ 0;
     let ascending = /*[[${ascending}]]*/ false;
     const pageSize = /*[[${transactionsPage.size}]]*/ 10;

@@ -4,6 +4,7 @@ import cl.casero.migration.domain.Customer;
 import cl.casero.migration.repository.CustomerRepository;
 import cl.casero.migration.repository.TransactionRepository;
 import cl.casero.migration.util.CustomerScoreCalculator;
+import cl.casero.migration.util.CustomerScoreNarrator;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -32,7 +33,7 @@ public class CustomerScoreService {
         this.customerRepository = customerRepository;
     }
 
-    public Map<Long, Double> calculateScores(Collection<Customer> customers) {
+    public Map<Long, CustomerScoreCalculator.ScoreResult> calculateScoreSummaries(Collection<Customer> customers) {
         if (customers == null || customers.isEmpty()) {
             return Collections.emptyMap();
         }
@@ -43,41 +44,49 @@ public class CustomerScoreService {
         if (ids.isEmpty()) {
             return Collections.emptyMap();
         }
-        Map<Long, TransactionRepository.CustomerScoreProjection> stats = transactionRepository
-                .findCustomerScoreStats(List.copyOf(ids))
-                .stream()
-                .collect(Collectors.toMap(TransactionRepository.CustomerScoreProjection::getCustomerId, projection -> projection));
-
-        Map<Long, Double> results = new HashMap<>();
+        Map<Long, TransactionRepository.CustomerScoreProjection> stats = fetchStats(ids);
+        Map<Long, CustomerScoreCalculator.ScoreResult> summaries = new HashMap<>();
         for (Customer customer : customers) {
             Long id = customer.getId();
             if (id == null) {
                 continue;
             }
             TransactionRepository.CustomerScoreProjection projection = stats.get(id);
-            CustomerScoreCalculator.ScoreInputs inputs = new CustomerScoreCalculator.ScoreInputs(
-                    safe(customer.getDebt()),
-                    projection != null ? safe(projection.getTotalCharges()) : 0,
-                    projection != null ? safe(projection.getTotalPayments()) : 0,
-                    projection != null ? projection.getLastPaymentDate() : null,
-                    projection != null ? projection.getLastActivityDate() : null
-            );
-            double score = CustomerScoreCalculator.calculateScore(inputs);
-            results.put(id, score);
+            CustomerScoreCalculator.ScoreInputs inputs = buildInputs(customer, projection);
+            CustomerScoreCalculator.ScoreResult summary = CustomerScoreCalculator.evaluate(inputs);
+            summaries.put(id, summary);
         }
-        return results;
+        return summaries;
+    }
+
+    public Map<Long, Double> calculateScores(Collection<Customer> customers) {
+        return calculateScoreSummaries(customers)
+                .entrySet()
+                .stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().score()));
     }
 
     public double calculateScore(Customer customer) {
         if (customer == null) {
             return CustomerScoreCalculator.minScore();
         }
-        Map<Long, Double> map = calculateScores(List.of(customer));
-        return map.getOrDefault(customer.getId(), CustomerScoreCalculator.minScore());
+        Map<Long, CustomerScoreCalculator.ScoreResult> summaries = calculateScoreSummaries(List.of(customer));
+        CustomerScoreCalculator.ScoreResult summary = summaries.get(customer.getId());
+        return summary != null ? summary.score() : CustomerScoreCalculator.minScore();
     }
 
-    private static int safe(Integer value) {
-        return value == null ? 0 : value;
+    public ScorePresentation getScorePresentation(Customer customer) {
+        if (customer == null) {
+            return new ScorePresentation(CustomerScoreCalculator.minScore(), "");
+        }
+        Map<Long, CustomerScoreCalculator.ScoreResult> summaries = calculateScoreSummaries(List.of(customer));
+        CustomerScoreCalculator.ScoreResult summary = summaries.get(customer.getId());
+        if (summary == null) {
+            summary = CustomerScoreCalculator.evaluate(new CustomerScoreCalculator.ScoreInputs(
+                    0, null, null, null, null, null, false));
+        }
+        String explanation = CustomerScoreNarrator.buildExplanation(summary);
+        return new ScorePresentation(summary.score(), explanation);
     }
 
     public Page<RankingEntry> getRanking(Pageable pageable, boolean ascending) {
@@ -87,12 +96,21 @@ public class CustomerScoreService {
             return new PageImpl<>(Collections.emptyList(), effectivePageable, 0);
         }
 
-        Map<Long, Double> scores = calculateScores(customers);
+        Map<Long, CustomerScoreCalculator.ScoreResult> summaries = calculateScoreSummaries(customers);
         List<RankingEntry> ranking = customers.stream()
-                .map(customer -> new RankingEntry(
-                        customer.getId(),
-                        customer.getName(),
-                        scores.getOrDefault(customer.getId(), CustomerScoreCalculator.minScore())))
+                .map(customer -> {
+                    CustomerScoreCalculator.ScoreResult summary = summaries.get(customer.getId());
+                    if (summary == null) {
+                        summary = CustomerScoreCalculator.evaluate(new CustomerScoreCalculator.ScoreInputs(
+                                0, null, null, null, null, null, false));
+                    }
+                    String explanation = CustomerScoreNarrator.buildExplanation(summary);
+                    return new RankingEntry(
+                            customer.getId(),
+                            customer.getName(),
+                            summary.score(),
+                            explanation);
+                })
                 .collect(Collectors.toCollection(ArrayList::new));
 
         ranking.sort((a, b) -> {
@@ -129,11 +147,13 @@ public class CustomerScoreService {
         private final Long id;
         private final String name;
         private final Double score;
+        private final String explanation;
 
-        public RankingEntry(Long id, String name, Double score) {
+        public RankingEntry(Long id, String name, Double score, String explanation) {
             this.id = id;
             this.name = name;
             this.score = score;
+            this.explanation = explanation;
         }
 
         public Long getId() {
@@ -147,5 +167,35 @@ public class CustomerScoreService {
         public Double getScore() {
             return score;
         }
+
+        public String getExplanation() {
+            return explanation;
+        }
+    }
+
+    public record ScorePresentation(double score, String explanation) {
+    }
+
+    private Map<Long, TransactionRepository.CustomerScoreProjection> fetchStats(Set<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        return transactionRepository.findCustomerScoreStats(List.copyOf(ids))
+                .stream()
+                .collect(Collectors.toMap(TransactionRepository.CustomerScoreProjection::getCustomerId, projection -> projection));
+    }
+
+    private CustomerScoreCalculator.ScoreInputs buildInputs(Customer customer,
+                                                            TransactionRepository.CustomerScoreProjection projection) {
+        boolean hasOutstandingDebt = customer != null && customer.getDebt() != null && customer.getDebt() > 0;
+        return new CustomerScoreCalculator.ScoreInputs(
+                projection != null ? projection.getTotalPayments() : 0,
+                projection != null ? projection.getLastPaymentDate() : null,
+                projection != null ? projection.getMaxIntervalBetweenPayments() : null,
+                projection != null ? projection.getTotalIntervalDays() : null,
+                projection != null ? projection.getIntervalCount() : null,
+                projection != null ? projection.getLateIntervalCount() : null,
+                hasOutstandingDebt
+        );
     }
 }

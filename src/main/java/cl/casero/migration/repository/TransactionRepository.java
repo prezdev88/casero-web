@@ -40,23 +40,58 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     List<Transaction> findByDateBetween(LocalDate start, LocalDate end);
 
     @Query(value = """
+            WITH payment_data AS (
+                SELECT
+                    t.customer_id,
+                    t.date,
+                    ROW_NUMBER() OVER (PARTITION BY t.customer_id ORDER BY t.date DESC) AS rn_desc,
+                    LAG(t.date) OVER (PARTITION BY t.customer_id ORDER BY t.date) AS prev_date
+                FROM transaction t
+                WHERE t.customer_id IN (:customerIds)
+                  AND t.type IN ('PAYMENT', 'REFUND', 'DEBT_FORGIVENESS', 'FAULT_DISCOUNT')
+            ),
+            payment_intervals AS (
+                SELECT
+                    customer_id,
+                    date,
+                    rn_desc,
+                    prev_date,
+                    CASE WHEN prev_date IS NULL THEN NULL ELSE (date - prev_date) END AS interval_days
+                FROM payment_data
+            ),
+            payment_summary AS (
+                SELECT
+                    customer_id,
+                    MAX(CASE WHEN rn_desc = 1 THEN date END) AS last_payment_date,
+                    COUNT(*) AS payments_count,
+                    MAX(interval_days) AS max_interval_days,
+                    SUM(CASE WHEN interval_days IS NOT NULL THEN interval_days ELSE 0 END) AS total_interval_days,
+                    SUM(CASE WHEN interval_days IS NOT NULL THEN 1 ELSE 0 END)::int AS interval_count,
+                    SUM(CASE WHEN interval_days > 45 THEN 1 ELSE 0 END)::int AS late_interval_count
+                FROM payment_intervals
+                GROUP BY customer_id
+            )
             SELECT
-                t.customer_id AS customerId,
-                COALESCE(SUM(CASE WHEN t.type IN ('SALE', 'INITIAL_BALANCE') THEN t.amount ELSE 0 END), 0) AS totalCharges,
-                COALESCE(SUM(CASE WHEN t.type IN ('PAYMENT', 'REFUND', 'DEBT_FORGIVENESS', 'FAULT_DISCOUNT') THEN t.amount ELSE 0 END), 0) AS totalPayments,
-                MAX(CASE WHEN t.type IN ('PAYMENT', 'REFUND', 'DEBT_FORGIVENESS', 'FAULT_DISCOUNT') THEN t.date ELSE NULL END) AS lastPaymentDate,
-                MAX(t.date) AS lastActivityDate
-            FROM transaction t
-            WHERE t.customer_id IN (:customerIds)
-            GROUP BY t.customer_id
+                c.id AS customerId,
+                ps.last_payment_date AS lastPaymentDate,
+                ps.max_interval_days AS maxIntervalBetweenPayments,
+                ps.total_interval_days AS totalIntervalDays,
+                ps.interval_count AS intervalCount,
+                ps.late_interval_count AS lateIntervalCount,
+                COALESCE(ps.payments_count, 0) AS totalPayments
+            FROM customer c
+            LEFT JOIN payment_summary ps ON ps.customer_id = c.id
+            WHERE c.id IN (:customerIds)
             """, nativeQuery = true)
     List<CustomerScoreProjection> findCustomerScoreStats(@Param("customerIds") List<Long> customerIds);
 
     interface CustomerScoreProjection {
         Long getCustomerId();
-        Integer getTotalCharges();
         Integer getTotalPayments();
         LocalDate getLastPaymentDate();
-        LocalDate getLastActivityDate();
+        Integer getMaxIntervalBetweenPayments();
+        Long getTotalIntervalDays();
+        Integer getIntervalCount();
+        Integer getLateIntervalCount();
     }
 }

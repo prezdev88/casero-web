@@ -14,12 +14,8 @@
         </div>
         <div class="ranking-explanation">
             <p>
-                Cada nota pondera cuatro cosas:
-                <strong>deuda actual</strong> (menos deuda, mejor),
-                <strong>cobros vs. pagos históricos</strong> (si ha pagado la mayoría de lo que se le ha cobrado),
-                <strong>tiempo desde el último abono</strong> y
-                <strong>tiempo desde la última actividad registrada</strong>.
-                Los factores se combinan para dar una nota entre 1.00 (muy riesgoso) y 7.00 (excelente).
+                La nota depende de cuán rápido paga cada compra: si liquida dentro de los primeros 45 días obtiene 7.0.
+                Cada día adicional sin abonos reduce la nota de manera proporcional hasta acercarse a 1.0 cuando pasan muchos meses sin pagar.
             </p>
         </div>
         <div class="table-wrapper">
@@ -39,7 +35,8 @@
                 </tr>
                 </thead>
                 <tbody>
-                <tr th:each="entry, iterStat : ${rankingPage.content}">
+                <th:block th:each="entry, iterStat : ${rankingPage.content}">
+                <tr>
                     <td th:text="${rankingPage.number * rankingPage.size + iterStat.index + 1}">1</td>
                     <td>
                         <a class="ranking-name-link"
@@ -47,11 +44,24 @@
                            th:text="${entry.name}">Cliente</a>
                     </td>
                     <td class="ranking-score-cell">
-                        <span class="customer-score-chip">
+                        <button type="button"
+                                class="customer-score-chip customer-score-chip--button"
+                                th:attr="data-score-target=${'ranking-expl-' + entry.id}"
+                                aria-expanded="false">
                             <strong th:text="${entry.score != null ? #numbers.formatDecimal(entry.score, 1, 'DEFAULT', 2, 'DEFAULT') : '--'}">7.00</strong>
-                        </span>
+                        </button>
                     </td>
                 </tr>
+                <tr class="ranking-explanation-row"
+                    th:attr="id=${'ranking-expl-' + entry.id}"
+                    hidden>
+                    <td colspan="3">
+                        <p th:text="${entry.explanation != null ? entry.explanation : 'Sin explicación disponible.'}">
+                            Explicación.
+                        </p>
+                    </td>
+                </tr>
+                </th:block>
                 <tr th:if="${rankingPage.empty}">
                     <td colspan="3" class="ranking-empty">No hay clientes disponibles</td>
                 </tr>
@@ -71,5 +81,28 @@
         </nav>
     </div>
 </div>
+<script th:inline="javascript">
+/*<![CDATA[*/
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('[data-score-target]').forEach((button) => {
+        const targetId = button.getAttribute('data-score-target');
+        const target = targetId ? document.getElementById(targetId) : null;
+        if (!target) {
+            return;
+        }
+        button.addEventListener('click', () => {
+            const isHidden = target.hasAttribute('hidden');
+            if (isHidden) {
+                target.removeAttribute('hidden');
+                button.setAttribute('aria-expanded', 'true');
+            } else {
+                target.setAttribute('hidden', '');
+                button.setAttribute('aria-expanded', 'false');
+            }
+        });
+    });
+});
+/*]]>*/
+</script>
 </body>
 </html>

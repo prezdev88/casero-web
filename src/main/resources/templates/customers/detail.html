@@ -15,10 +15,12 @@
             </div>
             <button type="button"
                     class="customer-score-badge customer-score-badge--button"
+                    th:classappend="${customerScore != null ? ' score-chip--' + T(cl.casero.migration.util.CustomerScoreColor).bucket(customerScore) : ''}"
                     data-score-toggle="customer-score-explanation"
                     aria-expanded="false"
                     title="Ver detalle de la nota">
                 <span class="customer-score-badge__value"
+                      th:classappend="${customerScore != null ? ' score-value--' + T(cl.casero.migration.util.CustomerScoreColor).bucket(customerScore) : ''}"
                       th:text="${customerScore != null ? #numbers.formatDecimal(customerScore, 1, 'DEFAULT', 2, 'DEFAULT') : '--'}">7.00</span>
             </button>
         </div>

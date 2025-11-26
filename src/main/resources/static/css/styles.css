@@ -593,11 +593,11 @@ header .container {
     border-radius: 999px;
     padding: 0.1rem 0.35rem;
     font-size: 0.78rem;
-    color: #0f355a;
     display: inline-flex;
     align-items: baseline;
     gap: 0.1rem;
     font-weight: 600;
+    color: #0f355a;
 }
 
 .customer-score-chip--button {
@@ -617,6 +617,60 @@ header .container {
 .customer-score-chip span {
     font-size: 0.8rem;
     opacity: 0.85;
+}
+
+.score-chip--excellent {
+    background: linear-gradient(135deg, #1a73e8, #4facfe);
+    color: #fff;
+}
+
+.score-value--excellent {
+    color: #fff;
+}
+
+.score-chip--great {
+    background: linear-gradient(135deg, #2f9e44, #5ad66f);
+    color: #fff;
+}
+
+.score-value--great {
+    color: #fff;
+}
+
+.score-chip--good {
+    background: linear-gradient(135deg, #8bc34a, #c0df5f);
+    color: #0f355a;
+}
+
+.score-value--good {
+    color: #0f355a;
+}
+
+.score-chip--fair {
+    background: linear-gradient(135deg, #ffd54f, #ffb300);
+    color: #4a3600;
+}
+
+.score-value--fair {
+    color: #4a3600;
+}
+
+.score-chip--warning {
+    background: linear-gradient(135deg, #ff9800, #ff7043);
+    color: #4a1f00;
+}
+
+.score-value--warning {
+    color: #4a1f00;
+}
+
+.score-chip--risk {
+    background: linear-gradient(135deg, #e53935, #ff1744);
+    color: #fff;
+}
+
+.score-value--risk {
+    color: #fff;
 }
 
 .card-list__empty {

@@ -26,8 +26,10 @@
                th:attr="data-customer-score=${score}">
                 <div class="customer-card__row">
                     <span class="customer-card__name" th:text="${customer.name}">Nombre</span>
-                    <span class="customer-score-chip">
-                        <strong th:text="${score != null ? #numbers.formatDecimal(score, 1, 'DEFAULT', 2, 'DEFAULT') : '--'}">7.00</strong>
+                    <span class="customer-score-chip"
+                          th:classappend="${score != null ? ' score-chip--' + T(cl.casero.migration.util.CustomerScoreColor).bucket(score) : ''}">
+                        <strong th:text="${score != null ? #numbers.formatDecimal(score, 1, 'DEFAULT', 2, 'DEFAULT') : '--'}"
+                                th:classappend="${score != null ? ' score-value--' + T(cl.casero.migration.util.CustomerScoreColor).bucket(score) : ''}">7.00</strong>
                     </span>
                 </div>
                 <span class="customer-card__debt customer-card__debt--red"
@@ -247,6 +249,28 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.customer-card').forEach((card) => attachActionsHandler(card));
     };
 
+    const scoreClassFromValue = (value) => {
+        if (typeof value !== 'number' || Number.isNaN(value)) {
+            return null;
+        }
+        if (value >= 6.5) {
+            return {chip: 'score-chip--excellent', value: 'score-value--excellent'};
+        }
+        if (value >= 5.5) {
+            return {chip: 'score-chip--great', value: 'score-value--great'};
+        }
+        if (value >= 4.5) {
+            return {chip: 'score-chip--good', value: 'score-value--good'};
+        }
+        if (value >= 3.5) {
+            return {chip: 'score-chip--fair', value: 'score-value--fair'};
+        }
+        if (value >= 2.5) {
+            return {chip: 'score-chip--warning', value: 'score-value--warning'};
+        }
+        return {chip: 'score-chip--risk', value: 'score-value--risk'};
+    };
+
     const buildCard = (customer) => {
         const link = document.createElement('a');
         link.className = 'customer-card';
@@ -275,6 +299,11 @@ document.addEventListener('DOMContentLoaded', () => {
         score.className = 'customer-score-chip';
         const scoreValue = document.createElement('strong');
         scoreValue.textContent = typeof customer.score === 'number' ? customer.score.toFixed(2) : '--';
+        const scoreClasses = scoreClassFromValue(customer.score);
+        if (scoreClasses) {
+            score.classList.add(scoreClasses.chip);
+            scoreValue.classList.add(scoreClasses.value);
+        }
         score.appendChild(scoreValue);
         row.appendChild(score);
         link.appendChild(row);

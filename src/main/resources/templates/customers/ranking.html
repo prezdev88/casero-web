@@ -36,7 +36,7 @@
                     <th>#</th>
                     <th>
                         <a class="ranking-sort-link"
-                           th:href="@{'/customers/ranking?page=0&size=' + ${rankingPage.size} + '&direction=' + ${nextDirection}}">
+                           th:href="@{|/customers/ranking?page=0&size=${rankingPage.size}&direction=${nextDirection}${range != null ? '&range=' + range : ''}|}">
                             Cliente
                             <span class="ranking-sort-indicator"
                                   th:text="${direction == 'asc'} ? '⬆️' : '⬇️'">⬇️</span>
@@ -57,9 +57,11 @@
                     <td class="ranking-score-cell">
                         <button type="button"
                                 class="customer-score-chip customer-score-chip--button"
+                                th:classappend="${entry.score != null ? ' score-chip--' + T(cl.casero.migration.util.CustomerScoreColor).bucket(entry.score) : ''}"
                                 th:attr="data-score-target=${'ranking-expl-' + entry.id}"
                                 aria-expanded="false">
-                            <strong th:text="${entry.score != null ? #numbers.formatDecimal(entry.score, 1, 'DEFAULT', 2, 'DEFAULT') : '--'}">7.00</strong>
+                            <strong th:text="${entry.score != null ? #numbers.formatDecimal(entry.score, 1, 'DEFAULT', 2, 'DEFAULT') : '--'}"
+                                    th:classappend="${entry.score != null ? ' score-value--' + T(cl.casero.migration.util.CustomerScoreColor).bucket(entry.score) : ''}">7.00</strong>
                         </button>
                     </td>
                 </tr>

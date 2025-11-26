@@ -44,6 +44,7 @@
                         </a>
                     </th>
                     <th>Ciclos</th>
+                    <th>Deuda</th>
                     <th>Nota</th>
                 </tr>
                 </thead>
@@ -57,6 +58,10 @@
                            th:text="${entry.name}">Cliente</a>
                     </td>
                     <td th:text="${entry.cycleCount}">0</td>
+                    <td class="ranking-debt-cell"
+                        th:text="${T(cl.casero.migration.util.CurrencyUtil).format(entry.debt != null ? entry.debt : 0)}">
+                        $0
+                    </td>
                     <td class="ranking-score-cell">
                         <button type="button"
                                 class="customer-score-chip customer-score-chip--button"
@@ -71,7 +76,7 @@
                 <tr class="ranking-explanation-row"
                     th:attr="id=${'ranking-expl-' + entry.id}"
                     hidden>
-                    <td colspan="4">
+                    <td colspan="5">
                         <p th:text="${entry.explanation != null ? entry.explanation : 'Sin explicación disponible.'}">
                             Explicación.
                         </p>
@@ -79,7 +84,7 @@
                 </tr>
                 </th:block>
                 <tr th:if="${rankingPage.empty}">
-                    <td colspan="4" class="ranking-empty">No hay clientes disponibles</td>
+                    <td colspan="5" class="ranking-empty">No hay clientes disponibles</td>
                 </tr>
                 </tbody>
             </table>

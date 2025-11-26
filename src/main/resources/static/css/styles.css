@@ -428,6 +428,11 @@ header .container {
     min-width: 140px;
 }
 
+.ranking-debt-cell {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
 .ranking-name-link {
     color: var(--link-color);
     text-decoration: none;

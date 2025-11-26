@@ -110,6 +110,7 @@ public class CustomerScoreService {
                     return new RankingEntry(
                             customer.getId(),
                             customer.getName(),
+                            customer.getDebt(),
                             summary.score(),
                             explanation,
                             summary.cycles().size());
@@ -153,13 +154,15 @@ public class CustomerScoreService {
     public static final class RankingEntry {
         private final Long id;
         private final String name;
+        private final Integer debt;
         private final Double score;
         private final String explanation;
         private final int cycleCount;
 
-        public RankingEntry(Long id, String name, Double score, String explanation, int cycleCount) {
+        public RankingEntry(Long id, String name, Integer debt, Double score, String explanation, int cycleCount) {
             this.id = id;
             this.name = name;
+            this.debt = debt;
             this.score = score;
             this.explanation = explanation;
             this.cycleCount = cycleCount;
@@ -171,6 +174,10 @@ public class CustomerScoreService {
 
         public String getName() {
             return name;
+        }
+
+        public Integer getDebt() {
+            return debt;
         }
 
         public Double getScore() {

@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.13.0](https://github.com/prezdev88/casero-web/compare/v1.12.0...v1.13.0) (2025-11-26)
+
+
+### Features
+
+* Add customer scoring system and ranking feature ([57035d0](https://github.com/prezdev88/casero-web/commit/57035d0862bc021e04b73d96bf88bcea6709b1a0))
+* Add debt column to customer ranking table and update RankingEntry to include debt information ([0c6f75e](https://github.com/prezdev88/casero-web/commit/0c6f75e3adef8183edb4f44c6c2eee975b3d6d9b))
+* Add pagination component to customer ranking page with dark theme support ([8401a4a](https://github.com/prezdev88/casero-web/commit/8401a4abaf7177ed7de7d44ec847f77cb5d32a20))
+* Enhance customer cycle scoring and transaction export functionality ([2b93033](https://github.com/prezdev88/casero-web/commit/2b9303324f34ef78a6f64b738a88239503c3198b))
+* Enhance customer scoring system with detailed explanations and improved ranking display ([982ef0d](https://github.com/prezdev88/casero-web/commit/982ef0d2cf46d3a2a6401175628dd52bef0c96d2))
+* Implement customer score color coding and display enhancements across templates ([7879409](https://github.com/prezdev88/casero-web/commit/7879409a00a33f206da7a8b23eb5eb939a139031))
+* Refactor customer actions and update ranking table to improve layout and functionality ([74973d2](https://github.com/prezdev88/casero-web/commit/74973d2d3a103041ee57292d798b72fb54d48bf3))
+* Remove obsolete notes file containing customer URLs ([20a29c3](https://github.com/prezdev88/casero-web/commit/20a29c3b93b4d43463581b1d761de52be86f9527))
+* Update header text color to use variable for improved theming ([925eab7](https://github.com/prezdev88/casero-web/commit/925eab748a4fd2a0fdc1f7ef49ca38eb529998dc))
+
 ## [1.12.0](https://github.com/prezdev88/casero-web/compare/v1.11.0...v1.12.0) (2025-11-23)
 
 

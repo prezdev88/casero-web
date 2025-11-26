@@ -17,10 +17,13 @@ import cl.casero.migration.service.dto.UpdateNameForm;
 import cl.casero.migration.service.dto.UpdateSectorForm;
 import cl.casero.migration.util.CurrencyUtil;
 import cl.casero.migration.util.CustomerScoreCalculator;
+import cl.casero.migration.util.CustomerScoreSummary;
 import cl.casero.migration.util.DateUtil;
 import jakarta.validation.Valid;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -157,6 +160,9 @@ public class CustomerController {
         CustomerScoreService.ScorePresentation scorePresentation = customerScoreService.getScorePresentation(customer);
         model.addAttribute("customerScore", scorePresentation.score());
         model.addAttribute("customerScoreExplanation", scorePresentation.explanation());
+        List<CustomerScoreSummary.CycleScore> reversedCycles = new ArrayList<>(scorePresentation.cycles());
+        Collections.reverse(reversedCycles);
+        model.addAttribute("customerScoreCycles", reversedCycles);
         Page<Transaction> transactions = transactionService.listByCustomer(id, pageable);
 
         model.addAttribute("customer", customer);

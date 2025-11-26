@@ -1,91 +1,86 @@
 package cl.casero.migration.util;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
+
 public final class CustomerScoreNarrator {
 
-    private static final int IDEAL_PAYMENT_WINDOW_DAYS = 45;
+    private static final DateTimeFormatter MONTH_FORMATTER =
+            DateTimeFormatter.ofPattern("MMM yyyy").withLocale(new Locale("es", "ES"));
 
     private CustomerScoreNarrator() {
     }
 
-    public static String buildExplanation(CustomerScoreCalculator.ScoreResult summary) {
+    public static String buildExplanation(CustomerScoreSummary summary) {
         if (summary == null) {
             return "";
         }
-        if (!summary.hasPayments()) {
-            return "No registra abonos, por lo que no podemos confiar en su comportamiento de pago.";
-        }
-        if (!summary.hasOutstandingDebt()) {
-            StringBuilder noDebtMessage = new StringBuilder("No tiene saldo pendiente.");
-            Integer lastPaymentDays = summary.daysSinceLastPayment();
-            if (lastPaymentDays != null) {
-                noDebtMessage.append(" Último pago registrado: ").append(elapsedText(lastPaymentDays)).append('.');
-            }
-            Integer averageInterval = summary.averageIntervalBetweenPayments();
-            Integer worstInterval = summary.maxIntervalBetweenPayments();
-            boolean hasHistoricalPenalty = summary.historyFactor() < 0.99;
-            if (hasHistoricalPenalty && averageInterval != null && worstInterval != null) {
-                noDebtMessage.append(" Sin embargo, sus pagos se tienden a espaciar alrededor de ")
-                        .append(durationText(averageInterval))
-                        .append(" y en su peor caso llegaron a ")
-                        .append(durationText(worstInterval))
-                        .append(". Eso explica una nota menor.");
-            }
-            return noDebtMessage.toString();
-        }
-        Integer days = summary.daysSinceLastPayment();
-        if (days == null) {
-            return "No hay registro reciente de pagos, se considera una nota de riesgo.";
+        if (!summary.hasCycles()) {
+            return "No registra ciclos de compra evaluables, aún no hay historial para analizar.";
         }
         StringBuilder explanation = new StringBuilder();
-        Integer worstInterval = summary.maxIntervalBetweenPayments();
-        boolean hasLongHistory = worstInterval != null && worstInterval > IDEAL_PAYMENT_WINDOW_DAYS;
-        boolean hasHistoricalPenalty = summary.historyFactor() < 0.99 && hasLongHistory;
-        if (hasHistoricalPenalty && days <= IDEAL_PAYMENT_WINDOW_DAYS) {
-            explanation.append("El último pago llegó dentro de los 45 días, pero el cliente no mantiene ese ritmo.");
-        } else {
-            explanation.append(describeFrequency(days));
-        }
-        explanation.append(" Último pago: ").append(elapsedText(days)).append('.');
-        if (hasHistoricalPenalty) {
-            explanation.append(" Históricamente llegó a demorar ")
-                    .append(durationText(worstInterval))
-                    .append(" entre abonos, lo que disminuye su nota.");
+        int cycleCount = summary.cycles().size();
+        explanation.append("Se analizaron ")
+                .append(cycleCount)
+                .append(cycleCount == 1 ? " ciclo." : " ciclos.");
+        for (int i = cycleCount - 1; i >= 0; i--) {
+            CustomerScoreSummary.CycleScore cycle = summary.cycles().get(i);
+            explanation.append(' ').append(describeCycle(cycle));
         }
         return explanation.toString();
     }
 
-    private static String describeFrequency(int days) {
-        if (days <= IDEAL_PAYMENT_WINDOW_DAYS) {
-            return "Paga dentro de los 45 días posteriores a la compra, comportamiento ideal.";
+    private static String describeCycle(CustomerScoreSummary.CycleScore cycle) {
+        CustomerScoreCalculator.ScoreResult result = cycle.result();
+        StringBuilder cycleDescription = new StringBuilder("Ciclo ");
+        cycleDescription.append(cycle.cycleNumber());
+        String rangeText = formatRange(cycle.cycleStartDate(), cycle.cycleEndDate());
+        if (!rangeText.isEmpty()) {
+            cycleDescription.append(' ').append(rangeText);
         }
-        if (days <= 90) {
-            return "Se demora cerca de dos meses en liquidar sus compras.";
+        cycleDescription.append(": nota ")
+                .append(String.format(Locale.US, "%.2f", result.score()))
+                .append(", ");
+        if (!result.hasPayments()) {
+            cycleDescription.append("sin pagos registrados");
+        } else if (result.paymentMonths() != null && result.cycleMonths() != null && result.cycleMonths() > 0) {
+            cycleDescription.append("pagó en ")
+                    .append(result.paymentMonths())
+                    .append(" de ")
+                    .append(result.cycleMonths())
+                    .append(" meses");
+        } else {
+            cycleDescription.append("historial parcial de pagos");
         }
-        if (days <= 180) {
-            return "Sus pagos se están retrasando por varios meses.";
+        if (result.hasOutstandingDebt()) {
+            cycleDescription.append(" y mantiene saldo pendiente");
+        } else {
+            cycleDescription.append(" y dejó el ciclo al día");
         }
-        return "Lleva demasiados meses sin pagar, alto riesgo.";
+        Integer lastPaymentDays = result.daysSinceLastPayment();
+        if (lastPaymentDays != null) {
+            cycleDescription.append(" (último pago ").append(elapsedText(lastPaymentDays)).append(')');
+        }
+        cycleDescription.append('.');
+        return cycleDescription.toString();
     }
 
-    private static String durationText(int days) {
-        if (days <= 1) {
-            return "1 día";
+    private static String formatRange(LocalDate start, LocalDate end) {
+        if (start == null && end == null) {
+            return "";
         }
-        if (days < 30) {
-            return days + " días";
+        if (start != null && end != null) {
+            return "(" + formatMonth(start) + " - " + formatMonth(end) + ")";
         }
-        int months = days / 30;
-        if (months == 1) {
-            return "1 mes";
+        if (start != null) {
+            return "(desde " + formatMonth(start) + ")";
         }
-        if (months < 12) {
-            return months + " meses";
-        }
-        int years = months / 12;
-        if (years == 1) {
-            return "1 año";
-        }
-        return years + " años";
+        return "(hasta " + formatMonth(end) + ")";
+    }
+
+    private static String formatMonth(LocalDate date) {
+        return date == null ? "" : MONTH_FORMATTER.format(date);
     }
 
     private static String elapsedText(int days) {

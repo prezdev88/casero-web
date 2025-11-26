@@ -60,6 +60,11 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
+    public List<Transaction> listAllByCustomer(Long customerId) {
+        return transactionRepository.findByCustomerIdOrderByDateDescIdDesc(customerId);
+    }
+
+    @Override
     public void registerSale(Long customerId, SaleForm form) {
         Customer customer = getCustomer(customerId);
         int previousBalance = customer.getDebt();

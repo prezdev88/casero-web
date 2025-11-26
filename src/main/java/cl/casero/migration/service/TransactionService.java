@@ -19,6 +19,8 @@ public interface TransactionService {
 
     Page<Transaction> listByCustomer(Long customerId, Pageable pageable);
 
+    List<Transaction> listAllByCustomer(Long customerId);
+
     void registerSale(Long customerId, SaleForm form);
 
     void registerPayment(Long customerId, PaymentForm form);

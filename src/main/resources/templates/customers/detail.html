@@ -43,6 +43,98 @@
             <a class="icon-button" title="Cambiar sector"
                th:href="@{'/customers/' + ${customer.id} + '/actions/sector/edit'}">✏️</a>
         </p>
+        <div class="transactions-json"
+             th:if="${currentUser != null and currentUser.admin}"
+             th:data-json-url="@{'/admin/customers/' + ${customer.id} + '/transactions/json'}">
+            <button type="button"
+                    id="transactions-json-toggle"
+                    class="text-button">
+                Ver transacciones en JSON
+            </button>
+            <div class="transactions-json__panel" id="transactions-json-panel" hidden>
+                <div class="transactions-json__toolbar">
+                    <span>Transacciones en JSON</span>
+                    <div class="transactions-json__actions">
+                        <button type="button" class="text-button"
+                                id="transactions-json-copy">Copiar</button>
+                        <button type="button" class="text-button"
+                                id="transactions-json-close">Cerrar</button>
+                    </div>
+                </div>
+                <pre id="transactions-json-content">Cargando...</pre>
+            </div>
+        </div>
+    </div>
+    <div class="card score-cycles-card">
+        <button type="button"
+                class="score-cycles-toggle"
+                data-score-toggle="customer-score-cycles"
+                aria-expanded="false">
+            <div class="score-cycles-header">
+                <div>
+                    <h3>Historial de ciclos</h3>
+                    <span class="text-muted"
+                          th:text="${#lists.isEmpty(customerScoreCycles) ? 'Sin ciclos' : #lists.size(customerScoreCycles) + (#lists.size(customerScoreCycles) == 1 ? ' ciclo' : ' ciclos')}">
+                        Sin ciclos
+                    </span>
+                </div>
+                <span class="score-cycles-toggle__icon" aria-hidden="true">⌄</span>
+            </div>
+        </button>
+        <div class="score-cycles-panel"
+             id="customer-score-cycles"
+             hidden>
+            <p class="score-cycles-empty"
+               th:if="${#lists.isEmpty(customerScoreCycles)}">
+                Aún no registra ciclos de compra.
+            </p>
+            <div class="score-cycle-list" th:if="${!#lists.isEmpty(customerScoreCycles)}">
+                <div class="score-cycle"
+                     th:each="cycle : ${customerScoreCycles}">
+                    <div class="score-cycle__header">
+                        <div>
+                            <span class="score-cycle__title"
+                                  th:text="${'Ciclo ' + cycle.cycleNumber()}">Ciclo 1</span>
+                            <span class="score-cycle__range"
+                                  th:text="${
+                                      cycle.cycleStartDate() != null or cycle.cycleEndDate() != null ?
+                                      (cycle.cycleStartDate() != null ? #temporals.format(cycle.cycleStartDate(), 'MMM yyyy') : 'Sin inicio')
+                                      + ' - ' +
+                                      (cycle.cycleEndDate() != null ? #temporals.format(cycle.cycleEndDate(), 'MMM yyyy') : 'vigente')
+                                      : 'Sin fechas registradas'
+                                  }">
+                                Ene 2024 - Mar 2024
+                            </span>
+                        </div>
+                        <span class="customer-score-chip"
+                              th:classappend="${' score-chip--' + T(cl.casero.migration.util.CustomerScoreColor).bucket(cycle.result().score())}">
+                            <strong th:text="${#numbers.formatDecimal(cycle.result().score(), 1, 'DEFAULT', 2, 'DEFAULT')}">7.00</strong>
+                        </span>
+                    </div>
+                    <p class="score-cycle__meta">
+                        <span th:if="${cycle.result().hasPayments()}">
+                            <span th:if="${cycle.result().paymentMonths() != null and cycle.result().cycleMonths() != null and cycle.result().cycleMonths() > 0}"
+                                  th:text="${'Pagó en ' + cycle.result().paymentMonths() + ' de ' + cycle.result().cycleMonths() + ' meses'}">
+                                Pagó en 3 de 4 meses
+                            </span>
+                            <span th:unless="${cycle.result().paymentMonths() != null and cycle.result().cycleMonths() != null and cycle.result().cycleMonths() > 0}">
+                                Historial de pagos parcial
+                            </span>
+                        </span>
+                        <span th:unless="${cycle.result().hasPayments()}">Sin pagos registrados</span>
+                        <span>·</span>
+                        <span th:text="${cycle.result().hasOutstandingDebt() ? 'Saldo pendiente' : 'Ciclo cerrado'}">
+                            Saldo pendiente
+                        </span>
+                    </p>
+                    <p class="score-cycle__meta" th:if="${cycle.result().daysSinceLastPayment() != null}">
+                        Último pago hace
+                        <span th:text="${cycle.result().daysSinceLastPayment()}">15</span>
+                        <span th:text="${cycle.result().daysSinceLastPayment() == 1 ? 'día' : 'días'}">días</span>
+                    </p>
+                </div>
+            </div>
+        </div>
     </div>
     <div class="card customer-actions-card">
         <div class="customer-actions__grid customer-actions__grid--inline">
@@ -116,24 +208,24 @@
 <script th:inline="javascript">
 /*<![CDATA[*/
 document.addEventListener('DOMContentLoaded', () => {
-    const scoreToggle = document.querySelector('[data-score-toggle]');
-    if (scoreToggle) {
-        const targetId = scoreToggle.getAttribute('data-score-toggle');
+    const scoreToggles = document.querySelectorAll('[data-score-toggle]');
+    scoreToggles.forEach((toggle) => {
+        const targetId = toggle.getAttribute('data-score-toggle');
         const target = document.getElementById(targetId);
-        scoreToggle.addEventListener('click', () => {
+        toggle.addEventListener('click', () => {
             if (!target) {
                 return;
             }
             const isHidden = target.hasAttribute('hidden');
             if (isHidden) {
                 target.removeAttribute('hidden');
-                scoreToggle.setAttribute('aria-expanded', 'true');
+                toggle.setAttribute('aria-expanded', 'true');
             } else {
                 target.setAttribute('hidden', '');
-                scoreToggle.setAttribute('aria-expanded', 'false');
+                toggle.setAttribute('aria-expanded', 'false');
             }
         });
-    }
+    });
 
     const customerId = /*[[${customer.id}]]*/ 0;
     let ascending = /*[[${ascending}]]*/ false;
@@ -165,6 +257,95 @@ document.addEventListener('DOMContentLoaded', () => {
         initial_balance: 'Saldo inicial',
         fault_discount: 'Descuento por falla'
     };
+
+    const jsonWrapper = document.querySelector('.transactions-json');
+    const jsonToggleBtn = document.getElementById('transactions-json-toggle');
+    const jsonPanel = document.getElementById('transactions-json-panel');
+    const jsonCopyBtn = document.getElementById('transactions-json-copy');
+    const jsonCloseBtn = document.getElementById('transactions-json-close');
+    const jsonContent = document.getElementById('transactions-json-content');
+    const transactionsJsonUrl = jsonWrapper ? jsonWrapper.dataset.jsonUrl : '';
+    let jsonLoaded = false;
+    let jsonLoading = false;
+
+    const fetchTransactionsJson = () => {
+        if (!transactionsJsonUrl || jsonLoading) {
+            return;
+        }
+        jsonLoading = true;
+        jsonContent.textContent = 'Cargando...';
+        fetch(transactionsJsonUrl, {headers: {'Accept': 'application/json'}})
+            .then((response) => response.ok ? response.json() : Promise.reject())
+            .then((data) => {
+                jsonContent.textContent = JSON.stringify(data, null, 2);
+                jsonLoaded = true;
+            })
+            .catch(() => {
+                jsonContent.textContent = 'No se pudo obtener la información.';
+            })
+            .finally(() => {
+                jsonLoading = false;
+            });
+    };
+
+    if (jsonToggleBtn && jsonPanel) {
+        jsonToggleBtn.addEventListener('click', () => {
+            const isHidden = jsonPanel.hasAttribute('hidden');
+            if (isHidden) {
+                jsonPanel.removeAttribute('hidden');
+                if (!jsonLoaded) {
+                    fetchTransactionsJson();
+                }
+            } else {
+                jsonPanel.setAttribute('hidden', '');
+            }
+        });
+    }
+
+    if (jsonCloseBtn && jsonPanel) {
+        jsonCloseBtn.addEventListener('click', () => {
+            jsonPanel.setAttribute('hidden', '');
+        });
+    }
+
+    if (jsonCopyBtn && jsonContent) {
+        jsonCopyBtn.addEventListener('click', () => {
+            const payload = jsonContent.textContent || '';
+            if (!payload.trim()) {
+                return;
+            }
+            const copy = (text) => navigator.clipboard
+                ? navigator.clipboard.writeText(text)
+                : new Promise((resolve, reject) => {
+                    try {
+                        const textarea = document.createElement('textarea');
+                        textarea.value = text;
+                        document.body.appendChild(textarea);
+                        textarea.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(textarea);
+                        resolve();
+                    } catch (err) {
+                        reject(err);
+                    }
+                });
+
+            copy(payload)
+                .then(() => {
+                    const original = jsonCopyBtn.textContent;
+                    jsonCopyBtn.textContent = 'Copiado';
+                    setTimeout(() => {
+                        jsonCopyBtn.textContent = original;
+                    }, 1500);
+                })
+                .catch(() => {
+                    jsonCopyBtn.textContent = 'Error';
+                    setTimeout(() => {
+                        jsonCopyBtn.textContent = 'Copiar';
+                    }, 1500);
+                });
+        });
+    }
 
     let currentPage = 0;
     let totalPages = 0;

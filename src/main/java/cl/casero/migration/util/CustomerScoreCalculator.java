@@ -18,7 +18,7 @@ public final class CustomerScoreCalculator {
 
     public static ScoreResult evaluate(ScoreInputs inputs) {
         if (inputs == null) {
-            return new ScoreResult(MIN_SCORE, null, null, null, 0, 0, false, MIN_SCORE, MIN_SCORE, 1.0, false);
+            return new ScoreResult(MIN_SCORE, null, null, null, 0, 0, false, MIN_SCORE, MIN_SCORE, MIN_SCORE, 1.0, false, null, null);
         }
         boolean hasPayments = inputs.totalPayments() > 0;
         boolean hasOutstandingDebt = inputs.hasOutstandingDebt();
@@ -28,12 +28,15 @@ public final class CustomerScoreCalculator {
         Integer averageInterval = averageInterval(inputs.totalIntervalDays(), inputs.intervalCount());
         double latestScore = scoreFromDelay(effectiveCurrentDelay, hasPayments);
         double averageScore = scoreFromDelay(averageInterval, hasPayments);
-        double baseScore = Math.min(latestScore, averageScore);
+        double coverageScore = coverageScore(inputs.paymentMonthCount(), inputs.cycleMonthCount(), hasPayments);
+        double baseScore = hasOutstandingDebt
+                ? Math.min(Math.min(latestScore, averageScore), coverageScore)
+                : coverageScore;
         double historyFactor = computeHistoryFactor(
                 inputs.lateIntervalCount(),
                 inputs.intervalCount(),
                 historicalMaxInterval);
-        double finalScore = roundTwoDecimals(clamp(baseScore * historyFactor, MIN_SCORE, MAX_SCORE));
+        double finalScore = roundTwoDecimals(clamp(baseScore * (hasOutstandingDebt ? historyFactor : 1.0), MIN_SCORE, MAX_SCORE));
         return new ScoreResult(finalScore,
                 daysSinceLast,
                 historicalMaxInterval,
@@ -43,8 +46,11 @@ public final class CustomerScoreCalculator {
                 hasPayments,
                 latestScore,
                 averageScore,
+                coverageScore,
                 historyFactor,
-                hasOutstandingDebt);
+                hasOutstandingDebt,
+                inputs.paymentMonthCount() != null ? inputs.paymentMonthCount().intValue() : null,
+                inputs.cycleMonthCount());
     }
 
     public static double minScore() {
@@ -114,12 +120,28 @@ public final class CustomerScoreCalculator {
         return (int) Math.max(totalIntervalDays / intervalCount, 0);
     }
 
+    private static double coverageScore(Long paymentMonths, Integer cycleMonths, boolean hasPayments) {
+        if (!hasPayments) {
+            return MIN_SCORE;
+        }
+        if (paymentMonths == null || cycleMonths == null || cycleMonths <= 0) {
+            return MAX_SCORE;
+        }
+        int allowedSkips = Math.min(2, Math.max(cycleMonths / 4, 1));
+        int effectiveMonths = Math.max(1, cycleMonths - allowedSkips);
+        double adjustedRatio = (double) Math.min(paymentMonths, cycleMonths) / (double) effectiveMonths;
+        adjustedRatio = Math.max(0.0, Math.min(1.0, adjustedRatio));
+        return roundTwoDecimals(MIN_SCORE + (adjustedRatio * (MAX_SCORE - MIN_SCORE)));
+    }
+
     public record ScoreInputs(int totalPayments,
                               LocalDate lastPaymentDate,
                               Integer maxIntervalBetweenPayments,
                               Long totalIntervalDays,
                               Integer intervalCount,
                               Integer lateIntervalCount,
+                              Long paymentMonthCount,
+                              Integer cycleMonthCount,
                               boolean hasOutstandingDebt) {
     }
 
@@ -132,7 +154,10 @@ public final class CustomerScoreCalculator {
                               boolean hasPayments,
                               double latestScoreComponent,
                               double averageScoreComponent,
+                              double coverageScoreComponent,
                               double historyFactor,
-                              boolean hasOutstandingDebt) {
+                              boolean hasOutstandingDebt,
+                              Integer paymentMonths,
+                              Integer cycleMonths) {
     }
 }

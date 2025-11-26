@@ -14,8 +14,9 @@
         </div>
         <div class="ranking-explanation">
             <p>
-                La nota depende de cuán rápido paga cada compra: si liquida dentro de los primeros 45 días obtiene 7.0.
-                Cada día adicional sin abonos reduce la nota de manera proporcional hasta acercarse a 1.0 cuando pasan muchos meses sin pagar.
+                La nota final es el promedio simple de todos los ciclos de compra del cliente.
+                Cada ciclo recibe su propia evaluación considerando constancia de abonos, meses cubiertos y si quedó con saldo pendiente.
+                Mientras más ciclos consistentes mantenga, mejor se posiciona en este ranking.
             </p>
         </div>
         <nav class="pagination pagination--top"
@@ -42,6 +43,7 @@
                                   th:text="${direction == 'asc'} ? '⬆️' : '⬇️'">⬇️</span>
                         </a>
                     </th>
+                    <th>Ciclos</th>
                     <th>Nota</th>
                 </tr>
                 </thead>
@@ -54,6 +56,7 @@
                            th:href="@{'/customers/' + ${entry.id}}"
                            th:text="${entry.name}">Cliente</a>
                     </td>
+                    <td th:text="${entry.cycleCount}">0</td>
                     <td class="ranking-score-cell">
                         <button type="button"
                                 class="customer-score-chip customer-score-chip--button"
@@ -68,7 +71,7 @@
                 <tr class="ranking-explanation-row"
                     th:attr="id=${'ranking-expl-' + entry.id}"
                     hidden>
-                    <td colspan="3">
+                    <td colspan="4">
                         <p th:text="${entry.explanation != null ? entry.explanation : 'Sin explicación disponible.'}">
                             Explicación.
                         </p>
@@ -76,7 +79,7 @@
                 </tr>
                 </th:block>
                 <tr th:if="${rankingPage.empty}">
-                    <td colspan="3" class="ranking-empty">No hay clientes disponibles</td>
+                    <td colspan="4" class="ranking-empty">No hay clientes disponibles</td>
                 </tr>
                 </tbody>
             </table>

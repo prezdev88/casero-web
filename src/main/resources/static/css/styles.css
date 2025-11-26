@@ -546,6 +546,7 @@ header .container {
     padding: 0;
     text-align: left;
     cursor: pointer;
+    color: var(--text-color);
 }
 
 .score-cycles-header {

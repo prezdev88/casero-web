@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.14.2](https://github.com/prezdev88/casero-web/compare/v1.14.1...v1.14.2) (2025-11-28)
+
+
+### Refactors
+
+* add standard commits types to versionrc file ([2ae1be5](https://github.com/prezdev88/casero-web/commit/2ae1be5acbfbdc0ab926e245220e915c8dc8c69f))
+
 ### [1.14.1](https://github.com/prezdev88/casero-web/compare/v1.14.0...v1.14.1) (2025-11-28)
 
 ## [1.14.0](https://github.com/prezdev88/casero-web/compare/v1.13.0...v1.14.0) (2025-11-28)

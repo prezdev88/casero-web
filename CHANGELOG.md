@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.14.0](https://github.com/prezdev88/casero-web/compare/v1.13.0...v1.14.0) (2025-11-28)
+
+
+### Features
+
+* Highlight sales transactions in customer report and update PDF report title ([3b447cc](https://github.com/prezdev88/casero-web/commit/3b447ccc1bbaf96d3b8042d7ff005fe7636dab43))
+* Implement customer transaction report generation and UI enhancements ([0271f4a](https://github.com/prezdev88/casero-web/commit/0271f4a77e41de209f55fbc09cfb0dd921596b3a))
+
 ## [1.13.0](https://github.com/prezdev88/casero-web/compare/v1.12.0...v1.13.0) (2025-11-26)
 
 

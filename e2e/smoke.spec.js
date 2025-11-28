@@ -1,12 +1,13 @@
 const { test, expect } = require('@playwright/test');
 
 const ADMIN_PIN = process.env.ADMIN_PIN || '1111';
+const BASE_URL = process.env.BASE_URL || 'http://localhost:8080';
 
 test.describe('Smoke E2E', () => {
   test('login, create customer, register sale and payment', async ({ page }) => {
     const customerName = `E2E Cliente ${Date.now()}`;
 
-    await page.goto('/login');
+    await page.goto(`${BASE_URL}/login`);
     await page.getByTestId('login-pin').fill(ADMIN_PIN);
     await page.waitForURL('**/customers');
     await expect(page.getByTestId('nav-customers')).toBeVisible();

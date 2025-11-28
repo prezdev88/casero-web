@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Casero API Docs</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --fg: #e2e8f0;
+      --panel: #111827;
+      --accent: #22d3ee;
+      --muted: #94a3b8;
+      --mono: "JetBrains Mono", "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: var(--sans);
+      background: radial-gradient(circle at 20% 20%, rgba(34,211,238,0.05), transparent 30%), radial-gradient(circle at 80% 0%, rgba(94,234,212,0.08), transparent 35%), var(--bg);
+      color: var(--fg);
+      min-height: 100vh;
+    }
+    header {
+      padding: 16px 24px;
+      background: linear-gradient(90deg, #0b1223, #0d152b);
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .title {
+      font-weight: 700;
+      letter-spacing: 0.2px;
+    }
+    .subtitle {
+      color: var(--muted);
+      font-size: 14px;
+      margin-top: 4px;
+    }
+    .pill {
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(34,211,238,0.12);
+      color: #67e8f9;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    main {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      min-height: calc(100vh - 60px);
+    }
+    aside {
+      padding: 16px;
+      background: #0b1223;
+      border-right: 1px solid rgba(255,255,255,0.05);
+    }
+    .card {
+      padding: 16px;
+      background: var(--panel);
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.06);
+      margin-bottom: 12px;
+    }
+    .card h4 {
+      margin: 0 0 8px 0;
+      font-size: 14px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+    .card p {
+      margin: 0;
+      color: var(--fg);
+      line-height: 1.4;
+      font-size: 14px;
+    }
+    .small {
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .url {
+      font-family: var(--mono);
+      background: rgba(255,255,255,0.04);
+      padding: 6px 10px;
+      border-radius: 8px;
+      display: inline-block;
+      margin-top: 6px;
+      color: #a5f3fc;
+    }
+    .redoc-wrap {
+      padding: 0;
+      background: #0f172a;
+    }
+    redoc {
+      color-scheme: dark;
+    }
+    @media (max-width: 1024px) {
+      main { grid-template-columns: 1fr; }
+      aside { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    }
+  </style>
+  <script src="https://cdn.redoc.ly/redoc/latest/bundles/redoc.standalone.js"></script>
+</head>
+<body>
+  <header>
+    <div>
+      <div class="title">Casero API</div>
+      <div class="subtitle">Documentación estática OpenAPI (ReDoc) · version v1</div>
+    </div>
+    <div class="pill">Bearer JWT</div>
+  </header>
+  <main>
+    <aside>
+      <div class="card">
+        <h4>OpenAPI</h4>
+        <p>Archivo local:</p>
+        <div class="url">/openapi.yaml</div>
+      </div>
+      <div class="card">
+        <h4>Auth</h4>
+        <p class="small">1) POST <code>/api/v1/auth/login</code> con <code>{"pin": "####"}</code><br>2) Usa el header <code>Authorization: Bearer &lt;token&gt;</code>.</p>
+      </div>
+      <div class="card">
+        <h4>Ámbitos</h4>
+        <p class="small">- Público: login<br>- Protegido: `/api/v1/**`<br>- Admin: `/api/v1/admin/**`</p>
+      </div>
+    </aside>
+    <section class="redoc-wrap">
+      <div id="redoc-container"></div>
+    </section>
+  </main>
+  <script>
+    (function () {
+      const target = document.getElementById('redoc-container');
+      if (!window.Redoc) {
+        target.innerHTML = '<p style="color:#f87171;padding:24px">No se pudo cargar ReDoc. Revisa la conexión a cdn.redoc.ly.</p>';
+        return;
+      }
+      Redoc.init('/openapi.yaml', { scrollYOffset: 0, suppressWarnings: true }, target);
+    })();
+  </script>
+</body>
+</html>

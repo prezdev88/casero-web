@@ -1,0 +1,972 @@
+openapi: 3.0.3
+info:
+  title: Casero API
+  version: "v1"
+  description: API REST para clientes, transacciones, estadísticas y administración de usuarios.
+servers:
+  - url: /
+paths:
+  /api/v1/auth/login:
+    post:
+      summary: Login con PIN y devuelve un JWT Bearer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthLoginRequest'
+      responses:
+        "200":
+          description: Token generado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthTokenResponse'
+  /api/v1/auth/me:
+    get:
+      summary: Perfil del usuario autenticado
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Datos básicos del usuario
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthUserResponse'
+  /api/v1/customers:
+    get:
+      summary: Buscar clientes
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: q
+          schema:
+            type: string
+          description: Nombre, dirección o sector
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 0
+        - in: query
+          name: size
+          schema:
+            type: integer
+            default: 10
+      responses:
+        "200":
+          description: Página de clientes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageCustomerSummary'
+    post:
+      summary: Crear cliente
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCustomerForm'
+      responses:
+        "201":
+          description: Cliente creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerSummaryResponse'
+  /api/v1/customers/{id}:
+    get:
+      summary: Obtener detalle de cliente
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CustomerId'
+      responses:
+        "200":
+          description: Detalle con score y transacciones recientes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerDetailResponse'
+  /api/v1/customers/{id}/transactions:
+    get:
+      summary: Listar transacciones de un cliente
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CustomerId'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size50'
+        - in: query
+          name: ascending
+          schema:
+            type: boolean
+            default: false
+      responses:
+        "200":
+          description: Página de transacciones
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageTransaction'
+  /api/v1/customers/{id}/transactions/report:
+    get:
+      summary: Descargar PDF de transacciones
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CustomerId'
+        - in: query
+          name: range
+          schema:
+            type: string
+            enum: [ALL, MONTHS]
+            default: ALL
+        - in: query
+          name: months
+          schema:
+            type: integer
+        - in: query
+          name: type
+          schema:
+            type: string
+            enum: [ALL, SALE, PAYMENT, REFUND, FAULT_DISCOUNT, DEBT_FORGIVENESS]
+            default: ALL
+      responses:
+        "200":
+          description: PDF con el reporte
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+  /api/v1/customers/{id}/sales:
+    post:
+      summary: Registrar venta
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CustomerId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaleForm'
+      responses:
+        "201":
+          description: Balance actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerSummaryResponse'
+  /api/v1/customers/{id}/payments:
+    post:
+      summary: Registrar pago
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CustomerId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentForm'
+      responses:
+        "201":
+          description: Balance actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerSummaryResponse'
+  /api/v1/customers/{id}/refunds:
+    post:
+      summary: Registrar devolución
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CustomerId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MoneyTransactionForm'
+      responses:
+        "201":
+          description: Balance actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerSummaryResponse'
+  /api/v1/customers/{id}/fault-discounts:
+    post:
+      summary: Registrar descuento por falla
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CustomerId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MoneyTransactionForm'
+      responses:
+        "201":
+          description: Balance actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerSummaryResponse'
+  /api/v1/customers/{id}/forgiveness:
+    post:
+      summary: Condonar deuda
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CustomerId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DebtForgivenessForm'
+      responses:
+        "201":
+          description: Balance actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerSummaryResponse'
+  /api/v1/customers/{id}/name:
+    post:
+      summary: Actualizar nombre
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CustomerId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateNameForm'
+      responses:
+        "200":
+          description: Nombre actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerSummaryResponse'
+  /api/v1/customers/{id}/address:
+    post:
+      summary: Actualizar dirección
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CustomerId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAddressForm'
+      responses:
+        "200":
+          description: Dirección actualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerSummaryResponse'
+  /api/v1/customers/{id}/sector:
+    post:
+      summary: Actualizar sector
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CustomerId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSectorForm'
+      responses:
+        "200":
+          description: Sector actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerSummaryResponse'
+  /api/v1/customers/transactions/{transactionId}:
+    delete:
+      summary: Eliminar transacción de un cliente
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TransactionId'
+      responses:
+        "204":
+          description: Eliminada
+  /api/v1/customers/ranking:
+    get:
+      summary: Ranking de clientes por score
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - in: query
+          name: size
+          schema:
+            type: integer
+            default: 100
+        - in: query
+          name: direction
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+      responses:
+        "200":
+          description: Ranking paginado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageRankingEntry'
+  /api/v1/customers/overdue:
+    get:
+      summary: Clientes morosos
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: months
+          schema:
+            type: integer
+            default: 1
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size50'
+      responses:
+        "200":
+          description: Morosos paginados
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageOverdueCustomer'
+  /api/v1/transactions:
+    get:
+      summary: Listar transacciones
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size50'
+        - in: query
+          name: type
+          schema:
+            $ref: '#/components/schemas/TransactionType'
+      responses:
+        "200":
+          description: Página de transacciones
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageTransaction'
+  /api/v1/transactions/{transactionId}:
+    delete:
+      summary: Eliminar transacción
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TransactionId'
+      responses:
+        "204":
+          description: Eliminada
+  /api/v1/transactions/monthly-stats:
+    get:
+      summary: Resumen mensual de ventas y pagos
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: startDate
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: endDate
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Lista por mes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TransactionMonthlySummary'
+  /api/v1/statistics/summary:
+    get:
+      summary: Resumen global
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Totales y top clientes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatisticSummaryResponse'
+  /api/v1/statistics/monthly:
+    get:
+      summary: Estadísticas mensuales
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: start
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: end
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Métricas del periodo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MonthlyStatisticResponse'
+  /api/v1/statistics/debtors:
+    get:
+      summary: Top deudores
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size100'
+      responses:
+        "200":
+          description: Página de clientes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageCustomerSummary'
+  /api/v1/statistics/best-customers:
+    get:
+      summary: Mejores clientes
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size100'
+      responses:
+        "200":
+          description: Página de clientes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageCustomerSummary'
+  /api/v1/statistics/sectors:
+    get:
+      summary: Conteo de clientes por sector
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size100'
+      responses:
+        "200":
+          description: Paginado por sector
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageSectorCount'
+  /api/v1/sectors:
+    get:
+      summary: Listar sectores
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Sectores disponibles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SectorResponse'
+  /api/v1/admin/users:
+    get:
+      summary: Listar usuarios (ADMIN)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Usuarios
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserResponse'
+    post:
+      summary: Crear usuario (ADMIN)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserForm'
+      responses:
+        "201":
+          description: Usuario creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+  /api/v1/admin/users/{id}/pin:
+    put:
+      summary: Actualizar PIN (ADMIN)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePinRequest'
+      responses:
+        "204":
+          description: PIN actualizado
+  /api/v1/admin/customers/{id}/transactions/export:
+    get:
+      summary: Exportar transacciones de cliente (ADMIN)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CustomerId'
+      responses:
+        "200":
+          description: Transacciones exportadas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TransactionExportItem'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    CustomerId:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: integer
+    TransactionId:
+      in: path
+      name: transactionId
+      required: true
+      schema:
+        type: integer
+    Page:
+      in: query
+      name: page
+      schema:
+        type: integer
+        default: 0
+    Size50:
+      in: query
+      name: size
+      schema:
+        type: integer
+        default: 10
+        maximum: 50
+    Size100:
+      in: query
+      name: size
+      schema:
+        type: integer
+        default: 10
+        maximum: 100
+  schemas:
+    AuthLoginRequest:
+      type: object
+      required: [pin]
+      properties:
+        pin:
+          type: string
+          description: PIN numérico (4-12 dígitos)
+    AuthTokenResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        tokenType:
+          type: string
+          example: Bearer
+    AuthUserResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        role:
+          type: string
+          enum: [ADMIN, NORMAL]
+        authenticated:
+          type: boolean
+    CreateCustomerForm:
+      type: object
+      required: [name, sectorId, address]
+      properties:
+        name:
+          type: string
+        sectorId:
+          type: integer
+        address:
+          type: string
+    CustomerSummaryResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        address:
+          type: string
+        sectorId:
+          type: integer
+        sectorName:
+          type: string
+        debt:
+          type: integer
+        score:
+          type: number
+          format: double
+    CustomerDetailResponse:
+      type: object
+      properties:
+        customer:
+          $ref: '#/components/schemas/CustomerSummaryResponse'
+        score:
+          $ref: '#/components/schemas/CustomerScoreResponse'
+        recentTransactions:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransactionResponse'
+    CustomerScoreResponse:
+      type: object
+      properties:
+        score:
+          type: number
+        explanation:
+          type: string
+        cycles:
+          type: array
+          items:
+            $ref: '#/components/schemas/CustomerScoreCycleResponse'
+    CustomerScoreCycleResponse:
+      type: object
+      properties:
+        cycleNumber:
+          type: integer
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        result:
+          $ref: '#/components/schemas/ScoreResultResponse'
+    ScoreResultResponse:
+      type: object
+      properties:
+        score:
+          type: number
+        daysSinceLastPayment:
+          type: integer
+          nullable: true
+        maxIntervalBetweenPayments:
+          type: integer
+          nullable: true
+        averageIntervalBetweenPayments:
+          type: integer
+          nullable: true
+        lateIntervals:
+          type: integer
+          nullable: true
+        totalIntervals:
+          type: integer
+          nullable: true
+        hasPayments:
+          type: boolean
+        latestScoreComponent:
+          type: number
+        averageScoreComponent:
+          type: number
+        coverageScoreComponent:
+          type: number
+        historyFactor:
+          type: number
+        hasOutstandingDebt:
+          type: boolean
+        paymentMonths:
+          type: integer
+          nullable: true
+        cycleMonths:
+          type: integer
+          nullable: true
+    TransactionResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        customerId:
+          type: integer
+        date:
+          type: string
+          format: date
+        detail:
+          type: string
+        amount:
+          type: integer
+        balance:
+          type: integer
+        type:
+          $ref: '#/components/schemas/TransactionType'
+        createdAt:
+          type: string
+          format: date-time
+        itemCount:
+          type: integer
+          nullable: true
+    TransactionType:
+      type: string
+      enum: [SALE, PAYMENT, REFUND, FAULT_DISCOUNT, DEBT_FORGIVENESS]
+    RankingEntryResponse:
+      type: object
+      properties:
+        id: {type: integer}
+        name: {type: string}
+        debt: {type: integer}
+        score: {type: number}
+        explanation: {type: string}
+        cycleCount: {type: integer}
+    OverdueCustomerResponse:
+      type: object
+      properties:
+        id: {type: integer}
+        name: {type: string}
+        sector: {type: string}
+        debt: {type: integer}
+        lastPayment: {type: string}
+        monthsOverdue: {type: integer}
+    TransactionMonthlySummary:
+      type: object
+      properties:
+        month:
+          type: string
+          format: date
+        salesAmount:
+          type: integer
+        paymentsAmount:
+          type: integer
+    StatisticSummaryResponse:
+      type: object
+      properties:
+        totalDebt: {type: integer}
+        averageDebt: {type: integer}
+        customersCount: {type: integer}
+        topDebtors:
+          type: array
+          items:
+            $ref: '#/components/schemas/CustomerSummaryResponse'
+        bestCustomers:
+          type: array
+          items:
+            $ref: '#/components/schemas/CustomerSummaryResponse'
+    MonthlyStatisticResponse:
+      type: object
+      properties:
+        stats:
+          type: object
+          properties:
+            finishedCardsCount: {type: integer}
+            newCardsCount: {type: integer}
+            maintenanceCount: {type: integer}
+            totalItemsCount: {type: integer}
+            paymentsCount: {type: integer}
+            salesCount: {type: integer}
+        start:
+          type: string
+          format: date
+        end:
+          type: string
+          format: date
+    SectorResponse:
+      type: object
+      properties:
+        id: {type: integer}
+        name: {type: string}
+    CreateUserForm:
+      type: object
+      required: [name, role, pin]
+      properties:
+        name: {type: string}
+        role:
+          type: string
+          enum: [ADMIN, NORMAL]
+        pin:
+          type: string
+          description: PIN 4 dígitos
+    UpdatePinRequest:
+      type: object
+      required: [pin]
+      properties:
+        pin:
+          type: string
+          description: PIN 4-12 dígitos
+    UserResponse:
+      type: object
+      properties:
+        id: {type: integer}
+        name: {type: string}
+        role: {type: string, enum: [ADMIN, NORMAL]}
+        enabled: {type: boolean}
+        createdAt: {type: string, format: date-time}
+        updatedAt: {type: string, format: date-time}
+    TransactionExportItem:
+      type: object
+      properties:
+        id: {type: integer}
+        date: {type: string, format: date}
+        type: {type: string}
+        detail: {type: string}
+        amount: {type: integer}
+        balance: {type: integer}
+    PaymentForm:
+      type: object
+      required: [date, amount]
+      properties:
+        date: {type: string, format: date}
+        amount: {type: integer, minimum: 1}
+    MoneyTransactionForm:
+      type: object
+      required: [detail, date, amount]
+      properties:
+        detail: {type: string}
+        date: {type: string, format: date}
+        amount: {type: integer, minimum: 1}
+    SaleForm:
+      type: object
+      required: [detail, date, itemsCount, amount]
+      properties:
+        detail: {type: string}
+        date: {type: string, format: date}
+        itemsCount: {type: integer, minimum: 1}
+        amount: {type: integer, minimum: 1}
+    DebtForgivenessForm:
+      type: object
+      required: [detail, date]
+      properties:
+        detail: {type: string}
+        date: {type: string, format: date}
+    UpdateNameForm:
+      type: object
+      required: [newName]
+      properties:
+        newName: {type: string}
+    UpdateAddressForm:
+      type: object
+      required: [newAddress]
+      properties:
+        newAddress: {type: string}
+    UpdateSectorForm:
+      type: object
+      required: [sectorId]
+      properties:
+        sectorId: {type: integer}
+    PageCustomerSummary:
+      allOf:
+        - $ref: '#/components/schemas/PageResponse'
+        - type: object
+          properties:
+            content:
+              type: array
+              items:
+                $ref: '#/components/schemas/CustomerSummaryResponse'
+    PageRankingEntry:
+      allOf:
+        - $ref: '#/components/schemas/PageResponse'
+        - type: object
+          properties:
+            content:
+              type: array
+              items:
+                $ref: '#/components/schemas/RankingEntryResponse'
+    PageOverdueCustomer:
+      allOf:
+        - $ref: '#/components/schemas/PageResponse'
+        - type: object
+          properties:
+            content:
+              type: array
+              items:
+                $ref: '#/components/schemas/OverdueCustomerResponse'
+    PageTransaction:
+      allOf:
+        - $ref: '#/components/schemas/PageResponse'
+        - type: object
+          properties:
+            content:
+              type: array
+              items:
+                $ref: '#/components/schemas/TransactionResponse'
+    PageSectorCount:
+      allOf:
+        - $ref: '#/components/schemas/PageResponse'
+        - type: object
+          properties:
+            content:
+              type: array
+              items:
+                type: object
+                properties:
+                  name: {type: string}
+                  total: {type: integer}
+    PageResponse:
+      type: object
+      properties:
+        page: {type: integer}
+        size: {type: integer}
+        totalPages: {type: integer}
+        totalElements: {type: integer}
+        hasPrevious: {type: boolean}
+        hasNext: {type: boolean}

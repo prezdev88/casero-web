@@ -1,0 +1,201 @@
+### Auth - login (reemplaza PIN)
+POST http://localhost:8080/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "pin": "0709"
+}
+
+###
+@token = {{login.response.body.$.token}}
+
+### Auth - perfil
+GET http://localhost:8080/api/v1/auth/me
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI1M2Q2NjY4Yjk5NWE0MTE3ZDA1ZDc3OTlmNjU2MzY3MmY0NjU5ZDA1ZjlmOWZkNDVmOTYxMTY0ZGUyNTZiNWQwIiwidWlkIjoxLCJyb2xlIjoiQURNSU4iLCJuYW1lIjoiQWRtaW5pc3RyYWRvciIsImV4cCI6MTc2NDI1ODk2NCwiaWF0IjoxNzY0MjE1NzY0fQ.FVKrX6zll-XWLDHFjgKf5CJQG9EwWikcr4lM2cZYfzg
+
+### Listar clientes (búsqueda opcional)
+GET http://localhost:8080/api/v1/customers?q=perez&page=0&size=10
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI1M2Q2NjY4Yjk5NWE0MTE3ZDA1ZDc3OTlmNjU2MzY3MmY0NjU5ZDA1ZjlmOWZkNDVmOTYxMTY0ZGUyNTZiNWQwIiwidWlkIjoxLCJyb2xlIjoiQURNSU4iLCJuYW1lIjoiQWRtaW5pc3RyYWRvciIsImV4cCI6MTc2NDI1ODk2NCwiaWF0IjoxNzY0MjE1NzY0fQ.FVKrX6zll-XWLDHFjgKf5CJQG9EwWikcr4lM2cZYfzg
+
+### Crear cliente
+POST http://localhost:8080/api/v1/customers
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Cliente Demo",
+  "sectorId": 1,
+  "address": "Calle Falsa 123"
+}
+
+### Detalle de cliente
+@customerId = 1
+GET http://localhost:8080/api/v1/customers/{{customerId}}
+Authorization: Bearer {{token}}
+
+### Transacciones de cliente
+GET http://localhost:8080/api/v1/customers/{{customerId}}/transactions?page=0&size=10&ascending=false
+Authorization: Bearer {{token}}
+
+### Reporte PDF de transacciones (AJUSTAR TYPE/RANGE)
+GET http://localhost:8080/api/v1/customers/{{customerId}}/transactions/report?range=ALL&type=ALL
+Authorization: Bearer {{token}}
+
+### Registrar venta
+POST http://localhost:8080/api/v1/customers/{{customerId}}/sales
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "detail": "Venta prueba",
+  "date": "2024-01-01",
+  "itemsCount": 1,
+  "amount": 10000
+}
+
+### Registrar pago
+POST http://localhost:8080/api/v1/customers/{{customerId}}/payments
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "date": "2024-01-02",
+  "amount": 5000
+}
+
+### Registrar devolución
+POST http://localhost:8080/api/v1/customers/{{customerId}}/refunds
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "detail": "Devolución",
+  "date": "2024-01-03",
+  "amount": 1000
+}
+
+### Registrar descuento por falla
+POST http://localhost:8080/api/v1/customers/{{customerId}}/fault-discounts
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "detail": "Falla producto",
+  "date": "2024-01-04",
+  "amount": 500
+}
+
+### Condonar deuda
+POST http://localhost:8080/api/v1/customers/{{customerId}}/forgiveness
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "detail": "Condonación",
+  "date": "2024-01-05"
+}
+
+### Actualizar nombre
+POST http://localhost:8080/api/v1/customers/{{customerId}}/name
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "newName": "Nombre Actualizado"
+}
+
+### Actualizar dirección
+POST http://localhost:8080/api/v1/customers/{{customerId}}/address
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "newAddress": "Nueva dirección 456"
+}
+
+### Actualizar sector
+POST http://localhost:8080/api/v1/customers/{{customerId}}/sector
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "sectorId": 1
+}
+
+### Eliminar transacción (AJUSTA ID)
+@transactionId = 1
+DELETE http://localhost:8080/api/v1/customers/transactions/{{transactionId}}
+Authorization: Bearer {{token}}
+
+### Ranking de clientes
+GET http://localhost:8080/api/v1/customers/ranking?page=0&size=50&direction=desc
+Authorization: Bearer {{token}}
+
+### Morosos
+GET http://localhost:8080/api/v1/customers/overdue?months=1&page=0&size=10
+Authorization: Bearer {{token}}
+
+### Transacciones globales
+GET http://localhost:8080/api/v1/transactions?page=0&size=10&type=
+Authorization: Bearer {{token}}
+
+### Eliminar transacción global (AJUSTA ID)
+DELETE http://localhost:8080/api/v1/transactions/{{transactionId}}
+Authorization: Bearer {{token}}
+
+### Stats mensuales de transacciones
+GET http://localhost:8080/api/v1/transactions/monthly-stats?startDate=&endDate=
+Authorization: Bearer {{token}}
+
+### Resumen global
+GET http://localhost:8080/api/v1/statistics/summary
+Authorization: Bearer {{token}}
+
+### Stats mensuales (intervalo)
+GET http://localhost:8080/api/v1/statistics/monthly?start=&end=
+Authorization: Bearer {{token}}
+
+### Top deudores
+GET http://localhost:8080/api/v1/statistics/debtors?page=0&size=10
+Authorization: Bearer {{token}}
+
+### Mejores clientes
+GET http://localhost:8080/api/v1/statistics/best-customers?page=0&size=10
+Authorization: Bearer {{token}}
+
+### Clientes por sector
+GET http://localhost:8080/api/v1/statistics/sectors?page=0&size=10
+Authorization: Bearer {{token}}
+
+### Listar sectores
+GET http://localhost:8080/api/v1/sectors
+Authorization: Bearer {{token}}
+
+### Admin: listar usuarios
+GET http://localhost:8080/api/v1/admin/users
+Authorization: Bearer {{token}}
+
+### Admin: crear usuario
+POST http://localhost:8080/api/v1/admin/users
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Nuevo Admin",
+  "role": "ADMIN",
+  "pin": "1234"
+}
+
+### Admin: actualizar PIN
+@userId = 1
+PUT http://localhost:8080/api/v1/admin/users/{{userId}}/pin
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "pin": "5678"
+}
+
+### Admin: exportar transacciones de cliente
+GET http://localhost:8080/api/v1/admin/customers/{{customerId}}/transactions/export
+Authorization: Bearer {{token}}

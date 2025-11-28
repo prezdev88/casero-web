@@ -8,6 +8,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -29,18 +30,10 @@ public class PinAuthenticationProvider implements AuthenticationProvider {
 
         String rawPin = (String) token.getPrincipal();
         String fingerprint = pinHasher.fingerprint(rawPin);
-        AppUser user = userService.findByPinFingerprint(fingerprint)
-                .orElseThrow(() -> new BadCredentialsException("PIN incorrecto"));
-
-        if (!user.isEnabled()) {
-            throw new DisabledException("Usuario deshabilitado");
-        }
-
-        if (!pinHasher.matches(rawPin, user.getPinSalt(), user.getPinHash())) {
+        CaseroUserDetails userDetails = loadUserDetails(fingerprint);
+        if (!pinHasher.matches(rawPin, userDetails.getUser().getPinSalt(), userDetails.getUser().getPinHash())) {
             throw new BadCredentialsException("PIN incorrecto");
         }
-
-        CaseroUserDetails userDetails = new CaseroUserDetails(user);
         PinAuthenticationToken authenticated = new PinAuthenticationToken(
                 userDetails,
                 null,
@@ -52,5 +45,14 @@ public class PinAuthenticationProvider implements AuthenticationProvider {
     @Override
     public boolean supports(Class<?> authentication) {
         return PinAuthenticationToken.class.isAssignableFrom(authentication);
+    }
+
+    CaseroUserDetails loadUserDetails(String fingerprint) {
+        AppUser user = userService.findByPinFingerprint(fingerprint)
+                .orElseThrow(() -> new UsernameNotFoundException("PIN incorrecto"));
+        if (!user.isEnabled()) {
+            throw new DisabledException("Usuario deshabilitado");
+        }
+        return new CaseroUserDetails(user);
     }
 }

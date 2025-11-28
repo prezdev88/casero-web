@@ -14,7 +14,6 @@ import java.time.LocalDate;
 import java.util.List;
 
 public interface TransactionService {
-
     Page<Transaction> listAll(TransactionType type, Pageable pageable);
 
     Page<Transaction> listByCustomer(Long customerId, Pageable pageable);

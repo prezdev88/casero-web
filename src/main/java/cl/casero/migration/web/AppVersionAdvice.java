@@ -31,19 +31,25 @@ public class AppVersionAdvice {
 
     private String resolveVersion() {
         String resolved = readPomProperties("/META-INF/maven/cl.casero/casero-web/pom.properties");
+
         if (resolved != null) {
             return resolved;
         }
+
         resolved = readPomProperties("target/maven-archiver/pom.properties");
+
         if (resolved != null) {
             return resolved;
         }
+
         resolved = readPomVersionFromPomXml();
+
         return resolved != null ? resolved : "0.0.0";
     }
 
     private String readPomProperties(String location) {
         boolean classpathResource = location.startsWith("/");
+
         try (InputStream inputStream = classpathResource
                 ? getClass().getResourceAsStream(location)
                 : Files.exists(Path.of(location)) ? Files.newInputStream(Path.of(location)) : null) {
@@ -53,6 +59,7 @@ public class AppVersionAdvice {
             Properties properties = new Properties();
             properties.load(inputStream);
             String value = properties.getProperty("version");
+
             return value != null && !value.isBlank() ? value.trim() : null;
         } catch (IOException ignored) {
             return null;
@@ -61,9 +68,11 @@ public class AppVersionAdvice {
 
     private String readPomVersionFromPomXml() {
         Path pomPath = Path.of("pom.xml");
+
         if (!Files.exists(pomPath)) {
             return null;
         }
+
         try (InputStream inputStream = Files.newInputStream(pomPath)) {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             factory.setNamespaceAware(false);
@@ -81,6 +90,7 @@ public class AppVersionAdvice {
             }
         } catch (Exception ignored) {
         }
+        
         return null;
     }
 }

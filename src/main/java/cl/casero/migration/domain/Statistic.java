@@ -10,13 +10,16 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDate;
 
 @Entity
+@Getter
+@Setter
 @Table(name = "statistic")
 public class Statistic {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -35,52 +38,4 @@ public class Statistic {
 
     @Column(nullable = false)
     private LocalDate date;
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public TransactionType getType() {
-        return type;
-    }
-
-    public void setType(TransactionType type) {
-        this.type = type;
-    }
-
-    public Integer getAmount() {
-        return amount;
-    }
-
-    public void setAmount(Integer amount) {
-        this.amount = amount;
-    }
-
-    public SaleType getSaleType() {
-        return saleType;
-    }
-
-    public void setSaleType(SaleType saleType) {
-        this.saleType = saleType;
-    }
-
-    public Integer getItemsCount() {
-        return itemsCount;
-    }
-
-    public void setItemsCount(Integer itemsCount) {
-        this.itemsCount = itemsCount;
-    }
-
-    public LocalDate getDate() {
-        return date;
-    }
-
-    public void setDate(LocalDate date) {
-        this.date = date;
-    }
 }

@@ -4,13 +4,13 @@ import cl.casero.migration.domain.enums.TransactionType;
 
 public final class TransactionTypeUtil {
 
-    private TransactionTypeUtil() {
-    }
+    private TransactionTypeUtil() {}
 
     public static String label(TransactionType type) {
         if (type == null) {
             return "—";
         }
+
         return switch (type) {
             case SALE -> "Venta";
             case PAYMENT -> "Abono";

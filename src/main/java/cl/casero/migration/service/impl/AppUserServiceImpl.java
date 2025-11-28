@@ -5,6 +5,8 @@ import cl.casero.migration.domain.enums.UserRole;
 import cl.casero.migration.repository.AppUserRepository;
 import cl.casero.migration.service.AppUserService;
 import cl.casero.migration.util.PinHasher;
+import lombok.AllArgsConstructor;
+
 import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
@@ -12,15 +14,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 @Service
+@AllArgsConstructor
 public class AppUserServiceImpl implements AppUserService {
 
-    private final AppUserRepository repository;
     private final PinHasher pinHasher;
-
-    public AppUserServiceImpl(AppUserRepository repository, PinHasher pinHasher) {
-        this.repository = repository;
-        this.pinHasher = pinHasher;
-    }
+    private final AppUserRepository repository;
 
     @Override
     @Transactional(readOnly = true)
@@ -48,19 +46,21 @@ public class AppUserServiceImpl implements AppUserService {
         });
 
         AppUser user = new AppUser();
+
         user.setName(sanitizedName);
         user.setRole(role);
         user.setPinSalt(salt);
         user.setPinHash(hash);
         user.setPinFingerprint(fingerprint);
+
         return repository.save(user);
     }
 
     @Override
     @Transactional
     public void updatePin(Long userId, String pin) {
-        AppUser user = repository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+        AppUser user = repository.findById(userId).orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+        
         String sanitizedPin = sanitizePin(pin);
         String salt = pinHasher.generateSalt();
         String hash = pinHasher.hashWithSalt(sanitizedPin, salt);
@@ -88,10 +88,13 @@ public class AppUserServiceImpl implements AppUserService {
         if (!StringUtils.hasText(pin)) {
             throw new IllegalArgumentException("El PIN es obligatorio");
         }
+
         String normalized = pin.trim();
+
         if (!normalized.matches("\\d{4,12}")) {
             throw new IllegalArgumentException("El PIN debe tener entre 4 y 12 dígitos");
         }
+        
         return normalized;
     }
 }

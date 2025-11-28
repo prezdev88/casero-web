@@ -7,24 +7,19 @@ import cl.casero.migration.repository.CustomerRepository;
 import cl.casero.migration.repository.StatisticRepository;
 import cl.casero.migration.repository.TransactionRepository;
 import cl.casero.migration.service.StatisticsService;
+import lombok.AllArgsConstructor;
+
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 
 @Service
+@AllArgsConstructor
 public class StatisticsServiceImpl implements StatisticsService {
 
+    private final CustomerRepository customerRepository;
     private final StatisticRepository statisticRepository;
     private final TransactionRepository transactionRepository;
-    private final CustomerRepository customerRepository;
-
-    public StatisticsServiceImpl(StatisticRepository statisticRepository,
-                                 TransactionRepository transactionRepository,
-                                 CustomerRepository customerRepository) {
-        this.statisticRepository = statisticRepository;
-        this.transactionRepository = transactionRepository;
-        this.customerRepository = customerRepository;
-    }
 
     @Override
     public MonthlyStatistic getMonthlyStatistic(LocalDate start, LocalDate end) {
@@ -52,6 +47,7 @@ public class StatisticsServiceImpl implements StatisticsService {
     public MonthlyStatistic getMonthlyStatistic(int month, int year) {
         LocalDate start = LocalDate.of(year, month, 1);
         LocalDate end = start.plusMonths(1).minusDays(1);
+        
         return getMonthlyStatistic(start, end);
     }
 

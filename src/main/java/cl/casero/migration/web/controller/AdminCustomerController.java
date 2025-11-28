@@ -3,6 +3,8 @@ package cl.casero.migration.web.controller;
 import cl.casero.migration.domain.Transaction;
 import cl.casero.migration.service.CustomerService;
 import cl.casero.migration.service.TransactionService;
+import lombok.AllArgsConstructor;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,35 +16,34 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Controller
+@AllArgsConstructor
 @RequestMapping("/admin/customers")
 public class AdminCustomerController {
 
-    private final TransactionService transactionService;
     private final CustomerService customerService;
+    private final TransactionService transactionService;
 
-    public AdminCustomerController(TransactionService transactionService,
-                                   CustomerService customerService) {
-        this.transactionService = transactionService;
-        this.customerService = customerService;
-    }
-
-    @GetMapping("/{id}/transactions/json")
     @ResponseBody
+    @GetMapping("/{id}/transactions/json")
     public ResponseEntity<List<TransactionExportItem>> exportTransactions(@PathVariable Long id) {
         customerService.get(id);
+
         List<TransactionExportItem> items = transactionService.listAllByCustomer(id)
                 .stream()
                 .map(TransactionExportItem::fromEntity)
                 .toList();
+
         return ResponseEntity.ok(items);
     }
 
-    public record TransactionExportItem(Long id,
-                                        String date,
-                                        String type,
-                                        String detail,
-                                        Integer amount,
-                                        Integer balance) {
+    public record TransactionExportItem(
+        Long id,
+        String date,
+        String type,
+        String detail,
+        Integer amount,
+        Integer balance
+    ) {
         private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE;
 
         static TransactionExportItem fromEntity(Transaction transaction) {

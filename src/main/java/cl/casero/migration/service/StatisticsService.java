@@ -5,7 +5,6 @@ import cl.casero.migration.domain.MonthlyStatistic;
 import java.time.LocalDate;
 
 public interface StatisticsService {
-
     MonthlyStatistic getMonthlyStatistic(LocalDate start, LocalDate end);
 
     MonthlyStatistic getMonthlyStatistic(int month, int year);

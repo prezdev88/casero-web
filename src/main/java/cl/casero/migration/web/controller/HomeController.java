@@ -15,6 +15,7 @@ public class HomeController {
                 && authentication.getPrincipal() instanceof CaseroUserDetails) {
             return "redirect:/customers";
         }
+        
         return "redirect:/login";
     }
 }

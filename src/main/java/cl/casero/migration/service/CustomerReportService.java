@@ -35,20 +35,23 @@ public class CustomerReportService {
     private static final DateTimeFormatter TIMESTAMP_FORMAT = DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm", LOCALE_CL);
     private static final ZoneId DEFAULT_ZONE = ZoneId.of("America/Santiago");
 
-    public byte[] generateTransactionsReport(Customer customer,
-                                             List<Transaction> transactions,
-                                             String rangeLabel,
-                                             TransactionType filterType) {
+    public byte[] generateTransactionsReport(
+        Customer customer,
+        List<Transaction> transactions,
+        String rangeLabel,
+        TransactionType filterType
+    ) {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         try {
             Document document = new Document(PageSize.A4, 36, 36, 54, 36);
             PdfWriter.getInstance(document, out);
+
             Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16);
             Font sectionFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12);
             Font normalFont = FontFactory.getFont(FontFactory.HELVETICA, 10);
             Font smallFont = FontFactory.getFont(FontFactory.HELVETICA, 9);
-            HeaderFooter header = new HeaderFooter(new Phrase(
-                    "Generado el " + LocalDateTime.now(DEFAULT_ZONE).format(TIMESTAMP_FORMAT), smallFont), false);
+
+            HeaderFooter header = new HeaderFooter(new Phrase("Generado el " + LocalDateTime.now(DEFAULT_ZONE).format(TIMESTAMP_FORMAT), smallFont), false);
             header.setAlignment(Element.ALIGN_RIGHT);
             header.setBorderWidthBottom(0);
             document.setHeader(header);
@@ -58,7 +61,6 @@ public class CustomerReportService {
             title.setAlignment(Element.ALIGN_CENTER);
             title.setSpacingAfter(18f);
             document.add(title);
-
             document.add(buildCustomerSummaryTable(customer, normalFont));
             document.add(new Paragraph(" ", normalFont));
 
@@ -87,10 +89,12 @@ public class CustomerReportService {
         }
     }
 
-    private static PdfPTable buildRangeSummaryTable(String rangeLabel,
-                                                    TransactionType filterType,
-                                                    int transactionCount,
-                                                    Font font) {
+    private static PdfPTable buildRangeSummaryTable(
+        String rangeLabel,
+        TransactionType filterType,
+        int transactionCount,
+        Font font
+    ) {
         PdfPTable table = new PdfPTable(new float[]{2.5f, 4.5f});
         table.setWidthPercentage(100f);
         addSummaryRow(table, "Rango seleccionado", normalizeText(rangeLabel, "Personalizado"), font, false);
@@ -102,21 +106,28 @@ public class CustomerReportService {
 
     private static PdfPTable buildCustomerSummaryTable(Customer customer, Font font) {
         PdfPTable table = new PdfPTable(new float[]{2.5f, 4.5f});
+
         table.setWidthPercentage(100f);
         table.setSpacingAfter(8f);
+
         addSummaryRow(table, "Nombre", safe(customer.getName()), font, false);
         addSummaryRow(table, "Dirección", safe(customer.getAddress()), font, false);
+
         String sectorName = customer.getSector() != null ? safe(customer.getSector().getName()) : "No asignado";
+
         addSummaryRow(table, "Sector", sectorName, font, false);
         addSummaryRow(table, "Deuda actual", formatCurrency(customer.getDebt()), font, true);
+
         return table;
     }
 
-    private static void addSummaryRow(PdfPTable table,
-                                      String label,
-                                      String value,
-                                      Font font,
-                                      boolean highlightValue) {
+    private static void addSummaryRow(
+        PdfPTable table,
+        String label,
+        String value,
+        Font font,
+        boolean highlightValue
+    ) {
         Font labelFont = new Font(font);
         labelFont.setStyle(Font.BOLD);
         PdfPCell labelCell = new PdfPCell(new Phrase(label, labelFont));
@@ -170,10 +181,6 @@ public class CustomerReportService {
         cell.setPadding(6f);
         cell.setBackgroundColor(new Color(235, 241, 251));
         table.addCell(cell);
-    }
-
-    private static PdfPCell buildCell(String text, Font font) {
-        return buildCell(text, font, false);
     }
 
     private static PdfPCell buildCell(String text, Font font, boolean highlight) {

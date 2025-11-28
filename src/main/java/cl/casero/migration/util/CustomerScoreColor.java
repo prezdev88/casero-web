@@ -1,9 +1,9 @@
 package cl.casero.migration.util;
 
-public final class CustomerScoreColor {
+import lombok.NoArgsConstructor;
 
-    private CustomerScoreColor() {
-    }
+@NoArgsConstructor
+public final class CustomerScoreColor {
 
     public static String bucket(Double score) {
         if (score == null) {

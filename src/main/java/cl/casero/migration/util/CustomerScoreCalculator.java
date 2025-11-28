@@ -3,14 +3,14 @@ package cl.casero.migration.util;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 
+import lombok.NoArgsConstructor;
+
+@NoArgsConstructor
 public final class CustomerScoreCalculator {
 
     private static final double MAX_SCORE = 7.0;
     private static final double MIN_SCORE = 1.0;
     private static final int PERFECT_PAYMENT_WINDOW_DAYS = 45;
-
-    private CustomerScoreCalculator() {
-    }
 
     public static double calculateScore(ScoreInputs inputs) {
         return evaluate(inputs).score();
@@ -72,9 +72,11 @@ public final class CustomerScoreCalculator {
         double score = MAX_SCORE * ratio;
         return roundTwoDecimals(clamp(score, MIN_SCORE, MAX_SCORE));
     }
-    private static double computeHistoryFactor(Integer lateIntervalCount,
-                                               Integer intervalCount,
-                                               Integer maxInterval) {
+    private static double computeHistoryFactor(
+        Integer lateIntervalCount,
+        Integer intervalCount,
+        Integer maxInterval
+    ) {
         int totalIntervals = intervalCount == null ? 0 : intervalCount;
         int lateIntervals = lateIntervalCount == null ? 0 : lateIntervalCount;
         if (totalIntervals <= 0) {
@@ -134,30 +136,32 @@ public final class CustomerScoreCalculator {
         return roundTwoDecimals(MIN_SCORE + (adjustedRatio * (MAX_SCORE - MIN_SCORE)));
     }
 
-    public record ScoreInputs(int totalPayments,
-                              LocalDate lastPaymentDate,
-                              Integer maxIntervalBetweenPayments,
-                              Long totalIntervalDays,
-                              Integer intervalCount,
-                              Integer lateIntervalCount,
-                              Long paymentMonthCount,
-                              Integer cycleMonthCount,
-                              boolean hasOutstandingDebt) {
-    }
+    public record ScoreInputs(
+        int totalPayments,
+        LocalDate lastPaymentDate,
+        Integer maxIntervalBetweenPayments,
+        Long totalIntervalDays,
+        Integer intervalCount,
+        Integer lateIntervalCount,
+        Long paymentMonthCount,
+        Integer cycleMonthCount,
+        boolean hasOutstandingDebt
+    ) {}
 
-    public record ScoreResult(double score,
-                              Integer daysSinceLastPayment,
-                              Integer maxIntervalBetweenPayments,
-                              Integer averageIntervalBetweenPayments,
-                              Integer lateIntervals,
-                              Integer totalIntervals,
-                              boolean hasPayments,
-                              double latestScoreComponent,
-                              double averageScoreComponent,
-                              double coverageScoreComponent,
-                              double historyFactor,
-                              boolean hasOutstandingDebt,
-                              Integer paymentMonths,
-                              Integer cycleMonths) {
-    }
+    public record ScoreResult(
+        double score,
+        Integer daysSinceLastPayment,
+        Integer maxIntervalBetweenPayments,
+        Integer averageIntervalBetweenPayments,
+        Integer lateIntervals,
+        Integer totalIntervals,
+        boolean hasPayments,
+        double latestScoreComponent,
+        double averageScoreComponent,
+        double coverageScoreComponent,
+        double historyFactor,
+        boolean hasOutstandingDebt,
+        Integer paymentMonths,
+        Integer cycleMonths
+    ) {}
 }

@@ -1,6 +1,7 @@
 package cl.casero.migration.domain.enums;
 
 public enum SaleType {
+    
     NEW_SALE(0),
     MAINTENANCE(1);
 

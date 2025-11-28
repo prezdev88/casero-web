@@ -12,17 +12,21 @@ import java.util.Optional;
 public class AuthController {
 
     @GetMapping("/login")
-    public String login(@RequestParam(value = "error", required = false) Optional<String> error,
-                        @RequestParam(value = "logout", required = false) Optional<String> logout,
-                        @RequestParam(value = "timeout", required = false) Optional<String> timeout,
-                        Model model,
-                        Authentication authentication) {
+    public String login(
+        @RequestParam(value = "error", required = false) Optional<String> error,
+        @RequestParam(value = "logout", required = false) Optional<String> logout,
+        @RequestParam(value = "timeout", required = false) Optional<String> timeout,
+        Model model,
+        Authentication authentication
+    ) {
         if (authentication != null && authentication.isAuthenticated()) {
             return "redirect:/";
         }
+
         model.addAttribute("showError", error.isPresent());
         model.addAttribute("showLogout", logout.isPresent());
         model.addAttribute("showTimeout", timeout.isPresent());
+        
         return "auth/login";
     }
 }

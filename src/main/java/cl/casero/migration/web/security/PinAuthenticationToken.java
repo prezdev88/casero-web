@@ -6,8 +6,8 @@ import java.util.Collection;
 
 public class PinAuthenticationToken extends AbstractAuthenticationToken {
 
-    private final Object principal;
     private Object credentials;
+    private final Object principal;
 
     public PinAuthenticationToken(String pin) {
         super(null);
@@ -16,9 +16,11 @@ public class PinAuthenticationToken extends AbstractAuthenticationToken {
         setAuthenticated(false);
     }
 
-    public PinAuthenticationToken(Object principal,
-                                  Object credentials,
-                                  Collection<? extends GrantedAuthority> authorities) {
+    public PinAuthenticationToken(
+        Object principal,
+        Object credentials,
+        Collection<? extends GrantedAuthority> authorities
+    ) {
         super(authorities);
         this.principal = principal;
         this.credentials = credentials;

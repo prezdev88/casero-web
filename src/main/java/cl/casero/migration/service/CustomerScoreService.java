@@ -6,6 +6,10 @@ import cl.casero.migration.repository.TransactionRepository;
 import cl.casero.migration.util.CustomerScoreCalculator;
 import cl.casero.migration.util.CustomerScoreNarrator;
 import cl.casero.migration.util.CustomerScoreSummary;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -24,42 +28,46 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
+@AllArgsConstructor
 public class CustomerScoreService {
 
-    private final TransactionRepository transactionRepository;
     private final CustomerRepository customerRepository;
-
-    public CustomerScoreService(TransactionRepository transactionRepository,
-                                CustomerRepository customerRepository) {
-        this.transactionRepository = transactionRepository;
-        this.customerRepository = customerRepository;
-    }
+    private final TransactionRepository transactionRepository;
 
     public Map<Long, CustomerScoreSummary> calculateScoreSummaries(Collection<Customer> customers) {
         if (customers == null || customers.isEmpty()) {
             return Collections.emptyMap();
         }
+
         Set<Long> ids = customers.stream()
                 .map(Customer::getId)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
+
         if (ids.isEmpty()) {
             return Collections.emptyMap();
         }
+
         Map<Long, List<TransactionRepository.CustomerCycleProjection>> cycleStats = fetchCycleStats(ids);
         Map<Long, CustomerScoreSummary> summaries = new HashMap<>();
+
         for (Customer customer : customers) {
             if (customer == null) {
                 continue;
             }
+
             Long id = customer.getId();
+
             if (id == null) {
                 continue;
             }
+
             List<TransactionRepository.CustomerCycleProjection> cycles = cycleStats.getOrDefault(id, Collections.emptyList());
             CustomerScoreSummary summary = buildSummary(customer, cycles);
+
             summaries.put(id, summary);
         }
+
         return summaries;
     }
 
@@ -74,8 +82,10 @@ public class CustomerScoreService {
         if (customer == null) {
             return CustomerScoreCalculator.minScore();
         }
+
         Map<Long, CustomerScoreSummary> summaries = calculateScoreSummaries(List.of(customer));
         CustomerScoreSummary summary = summaries.get(customer.getId());
+
         return summary != null ? summary.score() : CustomerScoreCalculator.minScore();
     }
 
@@ -83,18 +93,23 @@ public class CustomerScoreService {
         if (customer == null) {
             return new ScorePresentation(CustomerScoreCalculator.minScore(), "", Collections.emptyList());
         }
+
         Map<Long, CustomerScoreSummary> summaries = calculateScoreSummaries(List.of(customer));
         CustomerScoreSummary summary = summaries.get(customer.getId());
+
         if (summary == null) {
             summary = new CustomerScoreSummary(CustomerScoreCalculator.minScore(), Collections.emptyList());
         }
+
         String explanation = CustomerScoreNarrator.buildExplanation(summary);
+
         return new ScorePresentation(summary.score(), explanation, summary.cycles());
     }
 
     public Page<RankingEntry> getRanking(Pageable pageable, boolean ascending) {
         Pageable effectivePageable = pageable == null ? PageRequest.of(0, 20) : pageable;
         List<Customer> customers = customerRepository.findAll();
+
         if (customers.isEmpty()) {
             return new PageImpl<>(Collections.emptyList(), effectivePageable, 0);
         }
@@ -136,9 +151,11 @@ public class CustomerScoreService {
         int total = ranking.size();
         int start = (int) effectivePageable.getOffset();
         int pageSize = effectivePageable.getPageSize();
+
         if (pageSize <= 0) {
             pageSize = 20;
         }
+
         if (start >= total) {
             int lastPage = Math.max((int) Math.ceil((double) total / pageSize) - 1, 0);
             int newStart = lastPage * pageSize;
@@ -146,11 +163,16 @@ public class CustomerScoreService {
             Pageable lastPageable = PageRequest.of(lastPage, pageSize, effectivePageable.getSort());
             return new PageImpl<>(ranking.subList(newStart, newEnd), lastPageable, total);
         }
+
         int end = Math.min(start + pageSize, total);
         List<RankingEntry> pageContent = ranking.subList(start, end);
+
         return new PageImpl<>(pageContent, effectivePageable, total);
     }
 
+    @Getter
+    @Setter
+    @AllArgsConstructor
     public static final class RankingEntry {
         private final Long id;
         private final String name;
@@ -158,39 +180,6 @@ public class CustomerScoreService {
         private final Double score;
         private final String explanation;
         private final int cycleCount;
-
-        public RankingEntry(Long id, String name, Integer debt, Double score, String explanation, int cycleCount) {
-            this.id = id;
-            this.name = name;
-            this.debt = debt;
-            this.score = score;
-            this.explanation = explanation;
-            this.cycleCount = cycleCount;
-        }
-
-        public Long getId() {
-            return id;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public Integer getDebt() {
-            return debt;
-        }
-
-        public Double getScore() {
-            return score;
-        }
-
-        public String getExplanation() {
-            return explanation;
-        }
-
-        public int getCycleCount() {
-            return cycleCount;
-        }
     }
 
     public record ScorePresentation(double score, String explanation, List<CustomerScoreSummary.CycleScore> cycles) {
@@ -200,20 +189,27 @@ public class CustomerScoreService {
         if (ids == null || ids.isEmpty()) {
             return Collections.emptyMap();
         }
+
         List<TransactionRepository.CustomerCycleProjection> stats = transactionRepository.findCustomerCycleStats(List.copyOf(ids));
         Map<Long, List<TransactionRepository.CustomerCycleProjection>> grouped = new HashMap<>();
+
         for (TransactionRepository.CustomerCycleProjection projection : stats) {
             if (projection.getCustomerId() == null) {
                 continue;
             }
+
             grouped.computeIfAbsent(projection.getCustomerId(), unused -> new ArrayList<>()).add(projection);
         }
+
         return grouped;
     }
 
-    private CustomerScoreSummary buildSummary(Customer customer,
-                                              List<TransactionRepository.CustomerCycleProjection> cycleProjections) {
+    private CustomerScoreSummary buildSummary(
+        Customer customer,
+        List<TransactionRepository.CustomerCycleProjection> cycleProjections
+    ) {
         List<CustomerScoreSummary.CycleScore> cycleScores = new ArrayList<>();
+
         if (cycleProjections != null && !cycleProjections.isEmpty()) {
             int counter = 1;
             for (TransactionRepository.CustomerCycleProjection projection : cycleProjections) {
@@ -226,17 +222,21 @@ public class CustomerScoreService {
                         result));
             }
         }
+
         if (cycleScores.isEmpty()) {
             boolean hasOutstandingDebt = customer != null && customer.getDebt() != null && customer.getDebt() > 0;
             CustomerScoreCalculator.ScoreInputs fallbackInputs = new CustomerScoreCalculator.ScoreInputs(
                     0, null, null, null, null, null, null, null, hasOutstandingDebt);
             CustomerScoreCalculator.ScoreResult fallbackSummary = CustomerScoreCalculator.evaluate(fallbackInputs);
+
             return new CustomerScoreSummary(fallbackSummary.score(), Collections.emptyList());
         }
+
         DoubleSummaryStatistics stats = cycleScores.stream()
                 .mapToDouble(cycle -> cycle.result().score())
                 .summaryStatistics();
         double roundedAverage = roundTwoDecimals(stats.getAverage());
+        
         return new CustomerScoreSummary(roundedAverage, cycleScores);
     }
 

@@ -6,6 +6,8 @@ import cl.casero.migration.service.TransactionService;
 import cl.casero.migration.service.dto.TransactionMonthlySummary;
 import cl.casero.migration.util.CurrencyUtil;
 import cl.casero.migration.util.DateTimeUtil;
+import lombok.AllArgsConstructor;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -23,20 +25,19 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Controller
+@AllArgsConstructor
 @RequestMapping("/transactions")
 public class TransactionController {
 
     private final TransactionService transactionService;
 
-    public TransactionController(TransactionService transactionService) {
-        this.transactionService = transactionService;
-    }
-
     @GetMapping
-    public String listTransactions(@RequestParam(value = "page", defaultValue = "0") int page,
-                                   @RequestParam(value = "size", defaultValue = "10") int size,
-                                   @RequestParam(value = "type", required = false) TransactionType type,
-                                   Model model) {
+    public String listTransactions(
+        @RequestParam(value = "page", defaultValue = "0") int page,
+        @RequestParam(value = "size", defaultValue = "10") int size,
+        @RequestParam(value = "type", required = false) TransactionType type,
+        Model model
+    ) {
         int sanitizedPage = Math.max(page, 0);
         int sanitizedSize = Math.min(Math.max(size, 1), 50);
         Sort sort = Sort.by(Sort.Direction.DESC, "date").and(Sort.by(Sort.Direction.DESC, "createdAt"));
@@ -48,16 +49,18 @@ public class TransactionController {
         model.addAttribute("currencyUtil", CurrencyUtil.class);
         model.addAttribute("types", TransactionType.values());
         model.addAttribute("selectedType", type);
+
         return "transactions/list";
     }
 
-    @GetMapping(value = "/monthly-stats", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
+    @GetMapping(value = "/monthly-stats", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<TransactionMonthlySummary> monthlyStats(
-            @RequestParam(value = "startDate", required = false)
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam(value = "endDate", required = false)
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        @RequestParam(value = "startDate", required = false)
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+        @RequestParam(value = "endDate", required = false)
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
+    ) {
         return transactionService.getMonthlySummary(startDate, endDate);
     }
 }

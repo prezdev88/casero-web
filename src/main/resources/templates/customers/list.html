@@ -7,14 +7,14 @@
     <div th:replace="~{fragments/messages :: messages}"></div>
 
     <div class="card">
-        <div id="search-form">
-            <input type="search" id="query" name="q" th:value="${query}" placeholder="Buscar por nombre, dirección o sector" autofocus autocomplete="off">
+        <div id="search-form" data-testid="customer-search">
+            <input type="search" id="query" name="q" th:value="${query}" placeholder="Buscar por nombre, dirección o sector" autofocus autocomplete="off" data-testid="customer-search-input">
         </div>
     </div>
 
-    <div class="card" id="results-card" aria-live="polite" th:classappend="${!showResults} ? ' hidden'">
+    <div class="card" id="results-card" aria-live="polite" th:classappend="${!showResults} ? ' hidden'" data-testid="customer-results">
         <h3 id="results-count" th:text="${customersPage.totalElements} + ' usuarios'">0 usuarios</h3>
-        <div class="card-list" id="results-list">
+        <div class="card-list" id="results-list" data-testid="customer-results-list">
             <a class="customer-card"
                th:each="customer : ${customersPage.content}"
                th:with="formattedDebt=${T(cl.casero.migration.util.CurrencyUtil).format(customer.debt)},score=${customerScores[customer.id]}"
@@ -23,7 +23,8 @@
                th:data-customer-name="${customer.name}"
                 th:data-customer-debt="${formattedDebt}"
                 th:data-customer-debt-raw="${customer.debt}"
-               th:attr="data-customer-score=${score}">
+               th:attr="data-customer-score=${score}"
+               data-testid="customer-card">
                 <div class="customer-card__row">
                     <span class="customer-card__name" th:text="${customer.name}">Nombre</span>
                     <span class="customer-score-chip"
@@ -274,6 +275,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const buildCard = (customer) => {
         const link = document.createElement('a');
         link.className = 'customer-card';
+        link.setAttribute('data-testid', 'customer-card');
         link.href = `${customerDetailBase}${customer.id}`;
         link.dataset.customerId = customer.id;
         link.dataset.customerName = customer.name;

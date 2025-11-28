@@ -7,47 +7,47 @@
                       th:text="${'v' + (appVersion ?: '0.0.0')}">v1.0.1</span>
             </div>
         </div>
-        <button class="nav-toggle" type="button" aria-controls="main-menu" aria-expanded="false">
+        <button class="nav-toggle" type="button" aria-controls="main-menu" aria-expanded="false" data-testid="navbar-toggle">
             <span aria-hidden="true">☰</span>
             <span class="sr-only">Mostrar u ocultar menú</span>
         </button>
         <nav id="main-menu" class="nav-links">
-            <a th:href="@{/customers}">
+            <a th:href="@{/customers}" data-testid="nav-customers">
                 <span class="nav-link__icon" aria-hidden="true">📇</span>
                 <span class="nav-link__text">Clientes</span>
             </a>
-            <a th:href="@{/customers/new}">
+            <a th:href="@{/customers/new}" data-testid="nav-customers-new">
                 <span class="nav-link__icon" aria-hidden="true">➕</span>
                 <span class="nav-link__text">Crear Cliente</span>
             </a>
-            <a th:href="@{/statistics}">
+            <a th:href="@{/statistics}" data-testid="nav-statistics">
                 <span class="nav-link__icon" aria-hidden="true">💰</span>
                 <span class="nav-link__text">Deuda total</span>
             </a>
-            <a th:href="@{/statistics/monthly}">
+            <a th:href="@{/statistics/monthly}" data-testid="nav-statistics-monthly">
                 <span class="nav-link__icon" aria-hidden="true">📈</span>
                 <span class="nav-link__text">Estadísticas</span>
             </a>
-            <a th:href="@{/transactions}">
+            <a th:href="@{/transactions}" data-testid="nav-transactions">
                 <span class="nav-link__icon" aria-hidden="true">🔁</span>
                 <span class="nav-link__text">Transacciones</span>
             </a>
-            <a th:href="@{/debtors}">
+            <a th:href="@{/debtors}" data-testid="nav-debtors">
                 <span class="nav-link__icon" aria-hidden="true">⚠️</span>
                 <span class="nav-link__text">Morosos</span>
             </a>
-            <a th:if="${currentUser != null and currentUser.admin}" th:href="@{/admin/users}">
+            <a th:if="${currentUser != null and currentUser.admin}" th:href="@{/admin/users}" data-testid="nav-admin">
                 <span class="nav-link__icon" aria-hidden="true">🛠️</span>
                 <span class="nav-link__text">Admin Settings</span>
             </a>
-            <button class="theme-toggle nav-theme-toggle" id="theme-toggle" type="button" aria-label="Cambiar tema">
+            <button class="theme-toggle nav-theme-toggle" id="theme-toggle" type="button" aria-label="Cambiar tema" data-testid="theme-toggle">
                 🌙
             </button>
             <div class="nav-session" th:if="${currentUser != null}">
                 <span class="nav-session__user"
                       th:text="${currentUser.name + ' · ' + currentUser.role.name()}">Usuario</span>
                 <form th:action="@{/logout}" method="post">
-                    <button type="submit" class="nav-session__logout">Cerrar sesión</button>
+                    <button type="submit" class="nav-session__logout" data-testid="nav-logout">Cerrar sesión</button>
                 </form>
             </div>
         </nav>

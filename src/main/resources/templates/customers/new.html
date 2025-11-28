@@ -7,13 +7,13 @@
     <div class="card">
         <h2>Crear Cliente</h2>
         <p>Total de clientes actuales: <strong th:text="${customersCount}">0</strong></p>
-        <form th:object="${customerForm}" th:action="@{/customers}" method="post">
+        <form th:object="${customerForm}" th:action="@{/customers}" method="post" data-testid="customer-create-form">
             <label>Nombre</label>
-            <input type="text" th:field="*{name}">
+            <input type="text" th:field="*{name}" data-testid="customer-name">
             <div th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
 
             <label>Sector</label>
-            <select th:field="*{sectorId}">
+            <select th:field="*{sectorId}" data-testid="customer-sector">
                 <option th:each="sector : ${sectors}"
                         th:value="${sector.id}"
                         th:selected="${customerForm.sectorId == null ? sector.name.equals('Santa Cruz') : sector.id == customerForm.sectorId}"
@@ -25,10 +25,10 @@
             </div>
 
             <label>Dirección</label>
-            <input type="text" th:field="*{address}">
+            <input type="text" th:field="*{address}" data-testid="customer-address">
             <div th:if="${#fields.hasErrors('address')}" th:errors="*{address}"></div>
 
-            <button type="submit">Crear</button>
+            <button type="submit" data-testid="customer-create-submit">Crear</button>
         </form>
     </div>
 </div>

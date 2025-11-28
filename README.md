@@ -61,6 +61,20 @@ mvn spring-boot:run
 
 La aplicación quedará disponible en `http://localhost:8080`.
 
+### Tests E2E (Playwright)
+
+- Dockerizado con stack completo (DB + app + runner). El script clona la rama que indiques antes de ejecutar los tests:
+  ```bash
+  BRANCH=develop ./run-tests-docker.sh
+  ```
+  Variables:
+  - `BRANCH` (por defecto `develop`)
+  - `REPO_URL` (por defecto el repo público)
+  - `ADMIN_PIN` (por defecto `1111`)
+  - `PLAYWRIGHT_HEADLESS` (`true` por defecto; pon `false` para ver el navegador)
+  - `BASE_URL` (por defecto `http://app:8080` dentro del compose)
+
+
 ### Publicación de versiones
 
 Este repositorio usa [`standard-version`](https://github.com/conventional-changelog/standard-version) para generar changelog y bumps semánticos a partir de commits convencionales. Luego de preparar tus cambios:

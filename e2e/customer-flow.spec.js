@@ -3,8 +3,8 @@ const { test, expect } = require('@playwright/test');
 const ADMIN_PIN = process.env.ADMIN_PIN || '1111';
 const BASE_URL = process.env.BASE_URL || 'http://localhost:8080';
 
-test.describe('Smoke E2E', () => {
-  test('login, create customer, register sale and payment', async ({ page }) => {
+test.describe('Flujo principal usuario normal', () => {
+  test('login, crear cliente, venta y abono', async ({ page }) => {
     const customerName = `E2E Cliente ${Date.now()}`;
 
     await page.goto(`${BASE_URL}/login`);
@@ -24,11 +24,12 @@ test.describe('Smoke E2E', () => {
     const createdCard = page.getByTestId('customer-card').filter({ hasText: customerName }).first();
     await createdCard.waitFor();
     await createdCard.click();
+    await page.getByRole('link', { name: /ver transacciones/i }).click();
     await page.waitForURL(/\/customers\/\d+$/);
 
     await page.getByTestId('customer-action-sale').click();
     await page.waitForURL(/\/actions\/sale$/);
-    await page.getByTestId('sale-detail').fill('Mantencion E2E');
+    await page.getByTestId('sale-detail').fill('Mantención E2E');
     await page.getByTestId('sale-items').fill('1');
     await page.getByTestId('sale-amount').fill('1000');
     await page.getByTestId('sale-submit').click();
@@ -45,6 +46,6 @@ test.describe('Smoke E2E', () => {
     await expect(transactions).toHaveCount(2);
     const transactionTexts = await transactions.allTextContents();
     expect(transactionTexts.join(' ')).toContain('Venta');
-    expect(transactionTexts.join(' ')).toContain('Pago');
+    expect(transactionTexts.join(' ')).toContain('Abono');
   });
 });

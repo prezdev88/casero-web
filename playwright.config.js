@@ -2,6 +2,7 @@ const { defineConfig } = require('@playwright/test');
 
 const baseURL = process.env.BASE_URL || 'http://localhost:8080';
 const startCommand = process.env.E2E_START_COMMAND;
+const workers = Number(process.env.PLAYWRIGHT_WORKERS || 1);
 
 module.exports = defineConfig({
   testDir: './e2e',
@@ -16,6 +17,7 @@ module.exports = defineConfig({
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
   },
+  workers,
   webServer: startCommand
     ? {
         command: startCommand,

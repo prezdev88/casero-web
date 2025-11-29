@@ -63,16 +63,8 @@ La aplicación quedará disponible en `http://localhost:8080`.
 
 ### Tests E2E (Playwright)
 
-- Dockerizado con stack completo (DB + app + runner). El script clona la rama que indiques antes de ejecutar los tests:
-  ```bash
-  BRANCH=develop ./run-tests-docker.sh
-  ```
-  Variables:
-  - `BRANCH` (por defecto `develop`)
-  - `REPO_URL` (por defecto el repo público)
-  - `ADMIN_PIN` (por defecto `1111`)
-  - `PLAYWRIGHT_HEADLESS` (`true` por defecto; pon `false` para ver el navegador)
-  - `BASE_URL` (por defecto `http://app:8080` dentro del compose)
+- Specs en `e2e/`, config en `playwright.config.js`, runner en `run-tests.sh`.
+- Local: `./run-tests.sh` (levanta Postgres con `start-postgre.sh`, instala deps y por defecto inicia la app con `mvn spring-boot:run -Dspring-boot.run.profiles=local`; pasa `E2E_START_COMMAND=""` si ya la tienes arriba). Variables: `BASE_URL` (default `http://localhost:8080`), `ADMIN_PIN` (default `1111`), `PLAYWRIGHT_HEADLESS` (`false` para ver el navegador), `PLAYWRIGHT_WORKERS` (default `1`).
 
 
 ### Publicación de versiones

@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Runner local para la suite E2E.
+# Variables opcionales:
+#   BASE_URL (default: http://localhost:8080)
+#   ADMIN_PIN (default: 1111)
+#   E2E_START_COMMAND (default: mvn spring-boot:run -Dspring-boot.run.profiles=local)
+#   PLAYWRIGHT_HEADLESS (default: true; pon false para ver el navegador)
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$ROOT_DIR"
+
+BASE_URL="${BASE_URL:-http://localhost:8080}"
+ADMIN_PIN="${ADMIN_PIN:-1111}"
+E2E_START_COMMAND="${E2E_START_COMMAND:-mvn spring-boot:run -Dspring-boot.run.profiles=local}"
+PLAYWRIGHT_HEADLESS="${PLAYWRIGHT_HEADLESS:-false}"
+
+# Arch no está soportado oficialmente; saltamos validación de host.
+export PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=1
+
+echo ">> Ensuring JS dependencies..."
+npm install
+
+echo ">> Installing Playwright browsers (may show warnings on Arch)..."
+npx playwright install
+
+echo ">> Starting local Postgres (docker compose db)..."
+"$ROOT_DIR/start-postgre.sh"
+
+echo ">> Ensuring seed admin/normal users in DB..."
+docker compose -f "$ROOT_DIR/docker-compose.yml" exec -T db psql -U casero -d casero <<'SQL'
+INSERT INTO app_user (name, role, pin_hash, pin_salt, pin_fingerprint, enabled)
+VALUES
+  ('Administrador', 'ADMIN', '39f3a563f18cc784297b820fd271db2f0e3e1da6330333e3afa8d1dda95d9cc7', 'a1b2c3d4e5f60708', '0ffe1abd1a08215353c233d6e009613e95eec4253832a761af28ff37ac5a150c', true),
+  ('Vendedor', 'NORMAL', '154b36cf116dc0c09ce4f7727916a396e880b3d27a154cecc9373f668fbd21b5', '0f1e2d3c4b5a6978', 'edee29f882543b956620b26d0ee0e7e950399b1c4222f5de05e06425b4c995e9', true)
+ON CONFLICT (pin_fingerprint) DO UPDATE
+SET name = EXCLUDED.name, role = EXCLUDED.role, enabled = true;
+SQL
+
+echo ">> Running E2E suite"
+echo "   BASE_URL=${BASE_URL}"
+echo "   ADMIN_PIN=${ADMIN_PIN}"
+echo "   PLAYWRIGHT_HEADLESS=${PLAYWRIGHT_HEADLESS}"
+echo "   PLAYWRIGHT_WORKERS=${PLAYWRIGHT_WORKERS:-1}"
+if [[ -n "$E2E_START_COMMAND" ]]; then
+  echo "   E2E_START_COMMAND=${E2E_START_COMMAND}"
+else
+  echo "   Reusing existing app server (no start command set)"
+fi
+
+BASE_URL="$BASE_URL" \
+ADMIN_PIN="$ADMIN_PIN" \
+E2E_START_COMMAND="$E2E_START_COMMAND" \
+PLAYWRIGHT_HEADLESS="$PLAYWRIGHT_HEADLESS" \
+PLAYWRIGHT_WORKERS="${PLAYWRIGHT_WORKERS:-1}" \
+npm test

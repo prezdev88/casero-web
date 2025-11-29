@@ -9,8 +9,7 @@
         <form th:object="${paymentForm}"
               th:action="@{'/customers/' + ${customer.id} + '/payments'}"
               method="post"
-              data-disable-on-submit="true"
-              data-testid="payment-form">
+              data-disable-on-submit="true">
             <label>Monto</label>
             <input type="text" inputmode="numeric" data-money-input="true" th:field="*{amount}" data-testid="payment-amount">
             <div th:if="${#fields.hasErrors('amount')}" th:errors="*{amount}"></div>
@@ -18,13 +17,12 @@
                data-balance-preview
                data-balance-mode="decrease"
                th:attr="data-balance-current=${customer.debt}"
-               th:text="'Saldo luego de registrar: ' + ${T(cl.casero.migration.util.CurrencyUtil).format(customer.debt)}"
-               data-testid="payment-balance-preview">
+               th:text="'Saldo luego de registrar: ' + ${T(cl.casero.migration.util.CurrencyUtil).format(customer.debt)}">
                 Saldo luego de registrar: $0
             </p>
 
             <label>Fecha</label>
-            <input type="date" th:field="*{date}" th:value="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}" data-testid="payment-date">
+            <input type="date" th:field="*{date}" th:value="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}">
             <div th:if="${#fields.hasErrors('date')}" th:errors="*{date}"></div>
 
             <button type="submit" data-loading-text="Abonando..." data-testid="payment-submit">Abonar</button>

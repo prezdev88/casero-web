@@ -7,14 +7,14 @@
     <div th:replace="~{fragments/messages :: messages}"></div>
 
     <div class="card">
-        <div id="search-form" data-testid="customer-search">
+        <div id="search-form">
             <input type="search" id="query" name="q" th:value="${query}" placeholder="Buscar por nombre, dirección o sector" autofocus autocomplete="off" data-testid="customer-search-input">
         </div>
     </div>
 
-    <div class="card" id="results-card" aria-live="polite" th:classappend="${!showResults} ? ' hidden'" data-testid="customer-results">
+    <div class="card" id="results-card" aria-live="polite" th:classappend="${!showResults} ? ' hidden'">
         <h3 id="results-count" th:text="${customersPage.totalElements} + ' usuarios'">0 usuarios</h3>
-        <div class="card-list" id="results-list" data-testid="customer-results-list">
+        <div class="card-list" id="results-list">
             <a class="customer-card"
                th:each="customer : ${customersPage.content}"
                th:with="formattedDebt=${T(cl.casero.migration.util.CurrencyUtil).format(customer.debt)},score=${customerScores[customer.id]}"

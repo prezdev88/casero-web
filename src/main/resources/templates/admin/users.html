@@ -32,7 +32,7 @@
                             th:value="${role}"
                             th:text="${role.name()}"></option>
                 </select>
-                <span class="form-error" th:if="${#fields.hasErrors('role')}"
+                    <span class="form-error" th:if="${#fields.hasErrors('role')}"
                       th:errors="*{role}">Error</span>
             </label>
             <label>

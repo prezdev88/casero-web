@@ -7,7 +7,7 @@
     <div class="card">
         <h2>Crear Cliente</h2>
         <p>Total de clientes actuales: <strong th:text="${customersCount}">0</strong></p>
-        <form th:object="${customerForm}" th:action="@{/customers}" method="post" data-testid="customer-create-form">
+        <form th:object="${customerForm}" th:action="@{/customers}" method="post">
             <label>Nombre</label>
             <input type="text" th:field="*{name}" data-testid="customer-name">
             <div th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>

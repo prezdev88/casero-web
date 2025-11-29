@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.15.0](https://github.com/prezdev88/casero-web/compare/v1.14.2...v1.15.0) (2025-11-29)
+
+
+### Features
+
+* add docker-compose.e2e.yml and update run-tests.sh for E2E testing setup ([79f10aa](https://github.com/prezdev88/casero-web/commit/79f10aa32f2e4a33bce0237c85f376552be3be0c))
+* add E2E testing with Playwright and Docker support; enhance templates with data-testid attributes for better testability ([5158483](https://github.com/prezdev88/casero-web/commit/51584837d36d2513e7048ee4565c184af978dd18))
+* implement E2E testing with Playwright; update README and scripts for local and Docker usage ([ac83fe3](https://github.com/prezdev88/casero-web/commit/ac83fe3b3964add2c5f937c3c0e6cb9ce4706124))
+
+
+### Bug Fixes
+
+* fix tests ([c6a3599](https://github.com/prezdev88/casero-web/commit/c6a3599e263b58df70b5ded30024460f6c3fba43))
+* update cleanup function to remove Docker volumes on teardown ([1793a8f](https://github.com/prezdev88/casero-web/commit/1793a8f3668d574af5021b4ceecda6a28a23bb87))
+
 ### [1.14.2](https://github.com/prezdev88/casero-web/compare/v1.14.1...v1.14.2) (2025-11-28)
 
 

@@ -3,17 +3,26 @@ set -euo pipefail
 
 # Runner local para la suite E2E.
 # Variables opcionales:
-#   BASE_URL (default: http://localhost:8080)
+#   BASE_URL (default: http://localhost:8080/casero)
 #   ADMIN_PIN (default: 1111)
-#   E2E_START_COMMAND (default: mvn spring-boot:run -Dspring-boot.run.profiles=local)
-#   PLAYWRIGHT_HEADLESS (default: true; pon false para ver el navegador)
+#   E2E_START_COMMAND (default: vacío, porque usamos docker compose para la app)
+#   PLAYWRIGHT_HEADLESS (default: false; pon true para headless)
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$ROOT_DIR"
+COMPOSE_FILE="$ROOT_DIR/docker-compose.yml"
+COMPOSE_E2E_FILE="$ROOT_DIR/docker-compose.e2e.yml"
 
-BASE_URL="${BASE_URL:-http://localhost:8080}"
+cleanup() {
+  echo ">> Stopping docker compose services..."
+  docker compose -f "$COMPOSE_FILE" -f "$COMPOSE_E2E_FILE" down >/dev/null 2>&1 || true
+}
+trap cleanup EXIT
+
+BASE_URL="${BASE_URL:-http://localhost:8080/casero}"
 ADMIN_PIN="${ADMIN_PIN:-1111}"
-E2E_START_COMMAND="${E2E_START_COMMAND:-mvn spring-boot:run -Dspring-boot.run.profiles=local}"
+# Usamos la app en Docker Compose por defecto; deja vacío para reutilizarla.
+E2E_START_COMMAND="${E2E_START_COMMAND:-}"
 PLAYWRIGHT_HEADLESS="${PLAYWRIGHT_HEADLESS:-false}"
 
 # Arch no está soportado oficialmente; saltamos validación de host.
@@ -25,11 +34,31 @@ npm install
 echo ">> Installing Playwright browsers (may show warnings on Arch)..."
 npx playwright install
 
-echo ">> Starting local Postgres (docker compose db)..."
-"$ROOT_DIR/start-postgre.sh"
+echo ">> Ensuring proxy-net docker network exists..."
+if ! docker network inspect proxy-net >/dev/null 2>&1; then
+  docker network create proxy-net >/dev/null
+fi
+
+echo ">> Starting app and Postgres via docker compose..."
+docker compose -f "$COMPOSE_FILE" -f "$COMPOSE_E2E_FILE" up -d --build db app
+
+echo ">> Waiting for app to be ready at ${BASE_URL}..."
+ready=false
+for i in {1..60}; do
+  if curl -fsS "${BASE_URL}/login" >/dev/null 2>&1; then
+    ready=true
+    break
+  fi
+  sleep 2
+done
+
+if [[ "$ready" != true ]]; then
+  echo "App no respondió en ${BASE_URL} tras esperar." >&2
+  exit 1
+fi
 
 echo ">> Ensuring seed admin/normal users in DB..."
-docker compose -f "$ROOT_DIR/docker-compose.yml" exec -T db psql -U casero -d casero <<'SQL'
+docker compose -f "$COMPOSE_FILE" -f "$COMPOSE_E2E_FILE" exec -T db psql -U casero -d casero <<'SQL'
 INSERT INTO app_user (name, role, pin_hash, pin_salt, pin_fingerprint, enabled)
 VALUES
   ('Administrador', 'ADMIN', '39f3a563f18cc784297b820fd271db2f0e3e1da6330333e3afa8d1dda95d9cc7', 'a1b2c3d4e5f60708', '0ffe1abd1a08215353c233d6e009613e95eec4253832a761af28ff37ac5a150c', true),

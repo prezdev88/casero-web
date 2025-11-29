@@ -3,8 +3,8 @@
 <head th:replace="~{fragments/head :: head('Iniciar sesión')}"></head>
 <body class="auth-body">
 <div class="auth-card card">
-    <h1>Casero Web</h1>
-    <p class="text-muted">Ingresa tu PIN único para continuar</p>
+    <h1 class="loginTitle">Casero Web</h1>
+    <span class="app-version" th:text="${'v' + (appVersion)}"></span>
     <div th:if="${showError}" class="message message--error" role="alert">
         PIN incorrecto o usuario deshabilitado
     </div>
@@ -15,7 +15,6 @@
         Tu sesión expiró por inactividad, vuelve a ingresar tu PIN.
     </div>
     <form th:action="@{/login}" method="post" class="form" data-pin-login-form>
-        <label for="pin">PIN</label>
         <input type="password"
                id="pin"
                name="pin"

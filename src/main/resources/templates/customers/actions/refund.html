@@ -11,7 +11,7 @@
               method="post"
               data-disable-on-submit="true">
             <label>Monto</label>
-            <input type="text" inputmode="numeric" data-money-input="true" th:field="*{amount}">
+            <input type="text" inputmode="numeric" data-money-input="true" th:field="*{amount}" data-testid="refund-amount">
             <div th:if="${#fields.hasErrors('amount')}" th:errors="*{amount}"></div>
             <p class="future-balance"
                data-balance-preview
@@ -22,14 +22,14 @@
             </p>
 
             <label>Fecha</label>
-            <input type="date" th:field="*{date}" th:value="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}">
+            <input type="date" th:field="*{date}" th:value="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}" data-testid="refund-date">
             <div th:if="${#fields.hasErrors('date')}" th:errors="*{date}"></div>
 
             <label>Detalle</label>
-            <input type="text" th:field="*{detail}">
+            <input type="text" th:field="*{detail}" data-testid="refund-detail">
             <div th:if="${#fields.hasErrors('detail')}" th:errors="*{detail}"></div>
 
-            <button type="submit" data-loading-text="Registrando devolución...">Registrar devolución</button>
+            <button type="submit" data-loading-text="Registrando devolución..." data-testid="refund-submit">Registrar devolución</button>
         </form>
     </div>
 </div>

@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.16.0](https://github.com/prezdev88/casero-web/compare/v1.15.0...v1.16.0) (2025-11-29)
+
+
+### Features
+
+* add E2E tests for transaction flows including delete, refund, fault discount, forgiveness, and maintenance ([3f4c541](https://github.com/prezdev88/casero-web/commit/3f4c5419643ea37115750ca724cb8db0379146dd))
+* add version app in login page and create E2E test runner script ([56289ca](https://github.com/prezdev88/casero-web/commit/56289ca48b1a223c672b8b61f4a12a6bfe69f530))
+
 ## [1.15.0](https://github.com/prezdev88/casero-web/compare/v1.14.2...v1.15.0) (2025-11-29)
 
 

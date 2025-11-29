@@ -15,7 +15,7 @@ COMPOSE_E2E_FILE="$ROOT_DIR/docker-compose.e2e.yml"
 
 cleanup() {
   echo ">> Stopping docker compose services..."
-  docker compose -f "$COMPOSE_FILE" -f "$COMPOSE_E2E_FILE" down >/dev/null 2>&1 || true
+  docker compose -f "$COMPOSE_FILE" -f "$COMPOSE_E2E_FILE" down -v>/dev/null 2>&1 || true
 }
 trap cleanup EXIT
 

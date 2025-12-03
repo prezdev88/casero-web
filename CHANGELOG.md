@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.16.1](https://github.com/prezdev88/casero-web/compare/v1.16.0...v1.16.1) (2025-12-03)
+
+
+### Bug Fixes
+
+* replace password with SSH key for secure deployment in workflow ([ded7728](https://github.com/prezdev88/casero-web/commit/ded77282cad4de5e1b1833f823fc28afe114ff86))
+
 ## [1.16.0](https://github.com/prezdev88/casero-web/compare/v1.15.0...v1.16.0) (2025-11-29)
 
 

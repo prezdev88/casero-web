@@ -32,6 +32,9 @@ public class AuditEventServiceImpl implements AuditEventService {
         if (eventType == null) {
             return;
         }
+        if (user != null && user.isAdmin()) {
+            return;
+        }
         try {
             AuditEvent event = new AuditEvent();
             event.setEventType(eventType);

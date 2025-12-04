@@ -30,6 +30,9 @@ public class AuditViewInterceptor implements HandlerInterceptor {
         if (!isSafeMethod(request)) {
             return true;
         }
+        if (isLoginPage(request)) {
+            return true;
+        }
         auditEventService.logEvent(AuditEventType.PAGE_VIEW, resolveUser(), buildPayload(request), request);
         return true;
     }
@@ -71,5 +74,9 @@ public class AuditViewInterceptor implements HandlerInterceptor {
         }
         String method = request.getMethod();
         return "GET".equalsIgnoreCase(method) || "HEAD".equalsIgnoreCase(method);
+    }
+
+    private boolean isLoginPage(HttpServletRequest request) {
+        return request != null && "/login".equals(request.getRequestURI());
     }
 }

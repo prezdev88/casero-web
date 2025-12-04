@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.17.0](https://github.com/prezdev88/casero-web/compare/v1.16.1...v1.17.0) (2025-12-04)
+
+
+### Features
+
+* **audit:** add admin audit page and controller for viewing audit logs ([349ecec](https://github.com/prezdev88/casero-web/commit/349ecec9ae8b4542492d48a01f3afd3becabf6aa))
+* **audit:** implement audit logging for user actions and application configuration ([db4480f](https://github.com/prezdev88/casero-web/commit/db4480fe493d03e0a2033db01e1d75ec7c6fb235))
+* **audit:** refine audit event types and enhance logging for user actions ([52a321c](https://github.com/prezdev88/casero-web/commit/52a321cb18c339129fda25d2e92359264b5cbfd9))
+* **audit:** update payload type to JSONB and enhance logging structure for audit events ([84c020a](https://github.com/prezdev88/casero-web/commit/84c020a49a0fb3877cee6451c9fad25ba1b8d0c3))
+* **qa:** add script to stop and remove QA containers and database volume ([80274b6](https://github.com/prezdev88/casero-web/commit/80274b69d9273862fd0b2bf8cee086df0c9dc6f0))
+
 ### [1.16.1](https://github.com/prezdev88/casero-web/compare/v1.16.0...v1.16.1) (2025-12-03)
 
 

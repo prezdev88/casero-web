@@ -6,6 +6,8 @@ import cl.casero.migration.service.SectorService;
 import cl.casero.migration.service.CustomerService;
 import cl.casero.migration.service.dto.CreateCustomerForm;
 import cl.casero.migration.service.dto.OverdueCustomerSummary;
+import lombok.AllArgsConstructor;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -13,22 +15,18 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional
+@AllArgsConstructor
 public class CustomerServiceImpl implements CustomerService {
 
-    private final CustomerRepository customerRepository;
     private final SectorService sectorService;
-
-    public CustomerServiceImpl(CustomerRepository customerRepository,
-                               SectorService sectorService) {
-        this.customerRepository = customerRepository;
-        this.sectorService = sectorService;
-    }
+    private final CustomerRepository customerRepository;
 
     @Override
     public Page<Customer> search(String filter, Pageable pageable) {
         if (filter == null || filter.isBlank()) {
             return Page.empty(pageable);
         }
+
         return customerRepository.search(filter.trim(), pageable);
     }
 
@@ -40,10 +38,12 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public Customer create(CreateCustomerForm form) {
         Customer customer = new Customer();
+
         customer.setName(form.getName().trim());
         customer.setSector(sectorService.get(form.getSectorId()));
         customer.setAddress(form.getAddress().trim());
         customer.setDebt(0);
+        
         return customerRepository.save(customer);
     }
 

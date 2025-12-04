@@ -8,7 +8,7 @@
 
     <div class="card">
         <div id="search-form">
-            <input type="search" id="query" name="q" th:value="${query}" placeholder="Buscar por nombre, dirección o sector" autofocus autocomplete="off">
+            <input type="search" id="query" name="q" th:value="${query}" placeholder="Buscar por nombre, dirección o sector" autofocus autocomplete="off" data-testid="customer-search-input">
         </div>
     </div>
 
@@ -23,7 +23,8 @@
                th:data-customer-name="${customer.name}"
                 th:data-customer-debt="${formattedDebt}"
                 th:data-customer-debt-raw="${customer.debt}"
-               th:attr="data-customer-score=${score}">
+               th:attr="data-customer-score=${score}"
+               data-testid="customer-card">
                 <div class="customer-card__row">
                     <span class="customer-card__name" th:text="${customer.name}">Nombre</span>
                     <span class="customer-score-chip"
@@ -274,6 +275,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const buildCard = (customer) => {
         const link = document.createElement('a');
         link.className = 'customer-card';
+        link.setAttribute('data-testid', 'customer-card');
         link.href = `${customerDetailBase}${customer.id}`;
         link.dataset.customerId = customer.id;
         link.dataset.customerName = customer.name;

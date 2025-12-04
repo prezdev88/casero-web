@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('Auditoría')}"></head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+<div class="container">
+    <div th:replace="~{fragments/messages :: messages}"></div>
+
+    <div class="card">
+        <h2>Auditoría</h2>
+        <p class="text-muted">Eventos registrados en la aplicación.</p>
+    </div>
+
+    <style>
+        .audit-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+            color: var(--text-color);
+        }
+        .audit-table th, .audit-table td {
+            padding: 8px 10px;
+            vertical-align: top;
+            border-bottom: 1px solid var(--table-border);
+        }
+        .audit-table tbody tr:nth-child(odd) {
+            background: var(--card-surface);
+        }
+        @media (max-width: 720px) {
+            .audit-table thead {
+                display: none;
+            }
+            .audit-table tr {
+                display: block;
+                margin-bottom: 12px;
+                border: 1px solid var(--table-border);
+                border-radius: 8px;
+                padding: 8px 10px;
+                background: var(--card-bg);
+            }
+            .audit-table td {
+                display: block;
+                padding: 4px 0;
+                border: 0;
+            }
+            .audit-table td::before {
+                content: attr(data-label);
+                font-weight: 600;
+                color: var(--muted-text);
+                display: block;
+            }
+        }
+    </style>
+
+    <div class="card">
+        <div class="table-responsive">
+            <table class="audit-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Fecha</th>
+                        <th>Evento</th>
+                        <th>Usuario</th>
+                        <th>Payload</th>
+                        <th>IP</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="event : ${events.content}">
+                        <td th:text="${event.id}" data-label="ID">id</td>
+                        <td th:text="${#temporals.format(event.createdAt, 'dd-MMM-yyyy HH:mm:ss')}"
+                            data-label="Fecha">fecha</td>
+                        <td th:text="${event.eventType}" data-label="Evento">EVENT</td>
+                        <td th:text="${event.user?.name ?: 'N/A'}" data-label="Usuario">Usuario</td>
+                        <td th:text="${event.payload}" data-label="Payload">payload</td>
+                        <td th:text="${event.ip}" data-label="IP">ip</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="pagination">
+            <a th:if="${events.hasPrevious()}"
+               th:href="@{/admin/audit(page=${events.number - 1}, size=${events.size})}">Anterior</a>
+            <span th:text="${events.number + 1}">1</span>
+            <span>/</span>
+            <span th:text="${events.totalPages}">1</span>
+            <a th:if="${events.hasNext()}"
+               th:href="@{/admin/audit(page=${events.number + 1}, size=${events.size})}">Siguiente</a>
+        </div>
+    </div>
+</div>
+</body>
+</html>

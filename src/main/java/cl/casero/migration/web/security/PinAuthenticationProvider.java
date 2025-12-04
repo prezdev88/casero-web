@@ -3,6 +3,8 @@ package cl.casero.migration.web.security;
 import cl.casero.migration.domain.AppUser;
 import cl.casero.migration.service.AppUserService;
 import cl.casero.migration.util.PinHasher;
+import lombok.AllArgsConstructor;
+
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
@@ -12,15 +14,11 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 
 @Component
+@AllArgsConstructor
 public class PinAuthenticationProvider implements AuthenticationProvider {
 
-    private final AppUserService userService;
     private final PinHasher pinHasher;
-
-    public PinAuthenticationProvider(AppUserService userService, PinHasher pinHasher) {
-        this.userService = userService;
-        this.pinHasher = pinHasher;
-    }
+    private final AppUserService userService;
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
@@ -38,7 +36,9 @@ public class PinAuthenticationProvider implements AuthenticationProvider {
                 userDetails,
                 null,
                 userDetails.getAuthorities());
+
         authenticated.setDetails(token.getDetails());
+        
         return authenticated;
     }
 

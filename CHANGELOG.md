@@ -2,6 +2,71 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.17.1](https://github.com/prezdev88/casero-web/compare/v1.17.0...v1.17.1) (2025-12-04)
+
+
+### Refactors
+
+* **audit:** enhance audit logging by skipping events for admin users and login page ([3174080](https://github.com/prezdev88/casero-web/commit/31740805d459331dae94e3cfd302157906777a53))
+
+## [1.17.0](https://github.com/prezdev88/casero-web/compare/v1.16.1...v1.17.0) (2025-12-04)
+
+
+### Features
+
+* **audit:** add admin audit page and controller for viewing audit logs ([349ecec](https://github.com/prezdev88/casero-web/commit/349ecec9ae8b4542492d48a01f3afd3becabf6aa))
+* **audit:** implement audit logging for user actions and application configuration ([db4480f](https://github.com/prezdev88/casero-web/commit/db4480fe493d03e0a2033db01e1d75ec7c6fb235))
+* **audit:** refine audit event types and enhance logging for user actions ([52a321c](https://github.com/prezdev88/casero-web/commit/52a321cb18c339129fda25d2e92359264b5cbfd9))
+* **audit:** update payload type to JSONB and enhance logging structure for audit events ([84c020a](https://github.com/prezdev88/casero-web/commit/84c020a49a0fb3877cee6451c9fad25ba1b8d0c3))
+* **qa:** add script to stop and remove QA containers and database volume ([80274b6](https://github.com/prezdev88/casero-web/commit/80274b69d9273862fd0b2bf8cee086df0c9dc6f0))
+
+### [1.16.1](https://github.com/prezdev88/casero-web/compare/v1.16.0...v1.16.1) (2025-12-03)
+
+
+### Bug Fixes
+
+* replace password with SSH key for secure deployment in workflow ([ded7728](https://github.com/prezdev88/casero-web/commit/ded77282cad4de5e1b1833f823fc28afe114ff86))
+
+## [1.16.0](https://github.com/prezdev88/casero-web/compare/v1.15.0...v1.16.0) (2025-11-29)
+
+
+### Features
+
+* add E2E tests for transaction flows including delete, refund, fault discount, forgiveness, and maintenance ([3f4c541](https://github.com/prezdev88/casero-web/commit/3f4c5419643ea37115750ca724cb8db0379146dd))
+* add version app in login page and create E2E test runner script ([56289ca](https://github.com/prezdev88/casero-web/commit/56289ca48b1a223c672b8b61f4a12a6bfe69f530))
+
+## [1.15.0](https://github.com/prezdev88/casero-web/compare/v1.14.2...v1.15.0) (2025-11-29)
+
+
+### Features
+
+* add docker-compose.e2e.yml and update run-tests.sh for E2E testing setup ([79f10aa](https://github.com/prezdev88/casero-web/commit/79f10aa32f2e4a33bce0237c85f376552be3be0c))
+* add E2E testing with Playwright and Docker support; enhance templates with data-testid attributes for better testability ([5158483](https://github.com/prezdev88/casero-web/commit/51584837d36d2513e7048ee4565c184af978dd18))
+* implement E2E testing with Playwright; update README and scripts for local and Docker usage ([ac83fe3](https://github.com/prezdev88/casero-web/commit/ac83fe3b3964add2c5f937c3c0e6cb9ce4706124))
+
+
+### Bug Fixes
+
+* fix tests ([c6a3599](https://github.com/prezdev88/casero-web/commit/c6a3599e263b58df70b5ded30024460f6c3fba43))
+* update cleanup function to remove Docker volumes on teardown ([1793a8f](https://github.com/prezdev88/casero-web/commit/1793a8f3668d574af5021b4ceecda6a28a23bb87))
+
+### [1.14.2](https://github.com/prezdev88/casero-web/compare/v1.14.1...v1.14.2) (2025-11-28)
+
+
+### Refactors
+
+* add standard commits types to versionrc file ([2ae1be5](https://github.com/prezdev88/casero-web/commit/2ae1be5acbfbdc0ab926e245220e915c8dc8c69f))
+
+### [1.14.1](https://github.com/prezdev88/casero-web/compare/v1.14.0...v1.14.1) (2025-11-28)
+
+## [1.14.0](https://github.com/prezdev88/casero-web/compare/v1.13.0...v1.14.0) (2025-11-28)
+
+
+### Features
+
+* Highlight sales transactions in customer report and update PDF report title ([3b447cc](https://github.com/prezdev88/casero-web/commit/3b447ccc1bbaf96d3b8042d7ff005fe7636dab43))
+* Implement customer transaction report generation and UI enhancements ([0271f4a](https://github.com/prezdev88/casero-web/commit/0271f4a77e41de209f55fbc09cfb0dd921596b3a))
+
 ## [1.13.0](https://github.com/prezdev88/casero-web/compare/v1.12.0...v1.13.0) (2025-11-26)
 
 

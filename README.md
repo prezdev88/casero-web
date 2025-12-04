@@ -61,6 +61,12 @@ mvn spring-boot:run
 
 La aplicación quedará disponible en `http://localhost:8080`.
 
+### Tests E2E (Playwright)
+
+- Specs en `e2e/`, config en `playwright.config.js`, runner en `run-tests.sh`.
+- Local: `./run-tests.sh` (levanta Postgres con `start-postgre.sh`, instala deps y por defecto inicia la app con `mvn spring-boot:run -Dspring-boot.run.profiles=local`; pasa `E2E_START_COMMAND=""` si ya la tienes arriba). Variables: `BASE_URL` (default `http://localhost:8080`), `ADMIN_PIN` (default `1111`), `PLAYWRIGHT_HEADLESS` (`false` para ver el navegador), `PLAYWRIGHT_WORKERS` (default `1`).
+
+
 ### Publicación de versiones
 
 Este repositorio usa [`standard-version`](https://github.com/conventional-changelog/standard-version) para generar changelog y bumps semánticos a partir de commits convencionales. Luego de preparar tus cambios:

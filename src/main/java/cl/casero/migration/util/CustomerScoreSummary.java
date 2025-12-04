@@ -5,9 +5,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * Immutable snapshot of the per-cycle scoring information for a customer.
- */
 public record CustomerScoreSummary(double score, List<CycleScore> cycles) {
 
     public CustomerScoreSummary {
@@ -21,9 +18,10 @@ public record CustomerScoreSummary(double score, List<CycleScore> cycles) {
         return !cycles.isEmpty();
     }
 
-    public record CycleScore(int cycleNumber,
-                             LocalDate cycleStartDate,
-                             LocalDate cycleEndDate,
-                             CustomerScoreCalculator.ScoreResult result) {
-    }
+    public record CycleScore(
+        int cycleNumber,
+        LocalDate cycleStartDate,
+        LocalDate cycleEndDate,
+        CustomerScoreCalculator.ScoreResult result
+    ) {}
 }

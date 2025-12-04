@@ -11,7 +11,7 @@
               method="post"
               data-disable-on-submit="true">
             <label>Detalle</label>
-            <textarea th:field="*{detail}"></textarea>
+            <textarea th:field="*{detail}" data-testid="sale-detail"></textarea>
             <div th:if="${#fields.hasErrors('detail')}" th:errors="*{detail}"></div>
 
             <label>Fecha</label>
@@ -19,11 +19,11 @@
             <div th:if="${#fields.hasErrors('date')}" th:errors="*{date}"></div>
 
             <label>Cantidad de prendas</label>
-            <input type="number" min="1" th:field="*{itemsCount}">
+            <input type="number" min="1" th:field="*{itemsCount}" data-testid="sale-items">
             <div th:if="${#fields.hasErrors('itemsCount')}" th:errors="*{itemsCount}"></div>
 
             <label>Monto</label>
-            <input type="text" inputmode="numeric" data-money-input="true" th:field="*{amount}">
+            <input type="text" inputmode="numeric" data-money-input="true" th:field="*{amount}" data-testid="sale-amount">
             <div th:if="${#fields.hasErrors('amount')}" th:errors="*{amount}"></div>
             <p class="future-balance"
                data-balance-preview
@@ -32,7 +32,7 @@
                th:text="'Saldo luego de registrar: ' + ${T(cl.casero.migration.util.CurrencyUtil).format(customer.debt)}">
                 Saldo luego de registrar: $0
             </p>
-            <button type="submit" data-loading-text="Registrando venta...">Registrar venta</button>
+            <button type="submit" data-loading-text="Registrando venta..." data-testid="sale-submit">Registrar venta</button>
         </form>
     </div>
 </div>

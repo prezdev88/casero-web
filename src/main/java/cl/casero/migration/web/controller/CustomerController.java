@@ -2,13 +2,16 @@ package cl.casero.migration.web.controller;
 
 import cl.casero.migration.domain.Customer;
 import cl.casero.migration.domain.Transaction;
+import cl.casero.migration.domain.AppUser;
 import cl.casero.migration.domain.enums.TransactionType;
+import cl.casero.migration.domain.enums.AuditEventType;
 import cl.casero.migration.service.CustomerReportService;
 import cl.casero.migration.service.CustomerScoreService;
 import cl.casero.migration.service.CustomerService;
 import cl.casero.migration.service.SectorService;
 import cl.casero.migration.service.StatisticsService;
 import cl.casero.migration.service.TransactionService;
+import cl.casero.migration.service.AuditEventService;
 import cl.casero.migration.service.dto.CreateCustomerForm;
 import cl.casero.migration.service.dto.DebtForgivenessForm;
 import cl.casero.migration.service.dto.MoneyTransactionForm;
@@ -23,10 +26,12 @@ import cl.casero.migration.util.CustomerScoreSummary;
 import cl.casero.migration.util.DateUtil;
 import cl.casero.migration.util.TransactionTypeUtil;
 import jakarta.validation.Valid;
+import lombok.AllArgsConstructor;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +43,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -49,8 +55,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import jakarta.servlet.http.HttpServletRequest;
+import cl.casero.migration.web.security.CaseroUserDetails;
 
 @Controller
+@AllArgsConstructor
 @RequestMapping("/customers")
 public class CustomerController {
 
@@ -60,56 +69,53 @@ public class CustomerController {
     private final StatisticsService statisticsService;
     private final SectorService sectorService;
     private final CustomerReportService customerReportService;
-
-    public CustomerController(CustomerService customerService,
-                              CustomerScoreService customerScoreService,
-                              TransactionService transactionService,
-                              StatisticsService statisticsService,
-                              SectorService sectorService,
-                              CustomerReportService customerReportService) {
-        this.customerService = customerService;
-        this.customerScoreService = customerScoreService;
-        this.transactionService = transactionService;
-        this.statisticsService = statisticsService;
-        this.sectorService = sectorService;
-        this.customerReportService = customerReportService;
-    }
+    private final AuditEventService auditEventService;
 
     @GetMapping
-    public String listCustomers(@RequestParam(value = "q", required = false) String query,
-                                @RequestParam(value = "page", defaultValue = "0") int page,
-                                @RequestParam(value = "size", defaultValue = "10") int size,
-                                Model model) {
+    public String listCustomers(
+        @RequestParam(value = "q", required = false) String query,
+        @RequestParam(value = "page", defaultValue = "0") int page,
+        @RequestParam(value = "size", defaultValue = "10") int size,
+        Model model
+    ) {
         boolean hasQuery = query != null && !query.isBlank();
         Page<Customer> customersPage = searchCustomers(query, page, size);
+
         model.addAttribute("customerScores", customerScoreService.calculateScores(customersPage.getContent()));
         model.addAttribute("customersPage", customersPage);
         model.addAttribute("query", query == null ? "" : query);
         model.addAttribute("showResults", hasQuery);
+
         return "customers/list";
     }
 
     @GetMapping("/ranking")
-    public String ranking(@RequestParam(value = "page", defaultValue = "0") int page,
-                          @RequestParam(value = "size", defaultValue = "100") int size,
-                          @RequestParam(value = "direction", defaultValue = "desc") String direction,
-                          Model model) {
+    public String ranking(
+        @RequestParam(value = "page", defaultValue = "0") int page,
+        @RequestParam(value = "size", defaultValue = "100") int size,
+        @RequestParam(value = "direction", defaultValue = "desc") String direction,
+        Model model
+    ) {
         int sanitizedPage = Math.max(page, 0);
         int sanitizedSize = Math.min(Math.max(size, 1), 100);
         boolean ascending = "asc".equalsIgnoreCase(direction);
         Pageable pageable = PageRequest.of(sanitizedPage, sanitizedSize);
         Page<CustomerScoreService.RankingEntry> rankingPage = customerScoreService.getRanking(pageable, ascending);
+
         model.addAttribute("rankingPage", rankingPage);
         model.addAttribute("direction", ascending ? "asc" : "desc");
         model.addAttribute("nextDirection", ascending ? "desc" : "asc");
+
         return "customers/ranking";
     }
 
-    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public CustomerPageResponse listCustomersJson(@RequestParam(value = "q", required = false) String query,
-                                                  @RequestParam(value = "page", defaultValue = "0") int page,
-                                                  @RequestParam(value = "size", defaultValue = "10") int size) {
+    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+    public CustomerPageResponse listCustomersJson(
+        @RequestParam(value = "q", required = false) String query,
+        @RequestParam(value = "page", defaultValue = "0") int page,
+        @RequestParam(value = "size", defaultValue = "10") int size
+    ) {
         Page<Customer> result = searchCustomers(query, page, size);
         Map<Long, Double> scores = customerScoreService.calculateScores(result.getContent());
         List<CustomerSearchResult> content = result.getContent()
@@ -121,6 +127,7 @@ public class CustomerController {
                         customer.getDebt(),
                         scores.getOrDefault(customer.getId(), CustomerScoreCalculator.minScore())))
                 .toList();
+        
         return new CustomerPageResponse(
                 content,
                 result.getNumber(),
@@ -135,32 +142,52 @@ public class CustomerController {
         if (!model.containsAttribute("customerForm")) {
             model.addAttribute("customerForm", new CreateCustomerForm());
         }
+
         model.addAttribute("sectors", sectorService.listAll());
         model.addAttribute("customersCount", statisticsService.getCustomersCount());
+
         return "customers/new";
     }
 
     @PostMapping
-    public String createCustomer(@Valid @ModelAttribute("customerForm") CreateCustomerForm form,
-                                 BindingResult result,
-                                 RedirectAttributes redirectAttributes) {
+    public String createCustomer(
+        @Valid @ModelAttribute("customerForm") CreateCustomerForm form,
+        BindingResult result,
+        RedirectAttributes redirectAttributes,
+        Authentication authentication,
+        HttpServletRequest request
+    ) {
         if (result.hasErrors()) {
             redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.customerForm", result);
             redirectAttributes.addFlashAttribute("customerForm", form);
+
             return "redirect:/customers/new";
         }
 
-        customerService.create(form);
+        Customer created = customerService.create(form);
         redirectAttributes.addFlashAttribute("message", "Cliente creado correctamente");
+        auditEventService.logEvent(
+            AuditEventType.ACTION,
+            currentUser(authentication),
+            actionPayload("CREATE_CUSTOMER", payload(
+                "customerId", created.getId(),
+                "name", created.getName(),
+                "sectorId", created.getSector().getId(),
+                "address", sanitize(created.getAddress())
+            )),
+            request);
+
         return "redirect:/customers";
     }
 
     @GetMapping("/{id}")
-    public String viewCustomer(@PathVariable Long id,
-                               @RequestParam(value = "ascending", defaultValue = "false") boolean ascending,
-                               @RequestParam(value = "page", defaultValue = "0") int page,
-                               @RequestParam(value = "size", defaultValue = "10") int size,
-                               Model model) {
+    public String viewCustomer(
+        @PathVariable Long id,
+        @RequestParam(value = "ascending", defaultValue = "false") boolean ascending,
+        @RequestParam(value = "page", defaultValue = "0") int page,
+        @RequestParam(value = "size", defaultValue = "10") int size,
+        Model model
+    ) {
         int sanitizedPage = Math.max(page, 0);
         int sanitizedSize = Math.min(Math.max(size, 1), 50);
         Sort sort = Sort.by(ascending ? Sort.Direction.ASC : Sort.Direction.DESC, "createdAt");
@@ -182,12 +209,14 @@ public class CustomerController {
         return "customers/detail";
     }
 
-    @GetMapping(value = "/{id}/transactions", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public TransactionPageResponse listTransactions(@PathVariable Long id,
-                                                    @RequestParam(value = "page", defaultValue = "0") int page,
-                                                    @RequestParam(value = "size", defaultValue = "10") int size,
-                                                    @RequestParam(value = "ascending", defaultValue = "false") boolean ascending) {
+    @GetMapping(value = "/{id}/transactions", produces = MediaType.APPLICATION_JSON_VALUE)
+    public TransactionPageResponse listTransactions(
+        @PathVariable Long id,
+        @RequestParam(value = "page", defaultValue = "0") int page,
+        @RequestParam(value = "size", defaultValue = "10") int size,
+        @RequestParam(value = "ascending", defaultValue = "false") boolean ascending
+    ) {
         int sanitizedPage = Math.max(page, 0);
         int sanitizedSize = Math.min(Math.max(size, 1), 50);
         Sort sort = Sort.by(ascending ? Sort.Direction.ASC : Sort.Direction.DESC, "createdAt");
@@ -213,19 +242,19 @@ public class CustomerController {
         );
     }
 
-    @GetMapping(value = "/{id}/reports/transactions", produces = MediaType.APPLICATION_PDF_VALUE)
     @ResponseBody
-    public ResponseEntity<byte[]> downloadTransactionsReport(@PathVariable Long id,
-                                                             @RequestParam(value = "range", defaultValue = "ALL")
-                                                             String rangeParam,
-                                                             @RequestParam(value = "months", required = false)
-                                                             Integer monthsParam,
-                                                             @RequestParam(value = "type", defaultValue = "ALL")
-                                                             String typeParam) {
+    @GetMapping(value = "/{id}/reports/transactions", produces = MediaType.APPLICATION_PDF_VALUE)
+    public ResponseEntity<byte[]> downloadTransactionsReport(
+        @PathVariable Long id,
+        @RequestParam(value = "range", defaultValue = "ALL") String rangeParam,
+        @RequestParam(value = "months", required = false) Integer monthsParam,
+        @RequestParam(value = "type", defaultValue = "ALL") String typeParam
+    ) {
         Customer customer = customerService.get(id);
         TransactionType filterType = parseReportType(typeParam);
         List<Transaction> transactions = transactionService.listAllByCustomer(id);
         String rangeLabel;
+
         if (isMonthsRange(rangeParam)) {
             int months = sanitizeMonths(monthsParam);
             transactions = filterTransactionsByMonths(transactions, months);
@@ -233,14 +262,17 @@ public class CustomerController {
         } else {
             rangeLabel = "Todas las transacciones";
         }
+
         if (filterType != null) {
             transactions = transactions.stream()
                     .filter(tx -> tx.getType() == filterType)
                     .toList();
         }
+
         byte[] pdf = customerReportService.generateTransactionsReport(customer, transactions, rangeLabel, filterType);
         String safeName = customer.getName() != null ? customer.getName().replaceAll("[^a-zA-Z0-9]+", "-") : "cliente";
         String filename = "casero-informe-" + safeName + ".pdf";
+
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_PDF)
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
@@ -290,102 +322,222 @@ public class CustomerController {
     }
 
     @PostMapping("/{id}/sales")
-    public String registerSale(@PathVariable Long id,
-                               @Valid @ModelAttribute("saleForm") SaleForm form,
-                               BindingResult result,
-                               RedirectAttributes redirectAttributes) {
+    public String registerSale(
+        @PathVariable Long id,
+        @Valid @ModelAttribute("saleForm") SaleForm form,
+        BindingResult result,
+        RedirectAttributes redirectAttributes,
+        Authentication authentication,
+        HttpServletRequest request
+    ) {
         if (result.hasErrors()) {
             return redirectToAction(id, redirectAttributes, "saleForm", form, result, "sale");
         }
+
         transactionService.registerSale(id, form);
         redirectAttributes.addFlashAttribute("message", "Venta registrada");
+        auditEventService.logEvent(
+            AuditEventType.ACTION,
+            currentUser(authentication),
+            actionPayload("SALE", payload(
+                "customerId", id,
+                "amount", form.getAmount(),
+                "items", form.getItemsCount(),
+                "date", dateToString(form.getDate()),
+                "detail", sanitize(form.getDetail())
+            )),
+            request);
+
         return "redirect:/customers/" + id;
     }
 
     @PostMapping("/{id}/payments")
-    public String registerPayment(@PathVariable Long id,
-                                  @Valid @ModelAttribute("paymentForm") PaymentForm form,
-                                  BindingResult result,
-                                  RedirectAttributes redirectAttributes) {
+    public String registerPayment(
+        @PathVariable Long id,
+        @Valid @ModelAttribute("paymentForm") PaymentForm form,
+        BindingResult result,
+        RedirectAttributes redirectAttributes,
+        Authentication authentication,
+        HttpServletRequest request
+    ) {
         if (result.hasErrors()) {
             return redirectToAction(id, redirectAttributes, "paymentForm", form, result, "payment");
         }
+
         transactionService.registerPayment(id, form);
         redirectAttributes.addFlashAttribute("message", "Pago registrado");
+        auditEventService.logEvent(
+            AuditEventType.ACTION,
+            currentUser(authentication),
+            actionPayload("PAYMENT", payload(
+                "customerId", id,
+                "amount", form.getAmount(),
+                "date", dateToString(form.getDate())
+            )),
+            request);
+
         return "redirect:/customers/" + id;
     }
 
     @PostMapping("/{id}/refunds")
-    public String registerRefund(@PathVariable Long id,
-                                 @Valid @ModelAttribute("refundForm") MoneyTransactionForm form,
-                                 BindingResult result,
-                                 RedirectAttributes redirectAttributes) {
+    public String registerRefund(
+        @PathVariable Long id,
+        @Valid @ModelAttribute("refundForm") MoneyTransactionForm form,
+        BindingResult result,
+        RedirectAttributes redirectAttributes,
+        Authentication authentication,
+        HttpServletRequest request
+    ) {
         if (result.hasErrors()) {
             return redirectToAction(id, redirectAttributes, "refundForm", form, result, "refund");
         }
+
         transactionService.registerRefund(id, form);
         redirectAttributes.addFlashAttribute("message", "Devolución registrada");
+        auditEventService.logEvent(
+            AuditEventType.ACTION,
+            currentUser(authentication),
+            actionPayload("REFUND", payload(
+                "customerId", id,
+                "amount", form.getAmount(),
+                "date", dateToString(form.getDate()),
+                "detail", sanitize(form.getDetail())
+            )),
+            request);
+        
         return "redirect:/customers/" + id;
     }
 
     @PostMapping("/{id}/fault-discounts")
-    public String registerFaultDiscount(@PathVariable Long id,
-                                        @Valid @ModelAttribute("faultDiscountForm") MoneyTransactionForm form,
-                                        BindingResult result,
-                                        RedirectAttributes redirectAttributes) {
+    public String registerFaultDiscount(
+        @PathVariable Long id,
+        @Valid @ModelAttribute("faultDiscountForm") MoneyTransactionForm form,
+        BindingResult result,
+        RedirectAttributes redirectAttributes,
+        Authentication authentication,
+        HttpServletRequest request
+    ) {
         if (result.hasErrors()) {
             return redirectToAction(id, redirectAttributes, "faultDiscountForm", form, result, "fault-discount");
         }
+
         transactionService.registerFaultDiscount(id, form);
         redirectAttributes.addFlashAttribute("message", "Descuento por falla registrado");
+        auditEventService.logEvent(
+            AuditEventType.ACTION,
+            currentUser(authentication),
+            actionPayload("FAULT_DISCOUNT", payload(
+                "customerId", id,
+                "amount", form.getAmount(),
+                "date", dateToString(form.getDate()),
+                "detail", sanitize(form.getDetail())
+            )),
+            request);
+
         return "redirect:/customers/" + id;
     }
 
     @PostMapping("/{id}/forgiveness")
-    public String forgiveDebt(@PathVariable Long id,
-                              @Valid @ModelAttribute("debtForgivenessForm") DebtForgivenessForm form,
-                              BindingResult result,
-                              RedirectAttributes redirectAttributes) {
+    public String forgiveDebt(
+        @PathVariable Long id,
+        @Valid @ModelAttribute("debtForgivenessForm") DebtForgivenessForm form,
+        BindingResult result,
+        RedirectAttributes redirectAttributes,
+        Authentication authentication,
+        HttpServletRequest request
+    ) {
         if (result.hasErrors()) {
             return redirectToAction(id, redirectAttributes, "debtForgivenessForm", form, result, "forgiveness");
         }
+
         transactionService.forgiveDebt(id, form);
         redirectAttributes.addFlashAttribute("message", "Deuda condonada");
+        auditEventService.logEvent(
+            AuditEventType.ACTION,
+            currentUser(authentication),
+            actionPayload("DEBT_FORGIVEN", payload(
+                "customerId", id,
+                "date", dateToString(form.getDate()),
+                "detail", sanitize(form.getDetail())
+            )),
+            request);
+
         return "redirect:/customers/" + id;
     }
 
     @PostMapping("/{id}/address")
-    public String updateAddress(@PathVariable Long id,
-                                @Valid @ModelAttribute("updateAddressForm") UpdateAddressForm form,
-                                BindingResult result,
-                                RedirectAttributes redirectAttributes) {
+    public String updateAddress(
+        @PathVariable Long id,
+        @Valid @ModelAttribute("updateAddressForm") UpdateAddressForm form,
+        BindingResult result,
+        RedirectAttributes redirectAttributes,
+        Authentication authentication,
+        HttpServletRequest request
+    ) {
         if (result.hasErrors()) {
             return redirectToAction(id, redirectAttributes, "updateAddressForm", form, result, "address/edit");
         }
+
         customerService.updateAddress(id, form.getNewAddress());
         redirectAttributes.addFlashAttribute("successMessage", "Dirección actualizada");
+        auditEventService.logEvent(
+            AuditEventType.ACTION,
+            currentUser(authentication),
+            actionPayload("UPDATE_CUSTOMER_ADDRESS", payload(
+                "customerId", id,
+                "address", sanitize(form.getNewAddress())
+            )),
+            request);
+
         return "redirect:/customers/" + id;
     }
 
     @PostMapping("/{id}/sector")
-    public String updateSector(@PathVariable Long id,
-                               @Valid @ModelAttribute("updateSectorForm") UpdateSectorForm form,
-                               BindingResult result,
-                               RedirectAttributes redirectAttributes) {
+    public String updateSector(
+        @PathVariable Long id,
+        @Valid @ModelAttribute("updateSectorForm") UpdateSectorForm form,
+        BindingResult result,
+        RedirectAttributes redirectAttributes,
+        Authentication authentication,
+        HttpServletRequest request
+    ) {
         if (result.hasErrors()) {
             return redirectToAction(id, redirectAttributes, "updateSectorForm", form, result, "sector/edit");
         }
+
         customerService.updateSector(id, form.getSectorId());
         redirectAttributes.addFlashAttribute("successMessage", "Sector actualizado");
+        auditEventService.logEvent(
+            AuditEventType.ACTION,
+            currentUser(authentication),
+            actionPayload("UPDATE_CUSTOMER_SECTOR", payload(
+                "customerId", id,
+                "sectorId", form.getSectorId()
+            )),
+            request);
+
         return "redirect:/customers/" + id;
     }
 
     @PostMapping("/transactions/{transactionId}/delete")
-    public String deleteTransaction(@PathVariable Long transactionId,
-                                    @RequestParam("customerId") Long customerId,
-                                    RedirectAttributes redirectAttributes) {
+    public String deleteTransaction(
+        @PathVariable Long transactionId,
+        @RequestParam("customerId") Long customerId,
+        RedirectAttributes redirectAttributes,
+        Authentication authentication,
+        HttpServletRequest request
+    ) {
         transactionService.delete(transactionId);
         redirectAttributes.addFlashAttribute("message", "Transacción eliminada");
+        auditEventService.logEvent(
+            AuditEventType.ACTION,
+            currentUser(authentication),
+            actionPayload("TRANSACTION_DELETED", payload(
+                "transactionId", transactionId,
+                "customerId", customerId
+            )),
+            request);
+
         return "redirect:/customers/" + customerId;
     }
 
@@ -393,11 +545,13 @@ public class CustomerController {
     public String showPaymentForm(@PathVariable Long id, Model model) {
         Customer customer = customerService.get(id);
         model.addAttribute("customer", customer);
+
         if (!model.containsAttribute("paymentForm")) {
             PaymentForm form = new PaymentForm();
             form.setDate(LocalDate.now());
             model.addAttribute("paymentForm", form);
         }
+
         return "customers/actions/payment";
     }
 
@@ -405,11 +559,13 @@ public class CustomerController {
     public String showSaleForm(@PathVariable Long id, Model model) {
         Customer customer = customerService.get(id);
         model.addAttribute("customer", customer);
+
         if (!model.containsAttribute("saleForm")) {
             SaleForm form = new SaleForm();
             form.setDate(LocalDate.now());
             model.addAttribute("saleForm", form);
         }
+
         return "customers/actions/sale";
     }
 
@@ -417,11 +573,13 @@ public class CustomerController {
     public String showRefundForm(@PathVariable Long id, Model model) {
         Customer customer = customerService.get(id);
         model.addAttribute("customer", customer);
+
         if (!model.containsAttribute("refundForm")) {
             MoneyTransactionForm form = new MoneyTransactionForm();
             form.setDate(LocalDate.now());
             model.addAttribute("refundForm", form);
         }
+
         return "customers/actions/refund";
     }
 
@@ -429,11 +587,13 @@ public class CustomerController {
     public String showFaultDiscountForm(@PathVariable Long id, Model model) {
         Customer customer = customerService.get(id);
         model.addAttribute("customer", customer);
+
         if (!model.containsAttribute("faultDiscountForm")) {
             MoneyTransactionForm form = new MoneyTransactionForm();
             form.setDate(LocalDate.now());
             model.addAttribute("faultDiscountForm", form);
         }
+
         return "customers/actions/fault-discount";
     }
 
@@ -441,11 +601,13 @@ public class CustomerController {
     public String showForgivenessForm(@PathVariable Long id, Model model) {
         Customer customer = customerService.get(id);
         model.addAttribute("customer", customer);
+
         if (!model.containsAttribute("debtForgivenessForm")) {
             DebtForgivenessForm form = new DebtForgivenessForm();
             form.setDate(LocalDate.now());
             model.addAttribute("debtForgivenessForm", form);
         }
+
         return "customers/actions/forgiveness";
     }
 
@@ -459,22 +621,39 @@ public class CustomerController {
     public String editAddress(@PathVariable Long id, Model model) {
         Customer customer = customerService.get(id);
         model.addAttribute("customer", customer);
+
         if (!model.containsAttribute("updateAddressForm")) {
             model.addAttribute("updateAddressForm", new UpdateAddressForm(customer.getAddress()));
         }
+
         return "customers/actions/address-edit";
     }
 
     @PostMapping("/{id}/name")
-    public String updateName(@PathVariable Long id,
-                             @Valid @ModelAttribute("updateNameForm") UpdateNameForm form,
-                             BindingResult result,
-                             RedirectAttributes redirectAttributes) {
+    public String updateName(
+        @PathVariable Long id,
+        @Valid @ModelAttribute("updateNameForm") UpdateNameForm form,
+        BindingResult result,
+        RedirectAttributes redirectAttributes,
+        Authentication authentication,
+        HttpServletRequest request
+    ) {
         if (result.hasErrors()) {
             return redirectToAction(id, redirectAttributes, "updateNameForm", form, result, "name/edit");
         }
+
         customerService.updateName(id, form.getNewName());
         redirectAttributes.addFlashAttribute("successMessage", "Nombre actualizado");
+        auditEventService.logEvent(
+            AuditEventType.ACTION,
+            currentUser(authentication),
+            payload(
+                "action", "UPDATE_CUSTOMER_NAME",
+                "customerId", id,
+                "name", form.getNewName()
+            ),
+            request);
+
         return "redirect:/customers/" + id;
     }
 
@@ -482,9 +661,11 @@ public class CustomerController {
     public String editName(@PathVariable Long id, Model model) {
         Customer customer = customerService.get(id);
         model.addAttribute("customer", customer);
+
         if (!model.containsAttribute("updateNameForm")) {
             model.addAttribute("updateNameForm", new UpdateNameForm(customer.getName()));
         }
+
         return "customers/actions/name-edit";
     }
 
@@ -492,12 +673,15 @@ public class CustomerController {
     public String editSector(@PathVariable Long id, Model model) {
         Customer customer = customerService.get(id);
         model.addAttribute("customer", customer);
+
         if (!model.containsAttribute("updateSectorForm")) {
             UpdateSectorForm form = new UpdateSectorForm();
             form.setSectorId(customer.getSector().getId());
             model.addAttribute("updateSectorForm", form);
         }
+
         model.addAttribute("sectors", sectorService.listAll());
+
         return "customers/actions/sector-edit";
     }
 
@@ -509,47 +693,92 @@ public class CustomerController {
         return hasQuery ? customerService.search(query.trim(), pageable) : Page.empty(pageable);
     }
 
-    private String redirectToAction(Long id,
-                                    RedirectAttributes redirectAttributes,
-                                    String attributeName,
-                                    Object form,
-                                    BindingResult result,
-                                    String actionPath) {
-        redirectAttributes.addFlashAttribute(
-                "org.springframework.validation.BindingResult." + attributeName, result);
+    private String redirectToAction(
+        Long id,
+        RedirectAttributes redirectAttributes,
+        String attributeName,
+        Object form,
+        BindingResult result,
+        String actionPath
+    ) {
+        redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult." + attributeName, result);
         redirectAttributes.addFlashAttribute(attributeName, form);
+
         return "redirect:/customers/" + id + "/actions/" + actionPath;
     }
 
-    public record CustomerSearchResult(Long id,
-                                       String name,
-                                       String formattedDebt,
-                                       Integer debtValue,
-                                       Double score) {
+    private AppUser currentUser(Authentication authentication) {
+        if (authentication != null && authentication.getPrincipal() instanceof CaseroUserDetails details) {
+            return details.getAppUser();
+        }
+        return null;
     }
 
-    public record CustomerPageResponse(List<CustomerSearchResult> content,
-                                       int page,
-                                       int totalPages,
-                                       long totalElements,
-                                       boolean hasPrevious,
-                                       boolean hasNext) {
+    private Map<String, Object> actionPayload(String type, Map<String, Object> data) {
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("type", type);
+        payload.put("data", data != null ? data : Map.of());
+        return payload;
     }
 
-    public record TransactionCard(Long id,
-                                  String formattedDate,
-                                  String typeKey,
-                                  String detail,
-                                  String formattedAmount,
-                                  String formattedBalance) {
+    private Map<String, Object> payload(Object... kv) {
+        Map<String, Object> map = new HashMap<>();
+        if (kv == null) {
+            return map;
+        }
+        for (int i = 0; i + 1 < kv.length; i += 2) {
+            Object key = kv[i];
+            Object value = kv[i + 1];
+            if (key != null && value != null) {
+                map.put(String.valueOf(key), value);
+            }
+        }
+        return map;
     }
 
-    public record TransactionPageResponse(List<TransactionCard> content,
-                                          int page,
-                                          int totalPages,
-                                          long totalElements,
-                                          boolean hasPrevious,
-                                          boolean hasNext) {
+    private String sanitize(String value) {
+        if (value == null) {
+            return "";
+        }
+        return value.replaceAll("\\s+", " ").trim();
     }
 
+    private String dateToString(java.time.LocalDate date) {
+        return date != null ? date.toString() : null;
+    }
+
+    public record CustomerSearchResult(
+        Long id,
+        String name,
+        String formattedDebt,
+        Integer debtValue,
+        Double score
+    ) {}
+
+    public record CustomerPageResponse(
+        List<CustomerSearchResult> content,
+        int page,
+        int totalPages,
+        long totalElements,
+        boolean hasPrevious,
+        boolean hasNext
+    ) {}
+
+    public record TransactionCard(
+        Long id,
+        String formattedDate,
+        String typeKey,
+        String detail,
+        String formattedAmount,
+        String formattedBalance
+    ) {}
+
+    public record TransactionPageResponse(
+        List<TransactionCard> content,
+        int page,
+        int totalPages,
+        long totalElements,
+        boolean hasPrevious,
+        boolean hasNext
+    ) {}
 }

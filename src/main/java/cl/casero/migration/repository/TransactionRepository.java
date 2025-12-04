@@ -12,7 +12,6 @@ import java.time.LocalDate;
 import java.util.List;
 
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
-
     Page<Transaction> findByCustomerId(Long customerId, Pageable pageable);
 
     List<Transaction> findByCustomerIdOrderByDateDescIdDesc(Long customerId);

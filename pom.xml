@@ -12,7 +12,7 @@
 
     <groupId>cl.casero</groupId>
     <artifactId>casero-web</artifactId>
-    <version>1.13.0</version>
+    <version>1.17.1</version>
     <name>casero-web</name>
     <description>Reimplementación web de Casero con Spring Boot y Thymeleaf</description>
 
@@ -76,6 +76,11 @@
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
             <version>2.6.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
         </dependency>
     </dependencies>
 

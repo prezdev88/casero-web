@@ -20,10 +20,14 @@ public class UserSessionAdvice {
         if (!(principal instanceof CaseroUserDetails userDetails)) {
             return null;
         }
-        AppUser user = userDetails.getUser();
+        AppUser user = userDetails.getAppUser();
         return new CurrentUser(user.getId(), user.getName(), user.getRole(), userDetails.isAdmin());
     }
 
-    public record CurrentUser(Long id, String name, UserRole role, boolean admin) {
-    }
+    public record CurrentUser(
+        Long id, 
+        String name, 
+        UserRole role, 
+        boolean admin
+    ) {}
 }

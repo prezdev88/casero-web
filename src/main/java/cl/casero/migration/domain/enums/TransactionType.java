@@ -1,6 +1,7 @@
 package cl.casero.migration.domain.enums;
 
 public enum TransactionType {
+    
     SALE,
     PAYMENT,
     REFUND,

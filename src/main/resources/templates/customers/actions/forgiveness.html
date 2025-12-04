@@ -8,7 +8,8 @@
         <h2 th:text="'Condonar deuda de ' + ${customer.name}">Condonar deuda</h2>
         <p>Deuda actual:
             <strong class="text-red"
-                    th:text="${T(cl.casero.migration.util.CurrencyUtil).format(customer.debt)}">$0</strong>
+                    th:text="${T(cl.casero.migration.util.CurrencyUtil).format(customer.debt)}"
+                    data-testid="forgiveness-current-debt">$0</strong>
         </p>
         <form th:object="${debtForgivenessForm}"
               th:action="@{'/customers/' + ${customer.id} + '/forgiveness'}"
@@ -18,6 +19,7 @@
             <label for="forgiveness-reason">Motivo</label>
             <select id="forgiveness-reason"
                     data-forgiveness-reason="true"
+                    data-testid="forgiveness-reason"
                     required>
                 <option value="" disabled selected>Selecciona un motivo</option>
                 <option value="Descuento por pago contado" data-icon="💵">💵 Descuento por pago contado</option>
@@ -44,16 +46,18 @@
                 <input id="forgiveness-extra"
                        type="text"
                        data-forgiveness-extra-input="true"
+                       data-testid="forgiveness-extra"
                        placeholder="Ingresa los detalles">
             </div>
             <input type="hidden" th:field="*{detail}" data-forgiveness-detail="true">
             <div th:if="${#fields.hasErrors('detail')}" th:errors="*{detail}"></div>
 
             <label>Fecha</label>
-            <input type="date" th:field="*{date}" th:value="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}">
+            <input type="date" th:field="*{date}" th:value="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}"
+                   data-testid="forgiveness-date">
             <div th:if="${#fields.hasErrors('date')}" th:errors="*{date}"></div>
 
-            <button type="submit" data-loading-text="Condonando...">Condonar deuda</button>
+            <button type="submit" data-loading-text="Condonando..." data-testid="forgiveness-submit">Condonar deuda</button>
         </form>
     </div>
 </div>

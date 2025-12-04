@@ -12,11 +12,11 @@
             <span class="sr-only">Mostrar u ocultar menú</span>
         </button>
         <nav id="main-menu" class="nav-links">
-            <a th:href="@{/customers}">
+            <a th:href="@{/customers}" data-testid="nav-customers">
                 <span class="nav-link__icon" aria-hidden="true">📇</span>
                 <span class="nav-link__text">Clientes</span>
             </a>
-            <a th:href="@{/customers/new}">
+            <a th:href="@{/customers/new}" data-testid="nav-customers-new">
                 <span class="nav-link__icon" aria-hidden="true">➕</span>
                 <span class="nav-link__text">Crear Cliente</span>
             </a>
@@ -36,9 +36,9 @@
                 <span class="nav-link__icon" aria-hidden="true">⚠️</span>
                 <span class="nav-link__text">Morosos</span>
             </a>
-            <a th:if="${currentUser != null and currentUser.admin}" th:href="@{/admin/users}">
+            <a th:if="${currentUser != null and currentUser.admin}" th:href="@{/admin}">
                 <span class="nav-link__icon" aria-hidden="true">🛠️</span>
-                <span class="nav-link__text">Admin Settings</span>
+                <span class="nav-link__text">Admin</span>
             </a>
             <button class="theme-toggle nav-theme-toggle" id="theme-toggle" type="button" aria-label="Cambiar tema">
                 🌙

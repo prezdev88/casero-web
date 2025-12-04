@@ -1550,3 +1550,7 @@ body.modal-open {
 .ranking-score-cell {
     text-align: right;
 }
+.loginTitle {
+    margin-bottom: 0px;
+    margin-top: 0px;
+}

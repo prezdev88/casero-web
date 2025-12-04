@@ -14,6 +14,8 @@ import cl.casero.migration.service.dto.MoneyTransactionForm;
 import cl.casero.migration.service.dto.PaymentForm;
 import cl.casero.migration.service.dto.SaleForm;
 import cl.casero.migration.service.dto.TransactionMonthlySummary;
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -30,27 +32,21 @@ import java.util.stream.Collectors;
 
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class TransactionServiceImpl implements TransactionService {
 
-    private static final ZoneId DEFAULT_ZONE = ZoneId.of("America/Santiago");
-
-    private final TransactionRepository transactionRepository;
     private final CustomerRepository customerRepository;
     private final StatisticRepository statisticRepository;
+    private final TransactionRepository transactionRepository;
 
-    public TransactionServiceImpl(TransactionRepository transactionRepository,
-                                  CustomerRepository customerRepository,
-                                  StatisticRepository statisticRepository) {
-        this.transactionRepository = transactionRepository;
-        this.customerRepository = customerRepository;
-        this.statisticRepository = statisticRepository;
-    }
+    private static final ZoneId DEFAULT_ZONE = ZoneId.of("America/Santiago");
 
     @Override
     public Page<Transaction> listAll(TransactionType type, Pageable pageable) {
         if (type == null) {
             return transactionRepository.findAll(pageable);
         }
+
         return transactionRepository.findByType(type, pageable);
     }
 
@@ -67,9 +63,11 @@ public class TransactionServiceImpl implements TransactionService {
     @Override
     public List<Transaction> listRecentByCustomer(Long customerId, int limit) {
         List<Transaction> transactions = transactionRepository.findByCustomerIdOrderByDateDescIdDesc(customerId);
+        
         if (limit <= 0 || transactions.size() <= limit) {
             return transactions;
         }
+
         return new ArrayList<>(transactions.subList(0, limit));
     }
 
@@ -118,9 +116,11 @@ public class TransactionServiceImpl implements TransactionService {
     public void forgiveDebt(Long customerId, DebtForgivenessForm form) {
         Customer customer = getCustomer(customerId);
         int amount = customer.getDebt();
+        
         if (amount <= 0) {
             return;
         }
+
         int newBalance = 0;
 
         Transaction transaction = buildTransaction(customer, form.getDate(), form.getDetail(),
@@ -160,13 +160,16 @@ public class TransactionServiceImpl implements TransactionService {
         return customerRepository.findById(customerId).orElseThrow();
     }
 
-    private Transaction buildTransaction(Customer customer,
-                                          LocalDate date,
-                                          String detail,
-                                          int amount,
-                                          TransactionType type,
-                                          int newBalance) {
+    private Transaction buildTransaction(
+        Customer customer,
+        LocalDate date,
+        String detail,
+        int amount,
+        TransactionType type,
+        int newBalance
+    ) {
         Transaction transaction = new Transaction();
+
         transaction.setCustomer(customer);
         transaction.setDate(date);
         transaction.setDetail(detail);
@@ -174,22 +177,25 @@ public class TransactionServiceImpl implements TransactionService {
         transaction.setType(type);
         transaction.setBalance(newBalance);
         transaction.setCreatedAt(OffsetDateTime.now(DEFAULT_ZONE));
+
         return transaction;
     }
 
     private void persistTransaction(Transaction transaction, Integer itemsCount, SaleType saleType) {
         Customer customer = transaction.getCustomer();
         customer.setDebt(transaction.getBalance());
-        customerRepository.save(customer);
 
+        customerRepository.save(customer);
         transactionRepository.save(transaction);
 
         Statistic statistic = new Statistic();
+
         statistic.setType(transaction.getType());
         statistic.setAmount(transaction.getAmount());
         statistic.setDate(transaction.getDate());
         statistic.setItemsCount(itemsCount);
         statistic.setSaleType(saleType);
+
         statisticRepository.save(statistic);
     }
 
@@ -197,6 +203,7 @@ public class TransactionServiceImpl implements TransactionService {
     public List<TransactionMonthlySummary> getMonthlySummary(LocalDate start, LocalDate end) {
         LocalDate endBase = end != null ? end : LocalDate.now();
         LocalDate startBase = start != null ? start : endBase.minusMonths(5);
+        
         if (startBase.isAfter(endBase)) {
             LocalDate tmp = startBase;
             startBase = endBase;

@@ -22,16 +22,16 @@
                  T(cl.casero.migration.domain.enums.TransactionType).FAULT_DISCOUNT, 'Descuento por falla'
          )}">
         <h2>Transacciones</h2>
-        <form method="get" class="transaction-filter">
+        <form method="get" class="transaction-filter" data-testid="transactions-filter-form">
             <label for="type">Tipo</label>
-            <select id="type" name="type">
+            <select id="type" name="type" data-testid="transactions-filter-type">
                 <option value="" th:selected="${selectedType == null}">Todos</option>
                 <option th:each="type : ${types}"
                         th:value="${type.name()}"
                         th:selected="${type == selectedType}"
                         th:text="${typeIcons.getOrDefault(type, '📄') + ' ' + typeLabels.getOrDefault(type, type.name())}">Tipo</option>
             </select>
-            <button type="submit">Filtrar</button>
+            <button type="submit" data-testid="transactions-filter-submit">Filtrar</button>
         </form>
         <div class="table-wrapper" th:if="${!transactionsPage.empty}">
             <table>
@@ -46,7 +46,9 @@
                 </tr>
                 </thead>
                 <tbody>
-                <tr th:each="tx : ${transactionsPage.content}">
+                <tr th:each="tx : ${transactionsPage.content}"
+                    data-testid="transactions-row"
+                    th:attr="data-type=${tx.type.name()}">
                     <td th:text="${dateTimeUtil.format(tx.createdAt)}">01-ene-2024 10:30</td>
                     <td>
                         <a th:href="@{'/customers/' + ${tx.customer.id}}"
@@ -66,7 +68,7 @@
                 </tbody>
             </table>
         </div>
-        <p th:if="${transactionsPage.empty}">No hay transacciones registradas.</p>
+        <p th:if="${transactionsPage.empty}" data-testid="transactions-empty-message">No hay transacciones registradas.</p>
         <nav class="pagination"
              th:if="${transactionsPage.totalPages > 1}"
              th:with="prev=${T(java.lang.Math).max(0, transactionsPage.number - 1)},

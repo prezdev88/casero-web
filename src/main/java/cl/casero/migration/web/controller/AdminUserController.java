@@ -4,6 +4,10 @@ import cl.casero.migration.domain.enums.UserRole;
 import cl.casero.migration.service.AppUserService;
 import cl.casero.migration.service.dto.CreateUserForm;
 import cl.casero.migration.service.dto.UpdatePinForm;
+import cl.casero.migration.domain.enums.AuditEventType;
+import cl.casero.migration.domain.AppUser;
+import cl.casero.migration.service.AuditEventService;
+import cl.casero.migration.web.security.CaseroUserDetails;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 
@@ -17,6 +21,8 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.security.core.Authentication;
+import jakarta.servlet.http.HttpServletRequest;
 
 @Controller
 @AllArgsConstructor
@@ -24,36 +30,20 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class AdminUserController {
 
     private final AppUserService appUserService;
+    private final AuditEventService auditEventService;
 
     @GetMapping
     public String users(Model model) {
-        if (!model.containsAttribute("createUserForm")) {
-            model.addAttribute("createUserForm", new CreateUserForm());
-        }
-
-        if (!model.containsAttribute("updatePinForm")) {
-            model.addAttribute("updatePinForm", new UpdatePinForm());
-        }
-
-        if (!model.containsAttribute("pinErrorUserId")) {
-            model.addAttribute("pinErrorUserId", null);
-        }
-
-        if (!model.containsAttribute("pinError")) {
-            model.addAttribute("pinError", null);
-        }
-
-        model.addAttribute("users", appUserService.listAll());
-        model.addAttribute("roles", Arrays.asList(UserRole.values()));
-
-        return "admin/users";
+        return "redirect:/admin";
     }
 
     @PostMapping("/create")
     public String createUser(
         @Valid @ModelAttribute("createUserForm") CreateUserForm form,
         BindingResult result,
-        RedirectAttributes redirectAttributes
+        RedirectAttributes redirectAttributes,
+        Authentication authentication,
+        HttpServletRequest request
     ) {
         if (result.hasErrors()) {
             preserveForm("createUserForm", form, result, redirectAttributes);
@@ -63,6 +53,11 @@ public class AdminUserController {
         try {
             appUserService.create(form.getName(), form.getRole(), form.getPin());
             redirectAttributes.addFlashAttribute("message", "Usuario creado correctamente");
+            auditEventService.logEvent(
+                AuditEventType.ADMIN_USER_CREATED,
+                currentUser(authentication),
+                "ADMIN_USER_CREATED name=" + form.getName(),
+                request);
         } catch (IllegalArgumentException ex) {
             result.reject("createUserForm", ex.getMessage());
             preserveForm("createUserForm", form, result, redirectAttributes);
@@ -75,7 +70,9 @@ public class AdminUserController {
     public String updatePin(
         @Valid @ModelAttribute("updatePinForm") UpdatePinForm form,
         BindingResult result,
-        RedirectAttributes redirectAttributes
+        RedirectAttributes redirectAttributes,
+        Authentication authentication,
+        HttpServletRequest request
     ) {
         if (result.hasErrors()) {
             redirectAttributes.addFlashAttribute("pinErrorUserId", form.getUserId());
@@ -87,6 +84,11 @@ public class AdminUserController {
         try {
             appUserService.updatePin(form.getUserId(), form.getPin());
             redirectAttributes.addFlashAttribute("message", "PIN actualizado");
+            auditEventService.logEvent(
+                AuditEventType.ADMIN_USER_PIN_UPDATED,
+                currentUser(authentication),
+                "ADMIN_USER_PIN_UPDATED userId=" + form.getUserId(),
+                request);
         } catch (IllegalArgumentException ex) {
             redirectAttributes.addFlashAttribute("pinErrorUserId", form.getUserId());
             redirectAttributes.addFlashAttribute("pinError", ex.getMessage());
@@ -111,5 +113,12 @@ public class AdminUserController {
                 .map(DefaultMessageSourceResolvable::getDefaultMessage)
                 .findFirst()
                 .orElse("Error al procesar la solicitud");
+    }
+
+    private AppUser currentUser(Authentication authentication) {
+        if (authentication != null && authentication.getPrincipal() instanceof CaseroUserDetails details) {
+            return details.getAppUser();
+        }
+        return null;
     }
 }

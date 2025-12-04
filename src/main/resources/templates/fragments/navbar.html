@@ -36,9 +36,9 @@
                 <span class="nav-link__icon" aria-hidden="true">⚠️</span>
                 <span class="nav-link__text">Morosos</span>
             </a>
-            <a th:if="${currentUser != null and currentUser.admin}" th:href="@{/admin/users}">
+            <a th:if="${currentUser != null and currentUser.admin}" th:href="@{/admin}">
                 <span class="nav-link__icon" aria-hidden="true">🛠️</span>
-                <span class="nav-link__text">Admin Settings</span>
+                <span class="nav-link__text">Admin</span>
             </a>
             <button class="theme-toggle nav-theme-toggle" id="theme-toggle" type="button" aria-label="Cambiar tema">
                 🌙

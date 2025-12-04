@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('Admin')}"></head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+<div class="container">
+    <div th:replace="~{fragments/messages :: messages}"></div>
+
+    <div class="card">
+        <h2>Panel de administración</h2>
+        <p class="text-muted">
+            Gestiona usuarios y configuración de la aplicación.
+        </p>
+    </div>
+
+    <div class="card">
+        <h3>Usuarios</h3>
+        <p class="text-muted">Administra los PIN y perfiles disponibles.</p>
+        <div class="admin-grid">
+            <div>
+                <h4>Crear nuevo usuario</h4>
+                <form th:action="@{/admin/users/create}"
+                      th:object="${createUserForm}"
+                      method="post"
+                      class="form-grid">
+                    <label>
+                        Nombre
+                        <input type="text" th:field="*{name}" placeholder="Ej: Ana Pérez" required>
+                        <span class="form-error" th:if="${#fields.hasErrors('name')}"
+                              th:errors="*{name}">Error</span>
+                    </label>
+                    <label>
+                        Rol
+                        <select th:field="*{role}">
+                            <option th:each="role : ${roles}"
+                                    th:value="${role}"
+                                    th:text="${role.name()}"></option>
+                        </select>
+                            <span class="form-error" th:if="${#fields.hasErrors('role')}"
+                              th:errors="*{role}">Error</span>
+                    </label>
+                    <label>
+                        PIN
+                        <input type="password"
+                               th:field="*{pin}"
+                               pattern="[0-9]{4}"
+                               minlength="4"
+                               maxlength="4"
+                               inputmode="numeric"
+                               placeholder="••••"
+                               required>
+                        <span class="form-error" th:if="${#fields.hasErrors('pin')}"
+                              th:errors="*{pin}">Error</span>
+                    </label>
+                    <div class="form-actions">
+                        <button type="submit">Guardar</button>
+                    </div>
+                </form>
+            </div>
+            <div>
+                <h4>Usuarios existentes</h4>
+                <div class="admin-users-grid">
+                    <div class="admin-user-card" th:each="user : ${users}">
+                        <div class="admin-user-card__header">
+                            <h5 th:text="${user.name}">Nombre</h5>
+                            <span class="badge" th:text="${user.role.name()}">ROL</span>
+                        </div>
+                        <p class="text-muted" th:text="${'Creado: ' + #temporals.format(user.createdAt, 'dd-MM-yyyy HH:mm')}">
+                            Creado
+                        </p>
+                        <form th:action="@{/admin/users/pin}"
+                              method="post"
+                              class="admin-pin-form">
+                            <input type="hidden" name="userId" th:value="${user.id}">
+                            <label>
+                                Nuevo PIN
+                                <input type="password"
+                                       name="pin"
+                                       pattern="[0-9]{4}"
+                                       minlength="4"
+                                       maxlength="4"
+                                       inputmode="numeric"
+                                       placeholder="••••"
+                                       required>
+                            </label>
+                            <div class="form-error"
+                                 th:if="${pinErrorUserId != null and pinErrorUserId == user.id}"
+                                 th:text="${pinError}">Error</div>
+                            <div class="form-actions">
+                                <button type="submit">Actualizar PIN</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>Configuración de la aplicación</h3>
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Clave</th>
+                        <th>Valor</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="config : ${configs}">
+                        <td th:text="${config.configKey}">clave</td>
+                        <td>
+                            <form th:action="@{/admin/config/update}" method="post" class="form-inline">
+                                <input type="hidden" name="configKey" th:value="${config.configKey}">
+                                <input type="text"
+                                       name="value"
+                                       th:value="${config.value}"
+                                       placeholder="Valor"
+                                       required>
+                                <button type="submit">Guardar</button>
+                            </form>
+                        </td>
+                        <td class="text-muted" th:text="${'Actualizado: ' + #temporals.format(config.updatedAt, 'dd-MM-yyyy HH:mm')}">fecha</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <p class="text-muted">
+            Para desactivar la auditoría de eventos, establece <strong>audit.logging.enabled</strong> en <code>false</code>.
+        </p>
+    </div>
+</div>
+</body>
+</html>

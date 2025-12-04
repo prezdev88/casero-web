@@ -1,0 +1,16 @@
+package cl.casero.migration.domain.enums;
+
+public enum AuditEventType {
+    LOGIN_PAGE_VIEW,
+    LOGIN_FAILED,
+    LOGIN_SUCCESS,
+    PAGE_VIEW,
+    ADMIN_USER_CREATED,
+    ADMIN_USER_PIN_UPDATED,
+    PAYMENT_REGISTERED,
+    SALE_REGISTERED,
+    REFUND_REGISTERED,
+    FAULT_DISCOUNT_REGISTERED,
+    DEBT_FORGIVEN,
+    TRANSACTION_DELETED
+}

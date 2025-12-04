@@ -11,7 +11,6 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
-
 import lombok.AllArgsConstructor;
 
 @Configuration
@@ -29,12 +28,16 @@ public class SecurityConfig {
     @Bean
     PinAuthenticationFilter pinAuthenticationFilter(
         AuthenticationManager authenticationManager,
-        HttpSessionSecurityContextRepository contextRepository
+        HttpSessionSecurityContextRepository contextRepository,
+        LoginSuccessHandler loginSuccessHandler,
+        LoginFailureHandler loginFailureHandler
     ) {
         PinAuthenticationFilter filter = new PinAuthenticationFilter();
 
         filter.setSecurityContextRepository(contextRepository);
         filter.setAuthenticationManager(authenticationManager);
+        filter.setAuthenticationSuccessHandler(loginSuccessHandler);
+        filter.setAuthenticationFailureHandler(loginFailureHandler);
 
         return filter;
     }
@@ -75,5 +78,15 @@ public class SecurityConfig {
     @Bean
     AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
         return configuration.getAuthenticationManager();
+    }
+
+    @Bean
+    LoginSuccessHandler loginSuccessHandler(cl.casero.migration.service.AuditEventService auditEventService) {
+        return new LoginSuccessHandler(auditEventService);
+    }
+
+    @Bean
+    LoginFailureHandler loginFailureHandler(cl.casero.migration.service.AuditEventService auditEventService) {
+        return new LoginFailureHandler(auditEventService);
     }
 }

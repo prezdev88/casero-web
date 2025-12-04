@@ -2,13 +2,16 @@ package cl.casero.migration.web.controller;
 
 import cl.casero.migration.domain.Customer;
 import cl.casero.migration.domain.Transaction;
+import cl.casero.migration.domain.AppUser;
 import cl.casero.migration.domain.enums.TransactionType;
+import cl.casero.migration.domain.enums.AuditEventType;
 import cl.casero.migration.service.CustomerReportService;
 import cl.casero.migration.service.CustomerScoreService;
 import cl.casero.migration.service.CustomerService;
 import cl.casero.migration.service.SectorService;
 import cl.casero.migration.service.StatisticsService;
 import cl.casero.migration.service.TransactionService;
+import cl.casero.migration.service.AuditEventService;
 import cl.casero.migration.service.dto.CreateCustomerForm;
 import cl.casero.migration.service.dto.DebtForgivenessForm;
 import cl.casero.migration.service.dto.MoneyTransactionForm;
@@ -39,6 +42,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -50,6 +54,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import jakarta.servlet.http.HttpServletRequest;
+import cl.casero.migration.web.security.CaseroUserDetails;
 
 @Controller
 @AllArgsConstructor
@@ -62,6 +68,7 @@ public class CustomerController {
     private final StatisticsService statisticsService;
     private final SectorService sectorService;
     private final CustomerReportService customerReportService;
+    private final AuditEventService auditEventService;
 
     @GetMapping
     public String listCustomers(
@@ -306,7 +313,9 @@ public class CustomerController {
         @PathVariable Long id,
         @Valid @ModelAttribute("saleForm") SaleForm form,
         BindingResult result,
-        RedirectAttributes redirectAttributes
+        RedirectAttributes redirectAttributes,
+        Authentication authentication,
+        HttpServletRequest request
     ) {
         if (result.hasErrors()) {
             return redirectToAction(id, redirectAttributes, "saleForm", form, result, "sale");
@@ -314,6 +323,11 @@ public class CustomerController {
 
         transactionService.registerSale(id, form);
         redirectAttributes.addFlashAttribute("message", "Venta registrada");
+        auditEventService.logEvent(
+            AuditEventType.SALE_REGISTERED,
+            currentUser(authentication),
+            "SALE_REGISTERED customerId=" + id,
+            request);
 
         return "redirect:/customers/" + id;
     }
@@ -323,7 +337,9 @@ public class CustomerController {
         @PathVariable Long id,
         @Valid @ModelAttribute("paymentForm") PaymentForm form,
         BindingResult result,
-        RedirectAttributes redirectAttributes
+        RedirectAttributes redirectAttributes,
+        Authentication authentication,
+        HttpServletRequest request
     ) {
         if (result.hasErrors()) {
             return redirectToAction(id, redirectAttributes, "paymentForm", form, result, "payment");
@@ -331,6 +347,11 @@ public class CustomerController {
 
         transactionService.registerPayment(id, form);
         redirectAttributes.addFlashAttribute("message", "Pago registrado");
+        auditEventService.logEvent(
+            AuditEventType.PAYMENT_REGISTERED,
+            currentUser(authentication),
+            "PAYMENT_REGISTERED customerId=" + id,
+            request);
 
         return "redirect:/customers/" + id;
     }
@@ -340,7 +361,9 @@ public class CustomerController {
         @PathVariable Long id,
         @Valid @ModelAttribute("refundForm") MoneyTransactionForm form,
         BindingResult result,
-        RedirectAttributes redirectAttributes
+        RedirectAttributes redirectAttributes,
+        Authentication authentication,
+        HttpServletRequest request
     ) {
         if (result.hasErrors()) {
             return redirectToAction(id, redirectAttributes, "refundForm", form, result, "refund");
@@ -348,6 +371,11 @@ public class CustomerController {
 
         transactionService.registerRefund(id, form);
         redirectAttributes.addFlashAttribute("message", "Devolución registrada");
+        auditEventService.logEvent(
+            AuditEventType.REFUND_REGISTERED,
+            currentUser(authentication),
+            "REFUND_REGISTERED customerId=" + id,
+            request);
         
         return "redirect:/customers/" + id;
     }
@@ -357,7 +385,9 @@ public class CustomerController {
         @PathVariable Long id,
         @Valid @ModelAttribute("faultDiscountForm") MoneyTransactionForm form,
         BindingResult result,
-        RedirectAttributes redirectAttributes
+        RedirectAttributes redirectAttributes,
+        Authentication authentication,
+        HttpServletRequest request
     ) {
         if (result.hasErrors()) {
             return redirectToAction(id, redirectAttributes, "faultDiscountForm", form, result, "fault-discount");
@@ -365,6 +395,11 @@ public class CustomerController {
 
         transactionService.registerFaultDiscount(id, form);
         redirectAttributes.addFlashAttribute("message", "Descuento por falla registrado");
+        auditEventService.logEvent(
+            AuditEventType.FAULT_DISCOUNT_REGISTERED,
+            currentUser(authentication),
+            "FAULT_DISCOUNT_REGISTERED customerId=" + id,
+            request);
 
         return "redirect:/customers/" + id;
     }
@@ -374,7 +409,9 @@ public class CustomerController {
         @PathVariable Long id,
         @Valid @ModelAttribute("debtForgivenessForm") DebtForgivenessForm form,
         BindingResult result,
-        RedirectAttributes redirectAttributes
+        RedirectAttributes redirectAttributes,
+        Authentication authentication,
+        HttpServletRequest request
     ) {
         if (result.hasErrors()) {
             return redirectToAction(id, redirectAttributes, "debtForgivenessForm", form, result, "forgiveness");
@@ -382,6 +419,11 @@ public class CustomerController {
 
         transactionService.forgiveDebt(id, form);
         redirectAttributes.addFlashAttribute("message", "Deuda condonada");
+        auditEventService.logEvent(
+            AuditEventType.DEBT_FORGIVEN,
+            currentUser(authentication),
+            "DEBT_FORGIVEN customerId=" + id,
+            request);
 
         return "redirect:/customers/" + id;
     }
@@ -424,10 +466,17 @@ public class CustomerController {
     public String deleteTransaction(
         @PathVariable Long transactionId,
         @RequestParam("customerId") Long customerId,
-        RedirectAttributes redirectAttributes
+        RedirectAttributes redirectAttributes,
+        Authentication authentication,
+        HttpServletRequest request
     ) {
         transactionService.delete(transactionId);
         redirectAttributes.addFlashAttribute("message", "Transacción eliminada");
+        auditEventService.logEvent(
+            AuditEventType.TRANSACTION_DELETED,
+            currentUser(authentication),
+            "TRANSACTION_DELETED transactionId=" + transactionId + " customerId=" + customerId,
+            request);
 
         return "redirect:/customers/" + customerId;
     }
@@ -585,6 +634,13 @@ public class CustomerController {
         redirectAttributes.addFlashAttribute(attributeName, form);
 
         return "redirect:/customers/" + id + "/actions/" + actionPath;
+    }
+
+    private AppUser currentUser(Authentication authentication) {
+        if (authentication != null && authentication.getPrincipal() instanceof CaseroUserDetails details) {
+            return details.getAppUser();
+        }
+        return null;
     }
 
     public record CustomerSearchResult(

@@ -24,7 +24,7 @@ public class LoginSuccessHandler extends SavedRequestAwareAuthenticationSuccessH
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication)
             throws ServletException, IOException {
-        auditEventService.logEvent(AuditEventType.LOGIN_SUCCESS, extractUser(authentication), buildPayload(request), request);
+        auditEventService.logEvent(AuditEventType.LOG_IN, extractUser(authentication), buildPayload(request), request);
         super.onAuthenticationSuccess(request, response, authentication);
     }
 
@@ -41,9 +41,9 @@ public class LoginSuccessHandler extends SavedRequestAwareAuthenticationSuccessH
 
     private String buildPayload(HttpServletRequest request) {
         if (request == null) {
-            return "LOGIN_SUCCESS";
+            return "LOG_IN";
         }
         String sessionId = request.getSession(false) != null ? request.getSession(false).getId() : null;
-        return sessionId != null ? "LOGIN_SUCCESS sessionId=" + sessionId : "LOGIN_SUCCESS";
+        return sessionId != null ? "LOG_IN sessionId=" + sessionId : "LOG_IN";
     }
 }

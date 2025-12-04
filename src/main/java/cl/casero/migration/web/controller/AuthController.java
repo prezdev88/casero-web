@@ -32,9 +32,9 @@ public class AuthController {
         }
 
         auditEventService.logEvent(
-            AuditEventType.LOGIN_PAGE_VIEW,
+            AuditEventType.PAGE_VIEW,
             null,
-            "LOGIN_PAGE",
+            buildPathWithQuery(request),
             request);
 
         model.addAttribute("showError", error.isPresent());
@@ -42,5 +42,14 @@ public class AuthController {
         model.addAttribute("showTimeout", timeout.isPresent());
         
         return "auth/login";
+    }
+
+    private String buildPathWithQuery(HttpServletRequest request) {
+        if (request == null) {
+            return "/login";
+        }
+        String uri = request.getRequestURI();
+        String query = request.getQueryString();
+        return query != null && !query.isBlank() ? uri + "?" + query : uri;
     }
 }

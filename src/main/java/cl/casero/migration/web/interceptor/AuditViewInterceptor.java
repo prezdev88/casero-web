@@ -42,90 +42,9 @@ public class AuditViewInterceptor implements HandlerInterceptor {
         if (request == null) {
             return "PAGE_VIEW";
         }
-        String key = request.getRequestURI();
-        String label = mapPathToTitle(key);
-        return label != null ? label : key;
-    }
-
-    private String mapPathToTitle(String path) {
-        if (path == null) {
-            return null;
-        }
-        // Exact matches
-        switch (path) {
-            case "/", "/customers":
-                return "LIST_CUSTOMERS";
-            case "/customers/new":
-                return "CREATE_CUSTOMER";
-            case "/customers/ranking":
-                return "CUSTOMER_RANKING";
-            case "/statistics":
-                return "TOTAL_DEBT";
-            case "/statistics/monthly":
-                return "MONTHLY_STATS";
-            case "/transactions":
-                return "LIST_TRANSACTIONS";
-            case "/debtors":
-                return "LIST_DEBTORS";
-            case "/admin":
-                return "ADMIN_HOME";
-            case "/admin/users":
-                return "LIST_USERS";
-            case "/admin/config":
-                return "APP_CONFIG";
-            case "/admin/audit":
-                return "AUDIT_LOGS";
-            case "/login":
-                return "LOGIN_PAGE";
-            default:
-                break;
-        }
-
-        // Pattern matches
-        if (path.matches("/customers/\\d+$")) {
-            return "VIEW_CUSTOMER";
-        }
-
-        if (path.matches("/customers/\\d+/reports/transactions.*")) {
-            return "CUSTOMER_PDF_REPORT";
-        }
-
-        if (path.matches("/customers/\\d+/actions/.*")) {
-            return mapCustomerAction(path);
-        }
-
-        return null;
-    }
-
-    private String mapCustomerAction(String path) {
-        if (path.contains("/actions/payment")) {
-            return "CUSTOMER_PAYMENT";
-        }
-        if (path.contains("/actions/sale")) {
-            return "CUSTOMER_SALE";
-        }
-        if (path.contains("/actions/refund")) {
-            return "CUSTOMER_REFUND";
-        }
-        if (path.contains("/actions/fault-discount")) {
-            return "CUSTOMER_FAULT_DISCOUNT";
-        }
-        if (path.contains("/actions/forgiveness")) {
-            return "CUSTOMER_FORGIVENESS";
-        }
-        if (path.contains("/actions/address/edit")) {
-            return "CUSTOMER_ADDRESS_EDIT";
-        }
-        if (path.contains("/actions/address")) {
-            return "CUSTOMER_ADDRESS_VIEW";
-        }
-        if (path.contains("/actions/name/edit")) {
-            return "CUSTOMER_NAME_EDIT";
-        }
-        if (path.contains("/actions/sector/edit")) {
-            return "CUSTOMER_SECTOR_EDIT";
-        }
-        return "CUSTOMER_ACTION";
+        String path = request.getRequestURI();
+        String query = request.getQueryString();
+        return query != null && !query.isBlank() ? path + "?" + query : path;
     }
 
     private boolean isJsonRequest(HttpServletRequest request) {

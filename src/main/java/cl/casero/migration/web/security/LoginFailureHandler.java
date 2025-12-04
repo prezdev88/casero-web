@@ -23,7 +23,7 @@ public class LoginFailureHandler extends SimpleUrlAuthenticationFailureHandler {
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception)
             throws IOException, ServletException {
         String reason = exception != null && exception.getMessage() != null ? exception.getMessage() : "unknown";
-        auditEventService.logEvent(AuditEventType.LOGIN_FAILED, null, "LOGIN_FAILED reason=" + reason, request);
+        auditEventService.logEvent(AuditEventType.LOG_ERROR, null, "LOG_ERROR reason=" + reason, request);
         super.onAuthenticationFailure(request, response, exception);
     }
 }

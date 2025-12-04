@@ -51,12 +51,12 @@ public class AdminUserController {
         }
 
         try {
-            appUserService.create(form.getName(), form.getRole(), form.getPin());
+            AppUser created = appUserService.create(form.getName(), form.getRole(), form.getPin());
             redirectAttributes.addFlashAttribute("message", "Usuario creado correctamente");
             auditEventService.logEvent(
-                AuditEventType.ADMIN_USER_CREATED,
+                AuditEventType.ACTION,
                 currentUser(authentication),
-                "ADMIN_USER_CREATED name=" + form.getName(),
+                "ADMIN_USER_CREATED id=" + created.getId() + " name=" + created.getName() + " role=" + created.getRole(),
                 request);
         } catch (IllegalArgumentException ex) {
             result.reject("createUserForm", ex.getMessage());
@@ -85,7 +85,7 @@ public class AdminUserController {
             appUserService.updatePin(form.getUserId(), form.getPin());
             redirectAttributes.addFlashAttribute("message", "PIN actualizado");
             auditEventService.logEvent(
-                AuditEventType.ADMIN_USER_PIN_UPDATED,
+                AuditEventType.ACTION,
                 currentUser(authentication),
                 "ADMIN_USER_PIN_UPDATED userId=" + form.getUserId(),
                 request);

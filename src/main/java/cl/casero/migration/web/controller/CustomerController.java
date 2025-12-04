@@ -152,7 +152,9 @@ public class CustomerController {
     public String createCustomer(
         @Valid @ModelAttribute("customerForm") CreateCustomerForm form,
         BindingResult result,
-        RedirectAttributes redirectAttributes
+        RedirectAttributes redirectAttributes,
+        Authentication authentication,
+        HttpServletRequest request
     ) {
         if (result.hasErrors()) {
             redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.customerForm", result);
@@ -161,8 +163,13 @@ public class CustomerController {
             return "redirect:/customers/new";
         }
 
-        customerService.create(form);
+        Customer created = customerService.create(form);
         redirectAttributes.addFlashAttribute("message", "Cliente creado correctamente");
+        auditEventService.logEvent(
+            AuditEventType.ACTION,
+            currentUser(authentication),
+            "CREATE_CUSTOMER id=" + created.getId() + " name=" + created.getName(),
+            request);
 
         return "redirect:/customers";
     }
@@ -324,9 +331,13 @@ public class CustomerController {
         transactionService.registerSale(id, form);
         redirectAttributes.addFlashAttribute("message", "Venta registrada");
         auditEventService.logEvent(
-            AuditEventType.SALE_REGISTERED,
+            AuditEventType.ACTION,
             currentUser(authentication),
-            "SALE_REGISTERED customerId=" + id,
+            "SALE customerId=" + id
+                + " amount=" + form.getAmount()
+                + " items=" + form.getItemsCount()
+                + " date=" + form.getDate()
+                + " detail=" + sanitize(form.getDetail()),
             request);
 
         return "redirect:/customers/" + id;
@@ -348,9 +359,11 @@ public class CustomerController {
         transactionService.registerPayment(id, form);
         redirectAttributes.addFlashAttribute("message", "Pago registrado");
         auditEventService.logEvent(
-            AuditEventType.PAYMENT_REGISTERED,
+            AuditEventType.ACTION,
             currentUser(authentication),
-            "PAYMENT_REGISTERED customerId=" + id,
+            "PAYMENT customerId=" + id
+                + " amount=" + form.getAmount()
+                + " date=" + form.getDate(),
             request);
 
         return "redirect:/customers/" + id;
@@ -372,9 +385,12 @@ public class CustomerController {
         transactionService.registerRefund(id, form);
         redirectAttributes.addFlashAttribute("message", "Devolución registrada");
         auditEventService.logEvent(
-            AuditEventType.REFUND_REGISTERED,
+            AuditEventType.ACTION,
             currentUser(authentication),
-            "REFUND_REGISTERED customerId=" + id,
+            "REFUND customerId=" + id
+                + " amount=" + form.getAmount()
+                + " date=" + form.getDate()
+                + " detail=" + sanitize(form.getDetail()),
             request);
         
         return "redirect:/customers/" + id;
@@ -396,9 +412,12 @@ public class CustomerController {
         transactionService.registerFaultDiscount(id, form);
         redirectAttributes.addFlashAttribute("message", "Descuento por falla registrado");
         auditEventService.logEvent(
-            AuditEventType.FAULT_DISCOUNT_REGISTERED,
+            AuditEventType.ACTION,
             currentUser(authentication),
-            "FAULT_DISCOUNT_REGISTERED customerId=" + id,
+            "FAULT_DISCOUNT customerId=" + id
+                + " amount=" + form.getAmount()
+                + " date=" + form.getDate()
+                + " detail=" + sanitize(form.getDetail()),
             request);
 
         return "redirect:/customers/" + id;
@@ -420,9 +439,11 @@ public class CustomerController {
         transactionService.forgiveDebt(id, form);
         redirectAttributes.addFlashAttribute("message", "Deuda condonada");
         auditEventService.logEvent(
-            AuditEventType.DEBT_FORGIVEN,
+            AuditEventType.ACTION,
             currentUser(authentication),
-            "DEBT_FORGIVEN customerId=" + id,
+            "DEBT_FORGIVEN customerId=" + id
+                + " date=" + form.getDate()
+                + " detail=" + sanitize(form.getDetail()),
             request);
 
         return "redirect:/customers/" + id;
@@ -433,7 +454,9 @@ public class CustomerController {
         @PathVariable Long id,
         @Valid @ModelAttribute("updateAddressForm") UpdateAddressForm form,
         BindingResult result,
-        RedirectAttributes redirectAttributes
+        RedirectAttributes redirectAttributes,
+        Authentication authentication,
+        HttpServletRequest request
     ) {
         if (result.hasErrors()) {
             return redirectToAction(id, redirectAttributes, "updateAddressForm", form, result, "address/edit");
@@ -441,6 +464,11 @@ public class CustomerController {
 
         customerService.updateAddress(id, form.getNewAddress());
         redirectAttributes.addFlashAttribute("successMessage", "Dirección actualizada");
+        auditEventService.logEvent(
+            AuditEventType.ACTION,
+            currentUser(authentication),
+            "UPDATE_CUSTOMER_ADDRESS id=" + id,
+            request);
 
         return "redirect:/customers/" + id;
     }
@@ -450,7 +478,9 @@ public class CustomerController {
         @PathVariable Long id,
         @Valid @ModelAttribute("updateSectorForm") UpdateSectorForm form,
         BindingResult result,
-        RedirectAttributes redirectAttributes
+        RedirectAttributes redirectAttributes,
+        Authentication authentication,
+        HttpServletRequest request
     ) {
         if (result.hasErrors()) {
             return redirectToAction(id, redirectAttributes, "updateSectorForm", form, result, "sector/edit");
@@ -458,6 +488,11 @@ public class CustomerController {
 
         customerService.updateSector(id, form.getSectorId());
         redirectAttributes.addFlashAttribute("successMessage", "Sector actualizado");
+        auditEventService.logEvent(
+            AuditEventType.ACTION,
+            currentUser(authentication),
+            "UPDATE_CUSTOMER_SECTOR id=" + id + " sectorId=" + form.getSectorId(),
+            request);
 
         return "redirect:/customers/" + id;
     }
@@ -473,7 +508,7 @@ public class CustomerController {
         transactionService.delete(transactionId);
         redirectAttributes.addFlashAttribute("message", "Transacción eliminada");
         auditEventService.logEvent(
-            AuditEventType.TRANSACTION_DELETED,
+            AuditEventType.ACTION,
             currentUser(authentication),
             "TRANSACTION_DELETED transactionId=" + transactionId + " customerId=" + customerId,
             request);
@@ -574,7 +609,9 @@ public class CustomerController {
         @PathVariable Long id,
         @Valid @ModelAttribute("updateNameForm") UpdateNameForm form,
         BindingResult result,
-        RedirectAttributes redirectAttributes
+        RedirectAttributes redirectAttributes,
+        Authentication authentication,
+        HttpServletRequest request
     ) {
         if (result.hasErrors()) {
             return redirectToAction(id, redirectAttributes, "updateNameForm", form, result, "name/edit");
@@ -582,6 +619,11 @@ public class CustomerController {
 
         customerService.updateName(id, form.getNewName());
         redirectAttributes.addFlashAttribute("successMessage", "Nombre actualizado");
+        auditEventService.logEvent(
+            AuditEventType.ACTION,
+            currentUser(authentication),
+            "UPDATE_CUSTOMER_NAME id=" + id + " name=" + form.getNewName(),
+            request);
 
         return "redirect:/customers/" + id;
     }
@@ -641,6 +683,13 @@ public class CustomerController {
             return details.getAppUser();
         }
         return null;
+    }
+
+    private String sanitize(String value) {
+        if (value == null) {
+            return "";
+        }
+        return value.replaceAll("\\s+", " ").trim();
     }
 
     public record CustomerSearchResult(

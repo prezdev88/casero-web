@@ -9,6 +9,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.security.core.Authentication;
+import jakarta.servlet.http.HttpServletRequest;
+import cl.casero.migration.domain.enums.AuditEventType;
+import cl.casero.migration.domain.AppUser;
+import cl.casero.migration.service.AuditEventService;
+import cl.casero.migration.web.security.CaseroUserDetails;
 
 @Controller
 @RequiredArgsConstructor
@@ -16,6 +22,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class AdminConfigController {
 
     private final AppConfigService appConfigService;
+    private final AuditEventService auditEventService;
 
     @GetMapping
     public String config(Model model) {
@@ -26,14 +33,28 @@ public class AdminConfigController {
     public String updateConfig(
         @RequestParam("configKey") String configKey,
         @RequestParam("value") String value,
-        RedirectAttributes redirectAttributes
+        RedirectAttributes redirectAttributes,
+        Authentication authentication,
+        HttpServletRequest request
     ) {
         try {
             appConfigService.updateValue(configKey, value);
             redirectAttributes.addFlashAttribute("message", "Configuración actualizada");
+            auditEventService.logEvent(
+                AuditEventType.ACTION,
+                currentUser(authentication),
+                "APP_CONFIG_UPDATED key=" + configKey + " value=" + value,
+                request);
         } catch (IllegalArgumentException ex) {
             redirectAttributes.addFlashAttribute("error", ex.getMessage());
         }
         return "redirect:/admin/config";
+    }
+
+    private AppUser currentUser(Authentication authentication) {
+        if (authentication != null && authentication.getPrincipal() instanceof CaseroUserDetails details) {
+            return details.getAppUser();
+        }
+        return null;
     }
 }

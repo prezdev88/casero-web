@@ -27,6 +27,9 @@ public class AuditEventServiceImpl implements AuditEventService {
         if (!appConfigService.isAuditEnabled()) {
             return;
         }
+        if (eventType == null) {
+            return;
+        }
         try {
             AuditEvent event = new AuditEvent();
             event.setEventType(eventType);

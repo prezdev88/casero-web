@@ -54,6 +54,10 @@ public class CaseroUserDetails implements UserDetails {
         return appUser;
     }
 
+    public AppUser getUser() {
+        return appUser;
+    }
+
     public boolean isAdmin() {
         return appUser.getRole() == UserRole.ADMIN;
     }

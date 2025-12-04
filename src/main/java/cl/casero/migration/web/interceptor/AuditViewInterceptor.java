@@ -73,6 +73,8 @@ public class AuditViewInterceptor implements HandlerInterceptor {
                 return "LIST_USERS";
             case "/admin/config":
                 return "APP_CONFIG";
+            case "/admin/audit":
+                return "AUDIT_LOGS";
             case "/login":
                 return "LOGIN_PAGE";
             default:

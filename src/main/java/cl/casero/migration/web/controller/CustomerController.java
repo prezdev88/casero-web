@@ -31,6 +31,7 @@ import lombok.AllArgsConstructor;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -168,7 +169,12 @@ public class CustomerController {
         auditEventService.logEvent(
             AuditEventType.ACTION,
             currentUser(authentication),
-            "CREATE_CUSTOMER id=" + created.getId() + " name=" + created.getName(),
+            actionPayload("CREATE_CUSTOMER", payload(
+                "customerId", created.getId(),
+                "name", created.getName(),
+                "sectorId", created.getSector().getId(),
+                "address", sanitize(created.getAddress())
+            )),
             request);
 
         return "redirect:/customers";
@@ -333,11 +339,13 @@ public class CustomerController {
         auditEventService.logEvent(
             AuditEventType.ACTION,
             currentUser(authentication),
-            "SALE customerId=" + id
-                + " amount=" + form.getAmount()
-                + " items=" + form.getItemsCount()
-                + " date=" + form.getDate()
-                + " detail=" + sanitize(form.getDetail()),
+            actionPayload("SALE", payload(
+                "customerId", id,
+                "amount", form.getAmount(),
+                "items", form.getItemsCount(),
+                "date", dateToString(form.getDate()),
+                "detail", sanitize(form.getDetail())
+            )),
             request);
 
         return "redirect:/customers/" + id;
@@ -361,9 +369,11 @@ public class CustomerController {
         auditEventService.logEvent(
             AuditEventType.ACTION,
             currentUser(authentication),
-            "PAYMENT customerId=" + id
-                + " amount=" + form.getAmount()
-                + " date=" + form.getDate(),
+            actionPayload("PAYMENT", payload(
+                "customerId", id,
+                "amount", form.getAmount(),
+                "date", dateToString(form.getDate())
+            )),
             request);
 
         return "redirect:/customers/" + id;
@@ -387,10 +397,12 @@ public class CustomerController {
         auditEventService.logEvent(
             AuditEventType.ACTION,
             currentUser(authentication),
-            "REFUND customerId=" + id
-                + " amount=" + form.getAmount()
-                + " date=" + form.getDate()
-                + " detail=" + sanitize(form.getDetail()),
+            actionPayload("REFUND", payload(
+                "customerId", id,
+                "amount", form.getAmount(),
+                "date", dateToString(form.getDate()),
+                "detail", sanitize(form.getDetail())
+            )),
             request);
         
         return "redirect:/customers/" + id;
@@ -414,10 +426,12 @@ public class CustomerController {
         auditEventService.logEvent(
             AuditEventType.ACTION,
             currentUser(authentication),
-            "FAULT_DISCOUNT customerId=" + id
-                + " amount=" + form.getAmount()
-                + " date=" + form.getDate()
-                + " detail=" + sanitize(form.getDetail()),
+            actionPayload("FAULT_DISCOUNT", payload(
+                "customerId", id,
+                "amount", form.getAmount(),
+                "date", dateToString(form.getDate()),
+                "detail", sanitize(form.getDetail())
+            )),
             request);
 
         return "redirect:/customers/" + id;
@@ -441,9 +455,11 @@ public class CustomerController {
         auditEventService.logEvent(
             AuditEventType.ACTION,
             currentUser(authentication),
-            "DEBT_FORGIVEN customerId=" + id
-                + " date=" + form.getDate()
-                + " detail=" + sanitize(form.getDetail()),
+            actionPayload("DEBT_FORGIVEN", payload(
+                "customerId", id,
+                "date", dateToString(form.getDate()),
+                "detail", sanitize(form.getDetail())
+            )),
             request);
 
         return "redirect:/customers/" + id;
@@ -467,7 +483,10 @@ public class CustomerController {
         auditEventService.logEvent(
             AuditEventType.ACTION,
             currentUser(authentication),
-            "UPDATE_CUSTOMER_ADDRESS id=" + id,
+            actionPayload("UPDATE_CUSTOMER_ADDRESS", payload(
+                "customerId", id,
+                "address", sanitize(form.getNewAddress())
+            )),
             request);
 
         return "redirect:/customers/" + id;
@@ -491,7 +510,10 @@ public class CustomerController {
         auditEventService.logEvent(
             AuditEventType.ACTION,
             currentUser(authentication),
-            "UPDATE_CUSTOMER_SECTOR id=" + id + " sectorId=" + form.getSectorId(),
+            actionPayload("UPDATE_CUSTOMER_SECTOR", payload(
+                "customerId", id,
+                "sectorId", form.getSectorId()
+            )),
             request);
 
         return "redirect:/customers/" + id;
@@ -510,7 +532,10 @@ public class CustomerController {
         auditEventService.logEvent(
             AuditEventType.ACTION,
             currentUser(authentication),
-            "TRANSACTION_DELETED transactionId=" + transactionId + " customerId=" + customerId,
+            actionPayload("TRANSACTION_DELETED", payload(
+                "transactionId", transactionId,
+                "customerId", customerId
+            )),
             request);
 
         return "redirect:/customers/" + customerId;
@@ -622,7 +647,11 @@ public class CustomerController {
         auditEventService.logEvent(
             AuditEventType.ACTION,
             currentUser(authentication),
-            "UPDATE_CUSTOMER_NAME id=" + id + " name=" + form.getNewName(),
+            payload(
+                "action", "UPDATE_CUSTOMER_NAME",
+                "customerId", id,
+                "name", form.getNewName()
+            ),
             request);
 
         return "redirect:/customers/" + id;
@@ -685,11 +714,37 @@ public class CustomerController {
         return null;
     }
 
+    private Map<String, Object> actionPayload(String type, Map<String, Object> data) {
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("type", type);
+        payload.put("data", data != null ? data : Map.of());
+        return payload;
+    }
+
+    private Map<String, Object> payload(Object... kv) {
+        Map<String, Object> map = new HashMap<>();
+        if (kv == null) {
+            return map;
+        }
+        for (int i = 0; i + 1 < kv.length; i += 2) {
+            Object key = kv[i];
+            Object value = kv[i + 1];
+            if (key != null && value != null) {
+                map.put(String.valueOf(key), value);
+            }
+        }
+        return map;
+    }
+
     private String sanitize(String value) {
         if (value == null) {
             return "";
         }
         return value.replaceAll("\\s+", " ").trim();
+    }
+
+    private String dateToString(java.time.LocalDate date) {
+        return date != null ? date.toString() : null;
     }
 
     public record CustomerSearchResult(

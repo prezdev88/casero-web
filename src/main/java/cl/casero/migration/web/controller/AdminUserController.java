@@ -12,6 +12,8 @@ import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -56,7 +58,11 @@ public class AdminUserController {
             auditEventService.logEvent(
                 AuditEventType.ACTION,
                 currentUser(authentication),
-                "ADMIN_USER_CREATED id=" + created.getId() + " name=" + created.getName() + " role=" + created.getRole(),
+                actionPayload("ADMIN_USER_CREATED", Map.of(
+                    "id", created.getId(),
+                    "name", created.getName(),
+                    "role", created.getRole()
+                )),
                 request);
         } catch (IllegalArgumentException ex) {
             result.reject("createUserForm", ex.getMessage());
@@ -87,7 +93,9 @@ public class AdminUserController {
             auditEventService.logEvent(
                 AuditEventType.ACTION,
                 currentUser(authentication),
-                "ADMIN_USER_PIN_UPDATED userId=" + form.getUserId(),
+                actionPayload("ADMIN_USER_PIN_UPDATED", Map.of(
+                    "userId", form.getUserId()
+                )),
                 request);
         } catch (IllegalArgumentException ex) {
             redirectAttributes.addFlashAttribute("pinErrorUserId", form.getUserId());
@@ -120,5 +128,12 @@ public class AdminUserController {
             return details.getAppUser();
         }
         return null;
+    }
+
+    private Map<String, Object> actionPayload(String type, Map<String, Object> data) {
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("type", type);
+        payload.put("data", data != null ? data : Map.of());
+        return payload;
     }
 }

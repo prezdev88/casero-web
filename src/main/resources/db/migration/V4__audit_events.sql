@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS audit_event (
     id BIGSERIAL PRIMARY KEY,
     user_id BIGINT REFERENCES app_user (id) ON DELETE SET NULL,
     event_type TEXT NOT NULL,
-    payload TEXT NOT NULL DEFAULT '',
+    payload JSONB NOT NULL DEFAULT '{}'::jsonb,
     ip INET,
     user_agent TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP

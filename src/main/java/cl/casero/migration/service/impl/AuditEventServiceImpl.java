@@ -7,6 +7,8 @@ import cl.casero.migration.repository.AuditEventRepository;
 import cl.casero.migration.service.AppConfigService;
 import cl.casero.migration.service.AuditEventService;
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.HashMap;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -23,7 +25,7 @@ public class AuditEventServiceImpl implements AuditEventService {
 
     @Override
     @Transactional
-    public void logEvent(AuditEventType eventType, AppUser user, String payload, HttpServletRequest request) {
+    public void logEvent(AuditEventType eventType, AppUser user, Map<String, Object> payload, HttpServletRequest request) {
         if (!appConfigService.isAuditEnabled()) {
             return;
         }
@@ -34,7 +36,7 @@ public class AuditEventServiceImpl implements AuditEventService {
             AuditEvent event = new AuditEvent();
             event.setEventType(eventType);
             event.setUser(user);
-            event.setPayload(payload != null ? payload : "");
+            event.setPayload(payload != null ? new HashMap<>(payload) : Map.of());
             if (request != null) {
                 event.setIp(resolveIp(request));
                 event.setUserAgent(request.getHeader("User-Agent"));

@@ -15,6 +15,8 @@ import cl.casero.migration.domain.enums.AuditEventType;
 import cl.casero.migration.domain.AppUser;
 import cl.casero.migration.service.AuditEventService;
 import cl.casero.migration.web.security.CaseroUserDetails;
+import java.util.HashMap;
+import java.util.Map;
 
 @Controller
 @RequiredArgsConstructor
@@ -43,7 +45,10 @@ public class AdminConfigController {
             auditEventService.logEvent(
                 AuditEventType.ACTION,
                 currentUser(authentication),
-                "APP_CONFIG_UPDATED key=" + configKey + " value=" + value,
+                actionPayload("APP_CONFIG_UPDATED", Map.of(
+                    "key", configKey,
+                    "value", value
+                )),
                 request);
         } catch (IllegalArgumentException ex) {
             redirectAttributes.addFlashAttribute("error", ex.getMessage());
@@ -56,5 +61,12 @@ public class AdminConfigController {
             return details.getAppUser();
         }
         return null;
+    }
+
+    private Map<String, Object> actionPayload(String type, Map<String, Object> data) {
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("type", type);
+        payload.put("data", data != null ? data : Map.of());
+        return payload;
     }
 }

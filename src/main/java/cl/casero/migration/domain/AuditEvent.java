@@ -14,6 +14,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -38,8 +40,9 @@ public class AuditEvent {
     @Column(name = "event_type", nullable = false)
     private AuditEventType eventType;
 
-    @Column(nullable = false)
-    private String payload = "";
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(columnDefinition = "jsonb", nullable = false)
+    private Map<String, Object> payload = new HashMap<>();
 
     @JdbcTypeCode(SqlTypes.INET)
     @Column(name = "ip", columnDefinition = "inet")
@@ -54,7 +57,7 @@ public class AuditEvent {
     @PrePersist
     public void prePersist() {
         if (payload == null) {
-            payload = "";
+            payload = new HashMap<>();
         }
         createdAt = Instant.now();
     }

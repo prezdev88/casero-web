@@ -34,7 +34,7 @@ public class AuthController {
         auditEventService.logEvent(
             AuditEventType.PAGE_VIEW,
             null,
-            buildPathWithQuery(request),
+            Map.of("path", buildPathWithQuery(request)),
             request);
 
         model.addAttribute("showError", error.isPresent());

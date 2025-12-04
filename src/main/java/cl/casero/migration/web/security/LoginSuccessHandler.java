@@ -7,6 +7,8 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
@@ -39,11 +41,14 @@ public class LoginSuccessHandler extends SavedRequestAwareAuthenticationSuccessH
         return null;
     }
 
-    private String buildPayload(HttpServletRequest request) {
-        if (request == null) {
-            return "LOG_IN";
+    private Map<String, Object> buildPayload(HttpServletRequest request) {
+        Map<String, Object> payload = new HashMap<>();
+        if (request != null) {
+            payload.put("path", request.getRequestURI());
+            if (request.getSession(false) != null) {
+                payload.put("sessionId", request.getSession(false).getId());
+            }
         }
-        String sessionId = request.getSession(false) != null ? request.getSession(false).getId() : null;
-        return sessionId != null ? "LOG_IN sessionId=" + sessionId : "LOG_IN";
+        return payload;
     }
 }

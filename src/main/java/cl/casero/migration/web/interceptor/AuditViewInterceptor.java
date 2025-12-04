@@ -7,6 +7,10 @@ import cl.casero.migration.web.security.CaseroUserDetails;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -38,13 +42,15 @@ public class AuditViewInterceptor implements HandlerInterceptor {
         return null;
     }
 
-    private String buildPayload(HttpServletRequest request) {
+    private Map<String, Object> buildPayload(HttpServletRequest request) {
+        Map<String, Object> payload = new HashMap<>();
         if (request == null) {
-            return "PAGE_VIEW";
+            return payload;
         }
         String path = request.getRequestURI();
         String query = request.getQueryString();
-        return query != null && !query.isBlank() ? path + "?" + query : path;
+        payload.put("path", query != null && !query.isBlank() ? path + "?" + query : path);
+        return payload;
     }
 
     private boolean isJsonRequest(HttpServletRequest request) {

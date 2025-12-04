@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.17.1](https://github.com/prezdev88/casero-web/compare/v1.17.0...v1.17.1) (2025-12-04)
+
+
+### Refactors
+
+* **audit:** enhance audit logging by skipping events for admin users and login page ([3174080](https://github.com/prezdev88/casero-web/commit/31740805d459331dae94e3cfd302157906777a53))
+
 ## [1.17.0](https://github.com/prezdev88/casero-web/compare/v1.16.1...v1.17.0) (2025-12-04)
 
 

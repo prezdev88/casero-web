@@ -274,6 +274,52 @@ admin_export_customer_tx() {
   echo
 }
 
+admin_config_list() {
+  require_token || return
+  curl -sS -H "Authorization: Bearer $TOKEN" "$BASE/api/v1/admin/config"
+  echo
+}
+
+admin_config_get() {
+  require_token || return
+  local key
+  key=$(prompt "Config Key (ej: audit.enabled)")
+  curl -sS -H "Authorization: Bearer $TOKEN" "$BASE/api/v1/admin/config/$key"
+  echo
+}
+
+admin_config_update() {
+  require_token || return
+  local key value
+  key=$(prompt "Config Key (ej: audit.enabled)")
+  value=$(prompt "Nuevo Value")
+  curl -sS -X PUT "$BASE/api/v1/admin/config/$key" \
+    -H "Authorization: Bearer $TOKEN" \
+    -H "Content-Type: application/json" \
+    -d "{\"value\":\"$value\"}"
+  echo
+}
+
+admin_audit_list() {
+  require_token || return
+  local page size eventType payloadType
+  page=$(prompt "Página" "0")
+  size=$(prompt "Tamaño" "20")
+  eventType=$(prompt "Event Type (opcional: USER_ACTION, CONFIG_CHANGE, etc.)" "")
+  payloadType=$(prompt "Payload Type (opcional: SALE, PAYMENT, etc.)" "")
+  curl -sS -H "Authorization: Bearer $TOKEN" \
+    "$BASE/api/v1/admin/audit?page=$page&size=$size&eventType=$eventType&payloadType=$payloadType"
+  echo
+}
+
+admin_audit_get() {
+  require_token || return
+  local id
+  id=$(prompt "Audit Event ID")
+  curl -sS -H "Authorization: Bearer $TOKEN" "$BASE/api/v1/admin/audit/$id"
+  echo
+}
+
 customer_mutations_menu() {
   echo "1) Venta  2) Pago  3) Devolución  4) Descuento falla  5) Condonar"
   read -r -p "Elige: " op
@@ -316,6 +362,11 @@ main_menu() {
     echo "23) Admin: crear usuario"
     echo "24) Admin: actualizar PIN"
     echo "25) Admin: exportar transacciones cliente"
+    echo "26) Admin: listar configuraciones"
+    echo "27) Admin: obtener configuración"
+    echo "28) Admin: actualizar configuración"
+    echo "29) Admin: listar auditoría"
+    echo "30) Admin: detalle auditoría"
     echo "b) Cambiar BASE"
     echo "t) Definir TOKEN"
     echo "q) Salir"
@@ -355,6 +406,11 @@ main_menu() {
       23) admin_create_user ;;
       24) admin_update_pin ;;
       25) admin_export_customer_tx ;;
+      26) admin_config_list ;;
+      27) admin_config_get ;;
+      28) admin_config_update ;;
+      29) admin_audit_list ;;
+      30) admin_audit_get ;;
       b) BASE=$(prompt "Nuevo BASE" "$BASE") ;;
       t) TOKEN=$(prompt "Nuevo TOKEN" "$TOKEN") ;;
       q) exit 0 ;;

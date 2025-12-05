@@ -9,6 +9,16 @@
     <div class="card">
         <h2>Auditoría</h2>
         <p class="text-muted">Eventos registrados en la aplicación.</p>
+        <form th:action="@{/admin/audit}" method="get" class="filter-form">
+            <label for="eventType">Evento</label>
+            <select id="eventType" name="eventType" onchange="this.form.submit()">
+                <option th:value="''" th:selected="${selectedEventType == null}">Todos</option>
+                <option th:each="type : ${eventTypes}"
+                        th:value="${type}"
+                        th:text="${type}"
+                        th:selected="${type == selectedEventType}">TYPE</option>
+            </select>
+        </form>
     </div>
 
     <style>
@@ -50,6 +60,73 @@
                 display: block;
             }
         }
+        .filter-form {
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .filter-form select {
+            min-width: 180px;
+        }
+        .payload-link {
+            border: none;
+            background: none;
+            color: var(--link-color, #0d6efd);
+            cursor: pointer;
+            padding: 0;
+            text-decoration: underline;
+            font: inherit;
+        }
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-backdrop.show {
+            display: flex;
+        }
+        .modal {
+            background: #fff;
+            color: #111;
+            border-radius: 8px;
+            width: min(90vw, 720px);
+            max-height: 80vh;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+        }
+        .modal-header, .modal-footer {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .modal-footer {
+            border-top: 1px solid #e5e7eb;
+            border-bottom: 0;
+            text-align: right;
+        }
+        .modal-title {
+            margin: 0;
+            font-size: 1rem;
+        }
+        .modal-body {
+            padding: 12px 16px;
+            overflow: auto;
+        }
+        .modal-body pre {
+            background: #f8fafc;
+            padding: 12px;
+            border-radius: 6px;
+            white-space: pre-wrap;
+            word-break: break-word;
+            margin: 0;
+            font-size: 0.9rem;
+        }
     </style>
 
     <div class="card">
@@ -68,11 +145,17 @@
                 <tbody>
                     <tr th:each="event : ${events.content}">
                         <td th:text="${event.id}" data-label="ID">id</td>
-                        <td th:text="${#temporals.format(event.createdAt, 'dd-MMM-yyyy HH:mm:ss')}"
+                        <td th:text="${#temporals.format(event.createdAt.atZone(T(java.time.ZoneId).of('America/Santiago')), 'dd-MMM-yyyy HH:mm:ss')}"
                             data-label="Fecha">fecha</td>
                         <td th:text="${event.eventType}" data-label="Evento">EVENT</td>
                         <td th:text="${event.user?.name ?: 'N/A'}" data-label="Usuario">Usuario</td>
-                        <td th:text="${event.payload}" data-label="Payload">payload</td>
+                        <td data-label="Payload">
+                            <button type="button"
+                                    class="payload-link"
+                                    th:attr="data-payload=${@jsonFormatter.toJson(event.payload)}">
+                                Ver
+                            </button>
+                        </td>
                         <td th:text="${event.ip}" data-label="IP">ip</td>
                     </tr>
                 </tbody>
@@ -80,14 +163,58 @@
         </div>
         <div class="pagination">
             <a th:if="${events.hasPrevious()}"
-               th:href="@{/admin/audit(page=${events.number - 1}, size=${events.size})}">Anterior</a>
+               th:href="@{/admin/audit(page=${events.number - 1}, size=${events.size}, eventType=${selectedEventType})}">Anterior</a>
             <span th:text="${events.number + 1}">1</span>
             <span>/</span>
             <span th:text="${events.totalPages}">1</span>
             <a th:if="${events.hasNext()}"
-               th:href="@{/admin/audit(page=${events.number + 1}, size=${events.size})}">Siguiente</a>
+               th:href="@{/admin/audit(page=${events.number + 1}, size=${events.size}, eventType=${selectedEventType})}">Siguiente</a>
+        </div>
+    </div>
+    <div id="payloadModal" class="modal-backdrop" onclick="closePayloadModal(event)">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h4 class="modal-title">Payload</h4>
+            </div>
+            <div class="modal-body">
+                <pre id="payloadContent">{}</pre>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="closePayloadModal(event)">Cerrar</button>
+            </div>
         </div>
     </div>
 </div>
+<script>
+    const payloadModal = document.getElementById('payloadModal');
+    const payloadContent = document.getElementById('payloadContent');
+
+    function formatPayload(raw) {
+        if (!raw) {
+            return '{}';
+        }
+        try {
+            const parsed = JSON.parse(raw);
+            return JSON.stringify(parsed, null, 2);
+        } catch (err) {
+            return raw;
+        }
+    }
+
+    function closePayloadModal(event) {
+        if (event) {
+            event.stopPropagation();
+        }
+        payloadModal.classList.remove('show');
+    }
+
+    document.querySelectorAll('.payload-link').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const raw = btn.getAttribute('data-payload');
+            payloadContent.textContent = formatPayload(raw);
+            payloadModal.classList.add('show');
+        });
+    });
+</script>
 </body>
 </html>

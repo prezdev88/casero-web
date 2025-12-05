@@ -61,6 +61,15 @@ mvn spring-boot:run
 
 La aplicación quedará disponible en `http://localhost:8080`.
 
+### Documentación de API (OpenAPI/Swagger UI)
+
+- La especificación OpenAPI está en `http://localhost:8080/v3/api-docs`.
+- La UI interactiva (Swagger UI) está en `http://localhost:8080/swagger-ui/index.html`.
+- Perfiles:
+  - **local / qa**: docs y UI habilitados.
+  - **prod**: deshabilitados por configuración (`springdoc.api-docs.enabled=false`, `springdoc.swagger-ui.enabled=false`).
+  Ajusta estas flags en los properties de cada perfil si necesitas exponer/ocultar la documentación.
+
 ### Tests E2E (Playwright)
 
 - Specs en `e2e/`, config en `playwright.config.js`, runner en `run-tests.sh`.

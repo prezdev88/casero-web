@@ -57,7 +57,7 @@ public class SecurityConfig {
             .addFilterAt(pinAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/", "/login", "/css/**", "/js/**", "/icons/**", "/favicon.ico").permitAll()
-                .requestMatchers("/v3/api-docs/**").permitAll()
+                .requestMatchers("/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**").permitAll()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated())
             .exceptionHandling(ex -> ex

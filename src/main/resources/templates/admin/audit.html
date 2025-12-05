@@ -11,13 +11,22 @@
         <p class="text-muted">Eventos registrados en la aplicación.</p>
         <form th:action="@{/admin/audit}" method="get" class="filter-form">
             <label for="eventType">Evento</label>
-            <select id="eventType" name="eventType" onchange="this.form.submit()">
+            <select id="eventType" name="eventType">
                 <option th:value="''" th:selected="${selectedEventType == null}">Todos</option>
                 <option th:each="type : ${eventTypes}"
                         th:value="${type}"
                         th:text="${type}"
                         th:selected="${type == selectedEventType}">TYPE</option>
             </select>
+            <label for="payloadType">Tipo</label>
+            <select id="payloadType" name="payloadType">
+                <option th:value="''" th:selected="${payloadType == null}">Todos</option>
+                <option th:each="pType : ${payloadTypeOptions}"
+                        th:value="${pType}"
+                        th:text="${pType}"
+                        th:selected="${pType == payloadType}">TYPE</option>
+            </select>
+            <button type="submit">Filtrar</button>
         </form>
     </div>
 
@@ -68,6 +77,9 @@
             flex-wrap: wrap;
         }
         .filter-form select {
+            min-width: 180px;
+        }
+        .filter-form input[type="text"] {
             min-width: 180px;
         }
         .payload-link {
@@ -137,6 +149,7 @@
                         <th>ID</th>
                         <th>Fecha</th>
                         <th>Evento</th>
+                        <th>Tipo</th>
                         <th>Usuario</th>
                         <th>Payload</th>
                         <th>IP</th>
@@ -148,7 +161,9 @@
                         <td th:text="${#temporals.format(event.createdAt.atZone(T(java.time.ZoneId).of('America/Santiago')), 'dd-MMM-yyyy HH:mm:ss')}"
                             data-label="Fecha">fecha</td>
                         <td th:text="${event.eventType}" data-label="Evento">EVENT</td>
-                        <td th:text="${event.user?.name ?: 'N/A'}" data-label="Usuario">Usuario</td>
+                        <td th:text="${event.eventType.name() == 'ACTION' ? event.payload?.get('type') : ''}"
+                            data-label="Tipo">tipo</td>
+                        <td th:text="${event.user != null && event.user.name != null ? event.user.name : 'N/A'}" data-label="Usuario">Usuario</td>
                         <td data-label="Payload">
                             <button type="button"
                                     class="payload-link"

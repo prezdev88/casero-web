@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.17.2](https://github.com/prezdev88/casero-web/compare/v1.17.1...v1.17.2) (2025-12-05)
+
+
+### Refactors
+
+* **audit:** add event type filtering and payload modal in admin audit view ([ce86625](https://github.com/prezdev88/casero-web/commit/ce86625b08d5b5942f1d7bdfb8db7561fd63a81e))
+* **audit:** add filtering by payload type in admin audit view ([de6666a](https://github.com/prezdev88/casero-web/commit/de6666ad1d8da2dfcf0d16c4e797ae4096cbe13f))
+
 ### [1.17.1](https://github.com/prezdev88/casero-web/compare/v1.17.0...v1.17.1) (2025-12-04)
 
 

@@ -21,8 +21,9 @@
                th:href="@{'/customers/' + ${customer.id}}"
                th:data-customer-id="${customer.id}"
                th:data-customer-name="${customer.name}"
-                th:data-customer-debt="${formattedDebt}"
-                th:data-customer-debt-raw="${customer.debt}"
+               th:data-customer-address="${customer.address}"
+               th:data-customer-debt="${formattedDebt}"
+               th:data-customer-debt-raw="${customer.debt}"
                th:attr="data-customer-score=${score}"
                data-testid="customer-card">
                 <div class="customer-card__row">
@@ -33,6 +34,7 @@
                                 th:classappend="${score != null ? ' score-value--' + T(cl.casero.migration.util.CustomerScoreColor).bucket(score) : ''}">7.00</strong>
                     </span>
                 </div>
+                <span class="customer-card__address" th:text="${customer.address}">Dirección</span>
                 <span class="customer-card__debt customer-card__debt--red"
                       th:text="${formattedDebt}">$0</span>
             </a>
@@ -163,17 +165,30 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!actionsOverlay) {
             return;
         }
-        const hasDebt = customer.debtValue && Number(customer.debtValue) > 0;
         actionsSubtitle.textContent = '';
+        const titleWrap = document.createElement('span');
+        titleWrap.className = 'customer-actions__title';
+
+        const nameRow = document.createElement('span');
+        nameRow.className = 'customer-actions__title-row';
+
         const nameSpan = document.createElement('span');
         nameSpan.textContent = customer.name;
-        actionsSubtitle.appendChild(nameSpan);
+        nameRow.appendChild(nameSpan);
         if (customer.formattedDebt) {
             const debtSpan = document.createElement('span');
             debtSpan.className = 'customer-actions__debt customer-actions__debt--red';
             debtSpan.textContent = ` (${customer.formattedDebt})`;
-            actionsSubtitle.appendChild(debtSpan);
+            nameRow.appendChild(debtSpan);
         }
+        titleWrap.appendChild(nameRow);
+        if (customer.address) {
+            const addressSpan = document.createElement('span');
+            addressSpan.className = 'customer-actions__address';
+            addressSpan.textContent = customer.address;
+            titleWrap.appendChild(addressSpan);
+        }
+        actionsSubtitle.appendChild(titleWrap);
         actionsList.innerHTML = '';
         actionDefinitions.forEach((action) => {
             const link = document.createElement('a');
@@ -230,6 +245,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const customer = {
             id: customerId,
             name: element.dataset.customerName || (nameElement ? nameElement.textContent.trim() : ''),
+            address: element.dataset.customerAddress || '',
             formattedDebt: debtElement ? debtElement.textContent.trim() : (element.dataset.customerDebt || ''),
             debtValue: debtRaw !== undefined ? Number(debtRaw) : (debtElement ? Number(debtElement.textContent.replace(/[^0-9.-]/g, '')) : 0),
             score: Number.isNaN(parsedScore) ? null : parsedScore
@@ -279,6 +295,9 @@ document.addEventListener('DOMContentLoaded', () => {
         link.href = `${customerDetailBase}${customer.id}`;
         link.dataset.customerId = customer.id;
         link.dataset.customerName = customer.name;
+        if (customer.address) {
+            link.dataset.customerAddress = customer.address;
+        }
         if (customer.formattedDebt) {
             link.dataset.customerDebt = customer.formattedDebt;
         }
@@ -309,6 +328,11 @@ document.addEventListener('DOMContentLoaded', () => {
         score.appendChild(scoreValue);
         row.appendChild(score);
         link.appendChild(row);
+
+        const address = document.createElement('span');
+        address.className = 'customer-card__address';
+        address.textContent = customer.address || '';
+        link.appendChild(address);
 
         const debt = document.createElement('span');
         debt.className = 'customer-card__debt customer-card__debt--red';

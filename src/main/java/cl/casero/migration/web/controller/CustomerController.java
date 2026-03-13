@@ -123,6 +123,7 @@ public class CustomerController {
                 .map(customer -> new CustomerSearchResult(
                         customer.getId(),
                         customer.getName(),
+                        customer.getAddress(),
                         CurrencyUtil.format(customer.getDebt()),
                         customer.getDebt(),
                         scores.getOrDefault(customer.getId(), CustomerScoreCalculator.minScore())))
@@ -750,6 +751,7 @@ public class CustomerController {
     public record CustomerSearchResult(
         Long id,
         String name,
+        String address,
         String formattedDebt,
         Integer debtValue,
         Double score

@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.19.0](https://github.com/prezdev88/casero-web/compare/v1.18.0...v1.19.0) (2026-03-14)
+
+
+### Features
+
+* **customer:** enhance customer detail view with ID display and update transaction action ([1696d81](https://github.com/prezdev88/casero-web/commit/1696d81375ed541e6425c44036b9913e3972f0c4))
+
 ## [1.18.0](https://github.com/prezdev88/casero-web/compare/v1.17.2...v1.18.0) (2026-03-14)
 
 

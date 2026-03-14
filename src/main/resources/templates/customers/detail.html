@@ -9,7 +9,10 @@
     <div class="card">
         <div class="customer-header">
             <div class="customer-header__title">
-                <h2 th:text="${customer.name}">Cliente</h2>
+                <h2>
+                    <span th:text="${customer.name}">Cliente</span>
+                    <span class="customer-id-inline" th:text="${'(' + customer.id + ')'}">(1)</span>
+                </h2>
                 <a class="icon-button" title="Editar nombre"
                    th:href="@{'/customers/' + ${customer.id} + '/actions/name/edit'}">✏️</a>
             </div>

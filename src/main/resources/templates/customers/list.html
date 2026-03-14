@@ -163,13 +163,6 @@ document.addEventListener('DOMContentLoaded', () => {
             href: (id) => `${customerDetailBase}${id}/actions/forgiveness`
         },
         {
-            key: 'transactions',
-            label: 'Ver transacciones',
-            description: 'Abrir el detalle del cliente',
-            icon: '📋',
-            href: (id) => `${customerDetailBase}${id}`
-        },
-        {
             key: 'delete',
             label: 'Eliminar cliente',
             description: 'Eliminar este cliente',
@@ -177,6 +170,13 @@ document.addEventListener('DOMContentLoaded', () => {
             method: 'post',
             confirmMessage: '¿Seguro que deseas eliminar este cliente?',
             href: (id) => `${customerDetailBase}${id}/delete`
+        },
+        {
+            key: 'transactions',
+            label: 'Ver transacciones',
+            description: 'Abrir el detalle del cliente',
+            icon: '📋',
+            href: (id) => `${customerDetailBase}${id}`
         }
     ] : [];
 

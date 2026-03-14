@@ -393,6 +393,19 @@ header .container {
     gap: 0.5rem;
 }
 
+.customer-header__title h2 {
+    margin: 0;
+}
+
+.customer-id-inline {
+    display: inline-block;
+    margin-left: 0.45rem;
+    font-size: 0.92rem;
+    font-weight: 500;
+    color: var(--muted-text);
+    letter-spacing: 0.02em;
+}
+
 .customer-header .icon-button {
     font-size: 1.1rem;
     line-height: 1;

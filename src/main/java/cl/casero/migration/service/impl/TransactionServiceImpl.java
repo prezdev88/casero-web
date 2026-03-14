@@ -8,6 +8,7 @@ import cl.casero.migration.domain.enums.TransactionType;
 import cl.casero.migration.repository.CustomerRepository;
 import cl.casero.migration.repository.StatisticRepository;
 import cl.casero.migration.repository.TransactionRepository;
+import cl.casero.migration.service.CustomerNotFoundException;
 import cl.casero.migration.service.TransactionService;
 import cl.casero.migration.service.dto.DebtForgivenessForm;
 import cl.casero.migration.service.dto.MoneyTransactionForm;
@@ -44,25 +45,25 @@ public class TransactionServiceImpl implements TransactionService {
     @Override
     public Page<Transaction> listAll(TransactionType type, Pageable pageable) {
         if (type == null) {
-            return transactionRepository.findAll(pageable);
+            return transactionRepository.findAllVisible(pageable);
         }
 
-        return transactionRepository.findByType(type, pageable);
+        return transactionRepository.findVisibleByType(type, pageable);
     }
 
     @Override
     public Page<Transaction> listByCustomer(Long customerId, Pageable pageable) {
-        return transactionRepository.findByCustomerId(customerId, pageable);
+        return transactionRepository.findVisibleByCustomerId(customerId, pageable);
     }
 
     @Override
     public List<Transaction> listAllByCustomer(Long customerId) {
-        return transactionRepository.findByCustomerIdOrderByDateDescIdDesc(customerId);
+        return transactionRepository.findVisibleByCustomerIdOrderByDateDescIdDesc(customerId);
     }
 
     @Override
     public List<Transaction> listRecentByCustomer(Long customerId, int limit) {
-        List<Transaction> transactions = transactionRepository.findByCustomerIdOrderByDateDescIdDesc(customerId);
+        List<Transaction> transactions = transactionRepository.findVisibleByCustomerIdOrderByDateDescIdDesc(customerId);
         
         if (limit <= 0 || transactions.size() <= limit) {
             return transactions;
@@ -140,7 +141,10 @@ public class TransactionServiceImpl implements TransactionService {
         transactionRepository.delete(transaction);
 
         Transaction lastTransaction = transactionRepository
-                .findTopByCustomerIdOrderByCreatedAtDescIdDesc(customer.getId());
+                .findLatestVisibleByCustomerId(customer.getId(), Pageable.ofSize(1))
+                .stream()
+                .findFirst()
+                .orElse(null);
         int recalculatedDebt = lastTransaction != null ? lastTransaction.getBalance() : 0;
         customer.setDebt(recalculatedDebt);
         customerRepository.save(customer);
@@ -157,7 +161,8 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     private Customer getCustomer(Long customerId) {
-        return customerRepository.findById(customerId).orElseThrow();
+        return customerRepository.findByIdAndEnabledTrue(customerId)
+                .orElseThrow(() -> new CustomerNotFoundException(customerId));
     }
 
     private Transaction buildTransaction(
@@ -213,7 +218,7 @@ public class TransactionServiceImpl implements TransactionService {
         LocalDate sanitizedStart = startBase.withDayOfMonth(1);
         LocalDate sanitizedEnd = endBase.withDayOfMonth(endBase.lengthOfMonth());
 
-        List<Transaction> transactions = transactionRepository.findByDateBetween(sanitizedStart, sanitizedEnd);
+        List<Transaction> transactions = transactionRepository.findVisibleByDateBetween(sanitizedStart, sanitizedEnd);
         Map<YearMonth, List<Transaction>> grouped = transactions.stream()
                 .collect(Collectors.groupingBy(tx -> YearMonth.from(tx.getDate())));
 

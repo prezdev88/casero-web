@@ -66,6 +66,19 @@
         </div>
     </div>
 
+    <div id="confirm-delete-modal" class="confirm-modal" hidden>
+        <div class="confirm-modal__backdrop" id="confirm-delete-backdrop" aria-hidden="true"></div>
+        <div class="confirm-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="confirm-delete-title">
+            <p class="confirm-modal__eyebrow">Eliminar cliente</p>
+            <h3 class="confirm-modal__title" id="confirm-delete-title">¿Seguro que deseas eliminar este cliente?</h3>
+            <p class="confirm-modal__description">Esta acción eliminará el cliente de la vista del sistema.</p>
+            <div class="confirm-modal__actions">
+                <button type="button" class="confirm-modal__button confirm-modal__button--secondary" id="confirm-delete-cancel">Cancelar</button>
+                <button type="button" class="confirm-modal__button confirm-modal__button--danger" id="confirm-delete-accept" data-testid="confirm-delete-accept">Eliminar</button>
+            </div>
+        </div>
+    </div>
+
 </div>
 </body>
 <script th:inline="javascript">
@@ -86,9 +99,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const actionsBackdrop = document.getElementById('customer-actions-backdrop');
     const actionsList = document.getElementById('customer-actions-list');
     const actionsSubtitle = document.getElementById('customer-actions-subtitle');
+    const confirmDeleteModal = document.getElementById('confirm-delete-modal');
+    const confirmDeleteBackdrop = document.getElementById('confirm-delete-backdrop');
+    const confirmDeleteCancel = document.getElementById('confirm-delete-cancel');
+    const confirmDeleteAccept = document.getElementById('confirm-delete-accept');
 
     let debounceId;
     let currentController;
+    let pendingDeleteForm = null;
     const pageSize = /*[[${customersPage.size}]]*/ 10;
     let currentPage = /*[[${customersPage.number}]]*/ 0;
     let totalPages = /*[[${customersPage.totalPages}]]*/ 0;
@@ -150,6 +168,15 @@ document.addEventListener('DOMContentLoaded', () => {
             description: 'Abrir el detalle del cliente',
             icon: '📋',
             href: (id) => `${customerDetailBase}${id}`
+        },
+        {
+            key: 'delete',
+            label: 'Eliminar cliente',
+            description: 'Eliminar este cliente',
+            icon: '🗑️',
+            method: 'post',
+            confirmMessage: '¿Seguro que deseas eliminar este cliente?',
+            href: (id) => `${customerDetailBase}${id}/delete`
         }
     ] : [];
 
@@ -159,6 +186,26 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         actionsOverlay.hidden = true;
         document.body.classList.remove('modal-open');
+    };
+
+    const hideDeleteConfirm = () => {
+        if (!confirmDeleteModal || confirmDeleteModal.hidden) {
+            return;
+        }
+        confirmDeleteModal.hidden = true;
+        pendingDeleteForm = null;
+        if (!actionsOverlay || actionsOverlay.hidden) {
+            document.body.classList.remove('modal-open');
+        }
+    };
+
+    const showDeleteConfirm = (form) => {
+        if (!confirmDeleteModal || !form) {
+            return;
+        }
+        pendingDeleteForm = form;
+        confirmDeleteModal.hidden = false;
+        document.body.classList.add('modal-open');
     };
 
     const showActionsMenu = (customer) => {
@@ -191,9 +238,28 @@ document.addEventListener('DOMContentLoaded', () => {
         actionsSubtitle.appendChild(titleWrap);
         actionsList.innerHTML = '';
         actionDefinitions.forEach((action) => {
-            const link = document.createElement('a');
-            link.className = `customer-actions__action customer-actions__action--${action.key}`;
-            link.href = action.href(customer.id);
+            const isPostAction = action.method === 'post';
+            const actionNode = isPostAction ? document.createElement('form') : document.createElement('a');
+            actionNode.className = isPostAction
+                ? 'customer-actions__form'
+                : `customer-actions__action customer-actions__action--${action.key}`;
+            if (isPostAction) {
+                actionNode.method = 'post';
+                actionNode.action = action.href(customer.id);
+                actionNode.dataset.confirmDelete = 'true';
+                actionNode.addEventListener('submit', (event) => {
+                    event.preventDefault();
+                    showDeleteConfirm(actionNode);
+                });
+            } else {
+                actionNode.href = action.href(customer.id);
+            }
+
+            const link = isPostAction ? document.createElement('button') : actionNode;
+            if (isPostAction) {
+                link.type = 'submit';
+                link.className = `customer-actions__action customer-actions__action--${action.key} customer-actions__action--delete`;
+            }
 
             const icon = document.createElement('span');
             icon.className = 'customer-actions__icon';
@@ -212,6 +278,12 @@ document.addEventListener('DOMContentLoaded', () => {
             text.appendChild(desc);
             link.appendChild(text);
 
+            if (isPostAction) {
+                actionNode.appendChild(link);
+                actionsList.appendChild(actionNode);
+                return;
+            }
+
             actionsList.appendChild(link);
         });
         actionsOverlay.hidden = false;
@@ -222,8 +294,29 @@ document.addEventListener('DOMContentLoaded', () => {
         if (actionsBackdrop) {
             actionsBackdrop.addEventListener('click', hideActionsMenu);
         }
+        if (confirmDeleteBackdrop) {
+            confirmDeleteBackdrop.addEventListener('click', hideDeleteConfirm);
+        }
+        if (confirmDeleteCancel) {
+            confirmDeleteCancel.addEventListener('click', hideDeleteConfirm);
+        }
+        if (confirmDeleteAccept) {
+            confirmDeleteAccept.addEventListener('click', () => {
+                if (!pendingDeleteForm) {
+                    hideDeleteConfirm();
+                    return;
+                }
+                const form = pendingDeleteForm;
+                pendingDeleteForm = null;
+                form.submit();
+            });
+        }
         document.addEventListener('keydown', (event) => {
             if (event.key === 'Escape') {
+                if (confirmDeleteModal && !confirmDeleteModal.hidden) {
+                    hideDeleteConfirm();
+                    return;
+                }
                 hideActionsMenu();
             }
         });

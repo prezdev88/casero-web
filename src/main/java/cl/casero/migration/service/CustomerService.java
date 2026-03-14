@@ -15,6 +15,8 @@ public interface CustomerService {
 
     Customer create(CreateCustomerForm form);
 
+    void delete(Long id);
+
     void updateAddress(Long id, String address);
 
     void updateName(Long id, String name);

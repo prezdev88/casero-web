@@ -520,6 +520,26 @@ public class CustomerController {
         return "redirect:/customers/" + id;
     }
 
+    @PostMapping("/{id}/delete")
+    public String deleteCustomer(
+        @PathVariable Long id,
+        RedirectAttributes redirectAttributes,
+        Authentication authentication,
+        HttpServletRequest request
+    ) {
+        customerService.delete(id);
+        redirectAttributes.addFlashAttribute("successMessage", "Cliente eliminado");
+        auditEventService.logEvent(
+            AuditEventType.ACTION,
+            currentUser(authentication),
+            actionPayload("DELETE_CUSTOMER", payload(
+                "customerId", id
+            )),
+            request);
+
+        return "redirect:/customers";
+    }
+
     @PostMapping("/transactions/{transactionId}/delete")
     public String deleteTransaction(
         @PathVariable Long transactionId,

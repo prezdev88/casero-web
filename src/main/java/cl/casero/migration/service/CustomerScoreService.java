@@ -108,7 +108,7 @@ public class CustomerScoreService {
 
     public Page<RankingEntry> getRanking(Pageable pageable, boolean ascending) {
         Pageable effectivePageable = pageable == null ? PageRequest.of(0, 20) : pageable;
-        List<Customer> customers = customerRepository.findAll();
+        List<Customer> customers = customerRepository.findAllByEnabledTrue();
 
         if (customers.isEmpty()) {
             return new PageImpl<>(Collections.emptyList(), effectivePageable, 0);

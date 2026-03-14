@@ -12,18 +12,58 @@ import java.time.LocalDate;
 import java.util.List;
 
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
-    Page<Transaction> findByCustomerId(Long customerId, Pageable pageable);
+    @Query("""
+            SELECT t
+            FROM Transaction t
+            JOIN t.customer c
+            WHERE c.id = :customerId
+              AND c.enabled = true
+            """)
+    Page<Transaction> findVisibleByCustomerId(@Param("customerId") Long customerId, Pageable pageable);
 
-    List<Transaction> findByCustomerIdOrderByDateDescIdDesc(Long customerId);
+    @Query("""
+            SELECT t
+            FROM Transaction t
+            JOIN t.customer c
+            WHERE c.id = :customerId
+              AND c.enabled = true
+            ORDER BY t.date DESC, t.id DESC
+            """)
+    List<Transaction> findVisibleByCustomerIdOrderByDateDescIdDesc(@Param("customerId") Long customerId);
 
-    Transaction findTopByCustomerIdOrderByCreatedAtDescIdDesc(Long customerId);
+    @Query("""
+            SELECT t
+            FROM Transaction t
+            JOIN t.customer c
+            WHERE c.id = :customerId
+              AND c.enabled = true
+            ORDER BY t.createdAt DESC, t.id DESC
+            """)
+    Page<Transaction> findLatestVisibleByCustomerId(@Param("customerId") Long customerId, Pageable pageable);
 
-    Page<Transaction> findByType(TransactionType type, Pageable pageable);
+    @Query("""
+            SELECT t
+            FROM Transaction t
+            JOIN t.customer c
+            WHERE c.enabled = true
+            """)
+    Page<Transaction> findAllVisible(Pageable pageable);
+
+    @Query("""
+            SELECT t
+            FROM Transaction t
+            JOIN t.customer c
+            WHERE c.enabled = true
+              AND t.type = :type
+            """)
+    Page<Transaction> findVisibleByType(@Param("type") TransactionType type, Pageable pageable);
 
     @Query("""
             SELECT COUNT(t)
             FROM Transaction t
+            JOIN t.customer c
             WHERE t.balance = 0
+              AND c.enabled = true
               AND t.date BETWEEN :start AND :end
             """)
     long countFinishedCards(@Param("start") LocalDate start, @Param("end") LocalDate end);
@@ -31,14 +71,23 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     @Query("""
             SELECT SUM(t.amount)
             FROM Transaction t
+            JOIN t.customer c
             WHERE t.type = :type
+              AND c.enabled = true
               AND t.date BETWEEN :start AND :end
             """)
     Integer sumByTypeAndDateRange(@Param("type") TransactionType type,
                                   @Param("start") LocalDate start,
                                   @Param("end") LocalDate end);
 
-    List<Transaction> findByDateBetween(LocalDate start, LocalDate end);
+    @Query("""
+            SELECT t
+            FROM Transaction t
+            JOIN t.customer c
+            WHERE c.enabled = true
+              AND t.date BETWEEN :start AND :end
+            """)
+    List<Transaction> findVisibleByDateBetween(@Param("start") LocalDate start, @Param("end") LocalDate end);
 
     @Query(value = """
             WITH ordered_transactions AS (

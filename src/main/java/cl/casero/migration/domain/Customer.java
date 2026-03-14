@@ -37,6 +37,9 @@ public class Customer {
     @Column(nullable = false)
     private Integer debt = 0;
 
+    @Column(nullable = false)
+    private boolean enabled = true;
+
     @OneToMany(mappedBy = "customer")
     private List<Transaction> transactions = new ArrayList<>();
 }

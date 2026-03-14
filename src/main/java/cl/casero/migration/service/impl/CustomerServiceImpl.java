@@ -2,6 +2,7 @@ package cl.casero.migration.service.impl;
 
 import cl.casero.migration.domain.Customer;
 import cl.casero.migration.repository.CustomerRepository;
+import cl.casero.migration.service.CustomerNotFoundException;
 import cl.casero.migration.service.SectorService;
 import cl.casero.migration.service.CustomerService;
 import cl.casero.migration.service.dto.CreateCustomerForm;
@@ -32,7 +33,8 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public Customer get(Long id) {
-        return customerRepository.findById(id).orElseThrow();
+        return customerRepository.findByIdAndEnabledTrue(id)
+                .orElseThrow(() -> new CustomerNotFoundException(id));
     }
 
     @Override
@@ -43,8 +45,16 @@ public class CustomerServiceImpl implements CustomerService {
         customer.setSector(sectorService.get(form.getSectorId()));
         customer.setAddress(form.getAddress().trim());
         customer.setDebt(0);
+        customer.setEnabled(true);
         
         return customerRepository.save(customer);
+    }
+
+    @Override
+    public void delete(Long id) {
+        Customer customer = get(id);
+        customer.setEnabled(false);
+        customerRepository.save(customer);
     }
 
     @Override
@@ -70,12 +80,12 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public Page<Customer> getTopDebtors(Pageable pageable) {
-        return customerRepository.findAllByOrderByDebtDesc(pageable);
+        return customerRepository.findAllByEnabledTrueOrderByDebtDesc(pageable);
     }
 
     @Override
     public Page<Customer> getBestCustomers(Pageable pageable) {
-        return customerRepository.findAllByOrderByDebtAsc(pageable);
+        return customerRepository.findAllByEnabledTrueOrderByDebtAsc(pageable);
     }
 
     @Override
@@ -94,7 +104,7 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public long count() {
-        return customerRepository.count();
+        return customerRepository.countByEnabledTrue();
     }
 
     @Override

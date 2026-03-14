@@ -138,6 +138,20 @@
                 </span>
                 <span class="score-cycles-toggle__icon" aria-hidden="true">⌄</span>
             </button>
+            <form method="post"
+                  class="customer-actions__form"
+                  th:action="@{'/customers/' + ${customer.id} + '/delete'}"
+                  data-confirm-delete="true">
+                <button type="submit"
+                        class="customer-actions__action customer-actions__action--delete"
+                        data-testid="customer-delete-submit">
+                    <span class="customer-actions__icon">🗑️</span>
+                    <span class="customer-actions__action-text customer-actions__action-text--grow">
+                        <span class="customer-actions__action-title">Eliminar cliente</span>
+                        <span class="customer-actions__action-desc">Eliminar este cliente</span>
+                    </span>
+                </button>
+            </form>
         </div>
         <div class="score-cycles-panel"
              id="customer-score-cycles"
@@ -256,6 +270,19 @@
         </nav>
     </div>
 
+    <div id="confirm-delete-modal" class="confirm-modal" hidden>
+        <div class="confirm-modal__backdrop" id="confirm-delete-backdrop" aria-hidden="true"></div>
+        <div class="confirm-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="confirm-delete-title">
+            <p class="confirm-modal__eyebrow">Eliminar cliente</p>
+            <h3 class="confirm-modal__title" id="confirm-delete-title">¿Seguro que deseas eliminar este cliente?</h3>
+            <p class="confirm-modal__description">Esta acción eliminará el cliente de la vista del sistema.</p>
+            <div class="confirm-modal__actions">
+                <button type="button" class="confirm-modal__button confirm-modal__button--secondary" id="confirm-delete-cancel">Cancelar</button>
+                <button type="button" class="confirm-modal__button confirm-modal__button--danger" id="confirm-delete-accept" data-testid="confirm-delete-accept">Eliminar</button>
+            </div>
+        </div>
+    </div>
+
 </div>
 </body>
 <script th:inline="javascript">
@@ -335,9 +362,62 @@ document.addEventListener('DOMContentLoaded', () => {
     const jsonCopyBtn = document.getElementById('transactions-json-copy');
     const jsonCloseBtn = document.getElementById('transactions-json-close');
     const jsonContent = document.getElementById('transactions-json-content');
+    const confirmDeleteModal = document.getElementById('confirm-delete-modal');
+    const confirmDeleteBackdrop = document.getElementById('confirm-delete-backdrop');
+    const confirmDeleteCancel = document.getElementById('confirm-delete-cancel');
+    const confirmDeleteAccept = document.getElementById('confirm-delete-accept');
     const transactionsJsonUrl = jsonWrapper ? jsonWrapper.dataset.jsonUrl : '';
     let jsonLoaded = false;
     let jsonLoading = false;
+    let pendingDeleteForm = null;
+
+    const hideDeleteConfirm = () => {
+        if (!confirmDeleteModal || confirmDeleteModal.hidden) {
+            return;
+        }
+        confirmDeleteModal.hidden = true;
+        pendingDeleteForm = null;
+        document.body.classList.remove('modal-open');
+    };
+
+    const showDeleteConfirm = (form) => {
+        if (!confirmDeleteModal || !form) {
+            return;
+        }
+        pendingDeleteForm = form;
+        confirmDeleteModal.hidden = false;
+        document.body.classList.add('modal-open');
+    };
+
+    document.querySelectorAll('form[data-confirm-delete="true"]').forEach((form) => {
+        form.addEventListener('submit', (event) => {
+            event.preventDefault();
+            showDeleteConfirm(form);
+        });
+    });
+
+    if (confirmDeleteBackdrop) {
+        confirmDeleteBackdrop.addEventListener('click', hideDeleteConfirm);
+    }
+    if (confirmDeleteCancel) {
+        confirmDeleteCancel.addEventListener('click', hideDeleteConfirm);
+    }
+    if (confirmDeleteAccept) {
+        confirmDeleteAccept.addEventListener('click', () => {
+            if (!pendingDeleteForm) {
+                hideDeleteConfirm();
+                return;
+            }
+            const form = pendingDeleteForm;
+            pendingDeleteForm = null;
+            form.submit();
+        });
+    }
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && confirmDeleteModal && !confirmDeleteModal.hidden) {
+            hideDeleteConfirm();
+        }
+    });
 
     const fetchTransactionsJson = () => {
         if (!transactionsJsonUrl || jsonLoading) {

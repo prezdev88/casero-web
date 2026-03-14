@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.18.0](https://github.com/prezdev88/casero-web/compare/v1.17.2...v1.18.0) (2026-03-14)
+
+
+### Features
+
+* **customer:** add address display and data attributes in customer cards ([c2749ff](https://github.com/prezdev88/casero-web/commit/c2749ff71254850efd5b3063fdd88897561b2f6c))
+* **customer:** add end-to-end test for customer address visibility in search card and actions modal ([d657c38](https://github.com/prezdev88/casero-web/commit/d657c386a03c0b8fa2488b279776e2b02547625b))
+* **customer:** implement soft delete functionality for customers with confirmation modal ([f401592](https://github.com/prezdev88/casero-web/commit/f4015921535a77c2ab2312a968da2729e8ff416b))
+
 ### [1.17.2](https://github.com/prezdev88/casero-web/compare/v1.17.1...v1.17.2) (2025-12-05)
 
 

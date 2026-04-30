@@ -11,9 +11,9 @@ services:
       POSTGRES_DB: casero
       POSTGRES_USER: casero
       POSTGRES_PASSWORD: casero
-    # accesible solo desde el VPS (para backups y túnel SSH)
+    # accesible solo desde la misma VPS (para backups y túnel SSH)
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -55,9 +55,9 @@ services:
       POSTGRES_DB: casero
       POSTGRES_USER: casero
       POSTGRES_PASSWORD: casero
-    # igual que prod pero en otro puerto del host
+    # igual que prod pero en otro puerto local del host
     ports:
-      - "5433:5432"
+      - "127.0.0.1:5433:5432"
     volumes:
       - postgres_data_qa:/var/lib/postgresql/data
     healthcheck:

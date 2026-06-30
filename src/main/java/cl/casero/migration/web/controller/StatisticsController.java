@@ -43,9 +43,14 @@ public class StatisticsController {
         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
         @RequestParam(value = "end", required = false)
         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end,
+        @RequestParam(value = "month", required = false) Integer month,
+        @RequestParam(value = "year", required = false) Integer year,
         Model model
     ) {
-        if (start == null || end == null) {
+        if (year != null && month != null) {
+            start = LocalDate.of(year, month, 1);
+            end = start.withDayOfMonth(start.lengthOfMonth());
+        } else if (start == null || end == null) {
             LocalDate now = LocalDate.now();
             start = now.withDayOfMonth(1);
             end = start.plusMonths(1).minusDays(1);
@@ -56,6 +61,8 @@ public class StatisticsController {
         model.addAttribute("stats", stats);
         model.addAttribute("start", start);
         model.addAttribute("end", end);
+        model.addAttribute("selectedMonth", month != null ? month : start.getMonthValue());
+        model.addAttribute("selectedYear", year != null ? year : start.getYear());
 
         return "statistics/monthly";
     }

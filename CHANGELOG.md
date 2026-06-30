@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.20.0](https://github.com/prezdev88/casero-web/compare/v1.19.0...v1.20.0) (2026-06-30)
+
+
+### Features
+
+* **statistics:** add end-to-end tests for monthly statistics view with month/year and custom range filters ([67af761](https://github.com/prezdev88/casero-web/commit/67af761b8baa0af744e9070e09003a047ef6682f))
+* **statistics:** add month and year filters to monthly statistics view ([efe9d94](https://github.com/prezdev88/casero-web/commit/efe9d9411403cae75e8fe1b65aa6bc5b9bb1729f))
+
+
+### Bug Fixes
+
+* fix ports ([1663e36](https://github.com/prezdev88/casero-web/commit/1663e3647952dcf08277ea1ebb0ec2bddca3bafb))
+* **tests:** install only Chromium browsers for Playwright ([876ee55](https://github.com/prezdev88/casero-web/commit/876ee55dccd0a4b8064fcbf1c4e5e9e734633060))
+
 ## [1.19.0](https://github.com/prezdev88/casero-web/compare/v1.18.0...v1.19.0) (2026-03-14)
 
 

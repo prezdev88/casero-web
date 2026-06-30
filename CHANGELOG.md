@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.21.0](https://github.com/prezdev88/casero-web/compare/v1.20.0...v1.21.0) (2026-06-30)
+
+
+### Features
+
+* **statistics:** enhance monthly statistics display with improved layout and icons ([8291801](https://github.com/prezdev88/casero-web/commit/8291801710805fd1b92326d169a46aa5981e7f7b))
+
 ## [1.20.0](https://github.com/prezdev88/casero-web/compare/v1.19.0...v1.20.0) (2026-06-30)
 
 

@@ -80,8 +80,8 @@ export PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=1
 echo ">> Ensuring JS dependencies..."
 npm install
 
-echo ">> Installing Playwright browsers (may show warnings on Arch)..."
-npx playwright install
+echo ">> Installing Playwright browsers (chromium only)..."
+npx playwright install chromium
 
 echo ">> Ensuring proxy-net docker network exists..."
 if ! docker network inspect proxy-net >/dev/null 2>&1; then

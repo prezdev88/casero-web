@@ -114,6 +114,11 @@ VALUES
   ('Vendedor', 'NORMAL', '154b36cf116dc0c09ce4f7727916a396e880b3d27a154cecc9373f668fbd21b5', '0f1e2d3c4b5a6978', 'edee29f882543b956620b26d0ee0e7e950399b1c4222f5de05e06425b4c995e9', true)
 ON CONFLICT (pin_fingerprint) DO UPDATE
 SET name = EXCLUDED.name, role = EXCLUDED.role, enabled = true;
+
+INSERT INTO audit_event (event_type, payload) VALUES
+  ('ACTION', '{"type": "SALE"}'),
+  ('ACTION', '{"type": "SALE"}'),
+  ('ACTION', '{"type": "SALE"}');
 SQL
 
 echo ">> Running E2E suite"

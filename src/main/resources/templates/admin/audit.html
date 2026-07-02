@@ -178,12 +178,12 @@
         </div>
         <div class="pagination">
             <a th:if="${events.hasPrevious()}"
-               th:href="@{/admin/audit(page=${events.number - 1}, size=${events.size}, eventType=${selectedEventType})}">Anterior</a>
+               th:href="@{/admin/audit(page=${events.number - 1}, size=${events.size}, eventType=${selectedEventType}, payloadType=${payloadType})}">Anterior</a>
             <span th:text="${events.number + 1}">1</span>
             <span>/</span>
             <span th:text="${events.totalPages}">1</span>
             <a th:if="${events.hasNext()}"
-               th:href="@{/admin/audit(page=${events.number + 1}, size=${events.size}, eventType=${selectedEventType})}">Siguiente</a>
+               th:href="@{/admin/audit(page=${events.number + 1}, size=${events.size}, eventType=${selectedEventType}, payloadType=${payloadType})}">Siguiente</a>
         </div>
     </div>
     <div id="payloadModal" class="modal-backdrop" onclick="closePayloadModal(event)">

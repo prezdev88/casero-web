@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.22.0](https://github.com/prezdev88/casero-web/compare/v1.21.0...v1.22.0) (2026-07-02)
+
+
+### Features
+
+* **audit:** add E2E tests for audit view pagination and filter persistence ([b936b4a](https://github.com/prezdev88/casero-web/commit/b936b4ac80b1291252fc0a16e0c3f4c366a806c0))
+* **styles:** increase font size for highlight-debt class to improve visibility ([f557f00](https://github.com/prezdev88/casero-web/commit/f557f0077c3aeac5aa2015696ca32bcd8e155cab))
+
 ## [1.21.0](https://github.com/prezdev88/casero-web/compare/v1.20.0...v1.21.0) (2026-06-30)
 
 

@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.23.0](https://github.com/prezdev88/casero-web/compare/v1.22.0...v1.23.0) (2026-09-06)
+
+
+### Features
+
+* **customer:** add birthdate management with update functionality and UI integration ([a2a57ef](https://github.com/prezdev88/casero-web/commit/a2a57efeb9b169cad3cc76896f7eb95e0275e78b))
+
+
+### Tests
+
+* **birthdate:** add E2E tests for adding and editing customer birthdates ([1d9e721](https://github.com/prezdev88/casero-web/commit/1d9e7214709caa421dd8b6959efff9498f3ea42d))
+
 ## [1.22.0](https://github.com/prezdev88/casero-web/compare/v1.21.0...v1.22.0) (2026-07-02)
 
 

@@ -24,6 +24,7 @@
                th:data-customer-address="${customer.address}"
                th:data-customer-debt="${formattedDebt}"
                th:data-customer-debt-raw="${customer.debt}"
+               th:data-customer-birthdate="${customer.formattedBirthDate}"
                th:attr="data-customer-score=${score}"
                data-testid="customer-card">
                 <div class="customer-card__row">
@@ -177,6 +178,13 @@ document.addEventListener('DOMContentLoaded', () => {
             description: 'Abrir el detalle del cliente',
             icon: '📋',
             href: (id) => `${customerDetailBase}${id}`
+        },
+        {
+            key: 'birthdate',
+            label: 'Cumpleaños',
+            description: 'Registrar o editar fecha',
+            icon: '🎂',
+            href: (id) => `${customerDetailBase}${id}/actions/birthdate/edit`
         }
     ] : [];
 
@@ -234,6 +242,13 @@ document.addEventListener('DOMContentLoaded', () => {
             addressSpan.className = 'customer-actions__address';
             addressSpan.textContent = customer.address;
             titleWrap.appendChild(addressSpan);
+        }
+        if (customer.birthdate) {
+            const birthdateSpan = document.createElement('span');
+            birthdateSpan.className = 'customer-actions__address';
+            birthdateSpan.style.marginTop = '4px';
+            birthdateSpan.textContent = '🎂 ' + customer.birthdate;
+            titleWrap.appendChild(birthdateSpan);
         }
         actionsSubtitle.appendChild(titleWrap);
         actionsList.innerHTML = '';
@@ -339,6 +354,7 @@ document.addEventListener('DOMContentLoaded', () => {
             id: customerId,
             name: element.dataset.customerName || (nameElement ? nameElement.textContent.trim() : ''),
             address: element.dataset.customerAddress || '',
+            birthdate: element.dataset.customerBirthdate || '',
             formattedDebt: debtElement ? debtElement.textContent.trim() : (element.dataset.customerDebt || ''),
             debtValue: debtRaw !== undefined ? Number(debtRaw) : (debtElement ? Number(debtElement.textContent.replace(/[^0-9.-]/g, '')) : 0),
             score: Number.isNaN(parsedScore) ? null : parsedScore
@@ -390,6 +406,9 @@ document.addEventListener('DOMContentLoaded', () => {
         link.dataset.customerName = customer.name;
         if (customer.address) {
             link.dataset.customerAddress = customer.address;
+        }
+        if (customer.formattedBirthDate) {
+            link.dataset.customerBirthdate = customer.formattedBirthDate;
         }
         if (customer.formattedDebt) {
             link.dataset.customerDebt = customer.formattedDebt;

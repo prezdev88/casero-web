@@ -18,6 +18,7 @@ import cl.casero.migration.service.dto.MoneyTransactionForm;
 import cl.casero.migration.service.dto.PaymentForm;
 import cl.casero.migration.service.dto.SaleForm;
 import cl.casero.migration.service.dto.UpdateAddressForm;
+import cl.casero.migration.service.dto.UpdateBirthdateForm;
 import cl.casero.migration.service.dto.UpdateNameForm;
 import cl.casero.migration.service.dto.UpdateSectorForm;
 import cl.casero.migration.util.CurrencyUtil;
@@ -124,6 +125,7 @@ public class CustomerController {
                         customer.getId(),
                         customer.getName(),
                         customer.getAddress(),
+                        customer.getFormattedBirthDate(),
                         CurrencyUtil.format(customer.getDebt()),
                         customer.getDebt(),
                         scores.getOrDefault(customer.getId(), CustomerScoreCalculator.minScore())))
@@ -706,6 +708,52 @@ public class CustomerController {
         return "customers/actions/sector-edit";
     }
 
+    @PostMapping("/{id}/birthdate")
+    public String updateBirthdate(
+        @PathVariable Long id,
+        @Valid @ModelAttribute("updateBirthdateForm") UpdateBirthdateForm form,
+        BindingResult result,
+        RedirectAttributes redirectAttributes,
+        Authentication authentication,
+        HttpServletRequest request
+    ) {
+        if (result.hasErrors()) {
+            return redirectToAction(id, redirectAttributes, "updateBirthdateForm", form, result, "birthdate/edit");
+        }
+
+        customerService.updateBirthdate(id, form.getDay(), form.getMonth(), form.getYear());
+        redirectAttributes.addFlashAttribute("successMessage", "Fecha de nacimiento actualizada");
+        auditEventService.logEvent(
+            AuditEventType.ACTION,
+            currentUser(authentication),
+            payload(
+                "action", "UPDATE_CUSTOMER_BIRTHDATE",
+                "customerId", id,
+                "day", form.getDay(),
+                "month", form.getMonth(),
+                "year", form.getYear()
+            ),
+            request);
+
+        return "redirect:/customers/" + id;
+    }
+
+    @GetMapping("/{id}/actions/birthdate/edit")
+    public String editBirthdate(@PathVariable Long id, Model model) {
+        Customer customer = customerService.get(id);
+        model.addAttribute("customer", customer);
+
+        if (!model.containsAttribute("updateBirthdateForm")) {
+            UpdateBirthdateForm form = new UpdateBirthdateForm();
+            form.setDay(customer.getBirthDay());
+            form.setMonth(customer.getBirthMonth());
+            form.setYear(customer.getBirthYear());
+            model.addAttribute("updateBirthdateForm", form);
+        }
+
+        return "customers/actions/birthdate-edit";
+    }
+
     private Page<Customer> searchCustomers(String query, int page, int size) {
         int sanitizedPage = Math.max(page, 0);
         int sanitizedSize = Math.min(Math.max(size, 1), 50);
@@ -772,6 +820,7 @@ public class CustomerController {
         Long id,
         String name,
         String address,
+        String formattedBirthDate,
         String formattedDebt,
         Integer debtValue,
         Double score

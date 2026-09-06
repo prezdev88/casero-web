@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('Editar cumpleaños')}"></head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+<div class="container">
+    <div class="card">
+        <h2 th:text="'Editar cumpleaños de ' + ${customer.name}">Editar cumpleaños</h2>
+        <form th:object="${updateBirthdateForm}"
+              th:action="@{'/customers/' + ${customer.id} + '/birthdate'}"
+              method="post">
+            <label>Día</label>
+            <select th:field="*{day}">
+                <option value="">Selecciona un día...</option>
+                <option th:each="i : ${#numbers.sequence(1, 31)}" th:value="${i}" th:text="${i}"></option>
+            </select>
+            <div class="error-message text-red" th:if="${#fields.hasErrors('day')}" th:errors="*{day}"></div>
+
+            <label>Mes</label>
+            <select th:field="*{month}">
+                <option value="">Selecciona un mes...</option>
+                <option value="1">Enero</option>
+                <option value="2">Febrero</option>
+                <option value="3">Marzo</option>
+                <option value="4">Abril</option>
+                <option value="5">Mayo</option>
+                <option value="6">Junio</option>
+                <option value="7">Julio</option>
+                <option value="8">Agosto</option>
+                <option value="9">Septiembre</option>
+                <option value="10">Octubre</option>
+                <option value="11">Noviembre</option>
+                <option value="12">Diciembre</option>
+            </select>
+            <div class="error-message text-red" th:if="${#fields.hasErrors('month')}" th:errors="*{month}"></div>
+
+            <label>Año (Opcional)</label>
+            <input type="number" th:field="*{year}" placeholder="Ej: 1990" min="1900">
+            <div class="error-message text-red" th:if="${#fields.hasErrors('year')}" th:errors="*{year}"></div>
+
+            <button type="submit" style="margin-top: 15px;">Guardar</button>
+            <a class="text-button" style="margin-left: 15px;" th:href="@{'/customers/' + ${customer.id}}">Cancelar</a>
+        </form>
+    </div>
+</div>
+</body>
+</html>

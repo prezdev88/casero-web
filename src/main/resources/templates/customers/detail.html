@@ -47,6 +47,17 @@
             <a class="icon-button" title="Cambiar sector"
                th:href="@{'/customers/' + ${customer.id} + '/actions/sector/edit'}">✏️</a>
         </p>
+        <p class="text-muted birthdate-row" th:if="${customer.birthDay != null}">
+            <span>🎂 </span>
+            <span class="birthdate-row__value" th:text="${customer.formattedBirthDate}">15 de Octubre</span>
+            <a class="icon-button" title="Editar cumpleaños"
+               th:href="@{'/customers/' + ${customer.id} + '/actions/birthdate/edit'}">✏️</a>
+        </p>
+        <p class="text-muted birthdate-row" th:if="${customer.birthDay == null}">
+            <a class="btn-action" th:href="@{'/customers/' + ${customer.id} + '/actions/birthdate/edit'}">
+               Añadir fecha de nacimiento
+            </a>
+        </p>
         <div class="transactions-json"
              th:if="${currentUser != null and currentUser.admin}"
              th:data-json-url="@{'/admin/customers/' + ${customer.id} + '/transactions/json'}">
@@ -155,6 +166,15 @@
                     </span>
                 </button>
             </form>
+            <a class="customer-actions__action customer-actions__action--birthdate"
+               th:href="@{'/customers/' + ${customer.id} + '/actions/birthdate/edit'}"
+               data-testid="customer-action-birthdate">
+                <span class="customer-actions__icon">🎂</span>
+                <span class="customer-actions__action-text">
+                    <span class="customer-actions__action-title">Cumpleaños</span>
+                    <span class="customer-actions__action-desc">Registrar o editar fecha</span>
+                </span>
+            </a>
         </div>
         <div class="score-cycles-panel"
              id="customer-score-cycles"

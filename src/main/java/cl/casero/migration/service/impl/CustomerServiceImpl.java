@@ -79,6 +79,15 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
+    public void updateBirthdate(Long id, Integer day, Integer month, Integer year) {
+        Customer customer = get(id);
+        customer.setBirthDay(day);
+        customer.setBirthMonth(month);
+        customer.setBirthYear(year);
+        customerRepository.save(customer);
+    }
+
+    @Override
     public Page<Customer> getTopDebtors(Pageable pageable) {
         return customerRepository.findAllByEnabledTrueOrderByDebtDesc(pageable);
     }

@@ -2,6 +2,31 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.24.0](https://github.com/prezdev88/casero-web/compare/v1.23.0...v1.24.0) (2026-09-19)
+
+
+### Features
+
+* **birthdays:** add birth year and age display to birthday list ([d0989ce](https://github.com/prezdev88/casero-web/commit/d0989ce69b8a919639c746de18f8b5aaa8a73340))
+* **birthdays:** enhance responsive design and improve table accessibility for birthday list ([e5f64fb](https://github.com/prezdev88/casero-web/commit/e5f64fbf8695bee403ba7e038bdf9e31abbe84e2))
+* **dashboard:** add finished cards and sales views with corresponding service methods and templates ([f7b4d7d](https://github.com/prezdev88/casero-web/commit/f7b4d7d1107a6e39d9c75f38bbcc04c11e578566))
+* **dashboard:** add overdue debt and top customers metrics to dashboard ([d424f5c](https://github.com/prezdev88/casero-web/commit/d424f5c4a60723838d903effc5531356d6b8b53d))
+* **dashboard:** add total debt card to dashboard with statistics integration ([1ca7345](https://github.com/prezdev88/casero-web/commit/1ca7345278dc74283d00eddd449d40de394bb0b7))
+* **dashboard:** add upcoming birthdays feature with dashboard integration ([a80350b](https://github.com/prezdev88/casero-web/commit/a80350bb74e8d8ee59d4d5dfddcff353c9266db7))
+* **dashboard:** enhance dashboard with new statistics cards for active customers, overdue customers, and monthly sales/payments ([1900576](https://github.com/prezdev88/casero-web/commit/1900576da25e92838c41fdde21bbc948b0a6a2e9))
+
+
+### Bug Fixes
+
+* **dashboard:** add responsive styling for balance card and update card structure ([31f98cc](https://github.com/prezdev88/casero-web/commit/31f98cc20f3b5895ecb47d10b22a837cd0509f75))
+* **database:** optimize entity fetching with lazy loading for Customer and Transaction relationships ([9c59f65](https://github.com/prezdev88/casero-web/commit/9c59f6594787c7e12d4deb5452522e8f7d3abef9))
+
+
+### Tests
+
+* add end-to-end tests for dashboard views and metrics validation ([35b9594](https://github.com/prezdev88/casero-web/commit/35b95943642eb7547ef48714e40dc9e7873d86c5))
+* **dashboard:** add E2E tests for birthdays and update dashboard links ([3576623](https://github.com/prezdev88/casero-web/commit/35766233fa0b0e0fef300138672072b85877617f))
+
 ## [1.23.0](https://github.com/prezdev88/casero-web/compare/v1.22.0...v1.23.0) (2026-09-06)
 
 

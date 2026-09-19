@@ -237,4 +237,21 @@ public class TransactionServiceImpl implements TransactionService {
         }
         return result;
     }
+
+    @Override
+    public List<Transaction> getFinishedCardsThisMonth() {
+        LocalDate today = LocalDate.now();
+        LocalDate start = today.withDayOfMonth(1);
+        LocalDate end = today.withDayOfMonth(today.lengthOfMonth());
+        return transactionRepository.findFinishedCards(start, end);
+    }
+
+    @Override
+    public List<Transaction> getSalesThisMonth() {
+        LocalDate today = LocalDate.now();
+        LocalDate start = today.withDayOfMonth(1);
+        LocalDate end = today.withDayOfMonth(today.lengthOfMonth());
+        return transactionRepository.findSalesThisMonth(start, end);
+    }
+
 }

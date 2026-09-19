@@ -203,4 +203,27 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
         Integer getCycleMonthCount();
         Boolean getHasOutstandingDebt();
     }
+
+    @EntityGraph(attributePaths = {"customer", "customer.sector"})
+    @Query("""
+            SELECT t
+            FROM Transaction t
+            WHERE t.balance = 0
+              AND t.customer.enabled = true
+              AND t.date BETWEEN :start AND :end
+            ORDER BY t.date DESC
+            """)
+    List<Transaction> findFinishedCards(@Param("start") LocalDate start, @Param("end") LocalDate end);
+
+    @EntityGraph(attributePaths = {"customer", "customer.sector"})
+    @Query("""
+            SELECT t
+            FROM Transaction t
+            WHERE t.type = 'SALE'
+              AND t.customer.enabled = true
+              AND t.date BETWEEN :start AND :end
+            ORDER BY t.date DESC
+            """)
+    List<Transaction> findSalesThisMonth(@Param("start") LocalDate start, @Param("end") LocalDate end);
+
 }

@@ -35,4 +35,8 @@ public interface TransactionService {
     void delete(Long transactionId);
 
     List<TransactionMonthlySummary> getMonthlySummary(LocalDate start, LocalDate end);
+
+    List<Transaction> getFinishedCardsThisMonth();
+    List<Transaction> getSalesThisMonth();
+
 }

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('Ventas del Mes - Casero Web')}"></head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+<div class="container">
+    <style>
+        .mobile-cards { display: none; }
+        .desktop-table { display: block; overflow-x: auto; }
+        
+        .mobile-card {
+            background: var(--card-bg);
+            border: 1px solid var(--table-border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .mobile-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid var(--table-border);
+            padding-bottom: 0.5rem;
+        }
+        .mobile-card-title {
+            margin: 0;
+            font-size: 1.1rem;
+            color: var(--text-color);
+            font-weight: bold;
+        }
+        .mobile-card-amount {
+            color: var(--primary-red, #d32f2f);
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        .mobile-card-detail {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--muted-text);
+            margin: 0.5rem 0;
+            font-size: 0.95rem;
+        }
+        .mobile-card-btn {
+            display: block;
+            text-align: center;
+            margin-top: 1rem;
+        }
+        
+        @media (max-width: 768px) {
+            .desktop-table { display: none; }
+            .mobile-cards { display: block; }
+        }
+    </style>
+
+    <div class="header-actions" style="margin-top: 1rem; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <h2 style="margin: 0;">👕 Prendas Vendidas Este Mes</h2>
+        <a th:href="@{/dashboard}" class="btn" style="background: var(--primary-gray, #546e7a); color: white; text-decoration: none;">🔙 Volver al Dashboard</a>
+    </div>
+
+    <div class="card" style="margin-bottom: 2rem;">
+        <p style="color: var(--muted-text); margin-bottom: 1rem;">Listado detallado de todos los créditos/ventas entregadas a clientes durante el mes en curso.</p>
+        
+        <!-- Vista de Escritorio -->
+        <div class="desktop-table">
+            <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                <thead>
+                    <tr style="border-bottom: 2px solid var(--table-border);">
+                        <th style="padding: 0.75rem;">Fecha</th>
+                        <th style="padding: 0.75rem;">Cliente</th>
+                        <th style="padding: 0.75rem;">Sector</th>
+                        <th style="padding: 0.75rem; text-align: center;">Cant. Prendas</th>
+                        <th style="padding: 0.75rem; text-align: right;">Valor de Venta</th>
+                        <th style="padding: 0.75rem; text-align: right;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="tx : ${transactions}" style="border-bottom: 1px solid var(--table-border);">
+                        <td style="padding: 0.75rem;" th:text="${#temporals.format(tx.date, 'dd/MM/yyyy')}"></td>
+                        <td style="padding: 0.75rem;" th:text="${tx.customer.name}"></td>
+                        <td style="padding: 0.75rem;" th:text="${tx.customer.sector.name}"></td>
+                        <td style="padding: 0.75rem; text-align: center;">
+                            <span class="badge" th:text="${tx.itemCount != null ? tx.itemCount : 0}"></span>
+                        </td>
+                        <td style="padding: 0.75rem; text-align: right; color: var(--primary-red, #d32f2f); font-weight: bold;" th:text="${T(cl.casero.migration.util.CurrencyUtil).format(tx.amount)}"></td>
+                        <td style="padding: 0.75rem; text-align: right;">
+                            <a th:href="@{/customers/{id}(id=${tx.customer.id})}" class="btn" style="padding: 0.25rem 0.75rem; font-size: 0.9rem;">👤 Ver Perfil</a>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(transactions)}">
+                        <td colspan="6" style="text-align: center; padding: 2rem; color: var(--muted-text);">No se han registrado ventas este mes todavía.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Vista de Tarjetas para Móviles -->
+        <div class="mobile-cards">
+            <div th:each="tx : ${transactions}" class="mobile-card">
+                <div class="mobile-card-header">
+                    <h3 class="mobile-card-title" th:text="${tx.customer.name}"></h3>
+                    <span class="mobile-card-amount" th:text="${T(cl.casero.migration.util.CurrencyUtil).format(tx.amount)}"></span>
+                </div>
+                <div class="mobile-card-detail">
+                    <span th:text="${'📍 Sector: ' + tx.customer.sector.name}"></span>
+                </div>
+                <div class="mobile-card-detail">
+                    <span th:text="${'📅 Fecha: ' + #temporals.format(tx.date, 'dd/MM/yyyy')}"></span>
+                    <span class="badge" th:text="${tx.itemCount != null ? tx.itemCount + ' prendas' : '0 prendas'}"></span>
+                </div>
+                <a th:href="@{/customers/{id}(id=${tx.customer.id})}" class="btn mobile-card-btn">👤 Ver Perfil</a>
+            </div>
+            <div th:if="${#lists.isEmpty(transactions)}" style="text-align: center; padding: 2rem; color: var(--muted-text);">
+                No se han registrado ventas este mes todavía.
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

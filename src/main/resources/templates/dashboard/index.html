@@ -48,6 +48,34 @@
             <span style="font-size: 0.9rem; color: var(--text-muted, #6c757d);">registrados</span>
         </div>
 
+        
+        <!-- Tarjeta: Deuda Promedio -->
+        <div class="stat-card" style="background: var(--card-bg, #fff); padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center; cursor: pointer; transition: transform 0.2s;"
+             th:onclick="|window.location.href='@{/statistics}'|">
+            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📉</div>
+            <h3 style="margin: 0; color: var(--text-color);">Deuda Promedio</h3>
+            <p style="font-size: 2rem; font-weight: bold; margin: 0.5rem 0; color: var(--info-color, #17a2b8);" th:text="${T(cl.casero.migration.util.CurrencyUtil).format(averageDebt)}">$0</p>
+            <span style="font-size: 0.9rem; color: var(--text-muted, #6c757d);">por cliente activo</span>
+        </div>
+
+        <!-- Tarjeta: Cartolas Finalizadas -->
+        <div class="stat-card" style="background: var(--card-bg, #fff); padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center; cursor: pointer; transition: transform 0.2s;"
+             th:onclick="|window.location.href='@{/dashboard/finished-cards}'|">
+            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🎉</div>
+            <h3 style="margin: 0; color: var(--text-color);">Cuentas Saldadas</h3>
+            <p style="font-size: 2rem; font-weight: bold; margin: 0.5rem 0; color: var(--success-color, #28a745);" th:text="${finishedCardsCount}">0</p>
+            <span style="font-size: 0.9rem; color: var(--text-muted, #6c757d);">pagadas este mes</span>
+        </div>
+
+        <!-- Tarjeta: Prendas Vendidas -->
+        <div class="stat-card" style="background: var(--card-bg, #fff); padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center; cursor: pointer; transition: transform 0.2s;"
+             th:onclick="|window.location.href='@{/dashboard/sales}'|">
+            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">👕</div>
+            <h3 style="margin: 0; color: var(--text-color);">Prendas Vendidas</h3>
+            <p style="font-size: 2rem; font-weight: bold; margin: 0.5rem 0; color: var(--primary-color, #007bff);" th:text="${totalItemsCount}">0</p>
+            <span style="font-size: 0.9rem; color: var(--text-muted, #6c757d);">entregadas este mes</span>
+        </div>
+
         <!-- Tarjeta: Recaudación vs Ventas -->
         <div class="stat-card" style="background: var(--card-bg, #fff); padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center; cursor: pointer; transition: transform 0.2s; grid-column: 1 / -1; display: flex; justify-content: space-around; align-items: center;"
              th:onclick="|window.location.href='@{/statistics/monthly}'|">
@@ -63,6 +91,87 @@
         </div>
 
     </div>
+
+    <!-- Gráfico Visual de los Últimos 6 Meses -->
+    <div style="margin-top: 2rem; background: var(--card-bg, #fff); padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <h3 style="margin-top: 0; color: var(--text-color); margin-bottom: 1.5rem;">📊 Evolución: Vendido vs Cobrado (Último Semestre)</h3>
+        <div style="position: relative; height: 300px; width: 100%;">
+            <canvas id="salesChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        const ctx = document.getElementById('salesChart').getContext('2d');
+        const labels = [ [(${chartLabels})] ];
+        const salesData = [ [(${chartSales})] ];
+        const paymentsData = [ [(${chartPayments})] ];
+
+        const formatCurrency = (value) => {
+            return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(value);
+        };
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: '📈 Vendido (Crédito)',
+                        data: salesData,
+                        borderColor: '#dc3545',
+                        backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: true
+                    },
+                    {
+                        label: '💵 Cobrado (Abonos)',
+                        data: paymentsData,
+                        borderColor: '#28a745',
+                        backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    label += formatCurrency(context.parsed.y);
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value, index, values) {
+                                return '$' + (value / 1000).toLocaleString() + 'k';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        /*]]>*/
+    </script>
+
 </div>
 </body>
 </html>

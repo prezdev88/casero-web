@@ -12,6 +12,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import lombok.RequiredArgsConstructor;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.ArrayList;
+import java.time.format.TextStyle;
+import java.util.Locale;
 
 @Controller
 @RequestMapping("/dashboard")
@@ -50,6 +53,36 @@ public class DashboardController {
         model.addAttribute("salesAmount", salesAmount);
         model.addAttribute("paymentsAmount", paymentsAmount);
         
+        // Extra stats
+        int averageDebt = statisticsService.getAverageDebt();
+        int finishedCardsCount = stats.getFinishedCardsCount();
+        int totalItemsCount = stats.getTotalItemsCount();
+        
+        model.addAttribute("averageDebt", averageDebt);
+        model.addAttribute("finishedCardsCount", finishedCardsCount);
+        model.addAttribute("totalItemsCount", totalItemsCount);
+        
+        // Chart Data (Last 6 months)
+        LocalDate startOfSixMonthsAgo = today.minusMonths(5).withDayOfMonth(1);
+        LocalDate endOfCurrentMonth = today.withDayOfMonth(today.lengthOfMonth());
+        List<TransactionMonthlySummary> last6Months = transactionService.getMonthlySummary(startOfSixMonthsAgo, endOfCurrentMonth);
+        
+        List<String> chartLabels = new ArrayList<>();
+        List<Long> chartSales = new ArrayList<>();
+        List<Long> chartPayments = new ArrayList<>();
+        
+        for (TransactionMonthlySummary summary : last6Months) {
+            String monthName = summary.month().getMonth().getDisplayName(TextStyle.SHORT, new Locale("es", "ES"));
+            monthName = monthName.substring(0, 1).toUpperCase() + monthName.substring(1);
+            chartLabels.add("'" + monthName + " " + summary.month().getYear() + "'");
+            chartSales.add(summary.salesAmount());
+            chartPayments.add(summary.paymentsAmount());
+        }
+        
+        model.addAttribute("chartLabels", String.join(",", chartLabels));
+        model.addAttribute("chartSales", chartSales.toString().replaceAll("\\[|\\]", ""));
+        model.addAttribute("chartPayments", chartPayments.toString().replaceAll("\\[|\\]", ""));
+        
         return "dashboard/index";
     }
 
@@ -59,4 +92,17 @@ public class DashboardController {
         model.addAttribute("birthdays", customerService.getUpcomingBirthdays(today.getMonthValue(), today.getDayOfMonth()));
         return "dashboard/birthdays";
     }
+
+    @GetMapping("/finished-cards")
+    public String finishedCards(Model model) {
+        model.addAttribute("transactions", transactionService.getFinishedCardsThisMonth());
+        return "dashboard/finished-cards";
+    }
+
+    @GetMapping("/sales")
+    public String sales(Model model) {
+        model.addAttribute("transactions", transactionService.getSalesThisMonth());
+        return "dashboard/sales";
+    }
+
 }

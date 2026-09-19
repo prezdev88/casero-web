@@ -6,27 +6,68 @@
 <div class="container">
     <div th:replace="~{fragments/messages :: messages}"></div>
 
+    <style>
+        @media (max-width: 768px) {
+            table, thead, tbody, th, td, tr {
+                display: block;
+            }
+            thead tr {
+                position: absolute;
+                top: -9999px;
+                left: -9999px;
+            }
+            tr {
+                border: 1px solid var(--border-color, #dee2e6);
+                border-radius: 8px;
+                margin-bottom: 1rem;
+                padding: 0.5rem;
+            }
+            tr:last-child {
+                margin-bottom: 0;
+            }
+            td {
+                border: none !important;
+                padding: 0.5rem 0 !important;
+                text-align: right !important;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                border-bottom: 1px solid var(--border-color, #dee2e6) !important;
+            }
+            td:last-child {
+                border-bottom: none !important;
+            }
+            td::before {
+                content: attr(data-label);
+                font-weight: bold;
+                text-align: left;
+                padding-right: 1rem;
+                color: var(--text-color);
+            }
+        }
+    </style>
+
     <div class="header-actions" style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; margin-bottom: 1rem;">
         <h2 style="margin: 0;">🎂 Próximos Cumpleaños del Mes</h2>
         <a th:href="@{/dashboard}" class="btn" style="background: var(--secondary-bg, #6c757d); color: white; padding: 0.5rem 1rem; border-radius: 4px; text-decoration: none;">Volver</a>
     </div>
 
-    <div class="card table-responsive" style="margin-top: 1rem;">
+    <div class="card" style="margin-top: 1rem; border: none; box-shadow: none; background: transparent; padding: 0;">
         <table style="width: 100%; border-collapse: collapse; text-align: left;">
             <thead>
                 <tr style="border-bottom: 2px solid var(--border-color, #dee2e6);">
                     <th style="padding: 0.75rem;">Nombre</th>
                     <th style="padding: 0.75rem;">Cumpleaños</th>
                     <th style="padding: 0.75rem; text-align: right;">Deuda Actual</th>
-                    <th style="padding: 0.75rem;">Último Abono</th>
+                    <th style="padding: 0.75rem; text-align: right;">Último Abono</th>
                 </tr>
             </thead>
             <tbody>
-                <tr th:each="b : ${birthdays}" style="border-bottom: 1px solid var(--border-color, #dee2e6);">
-                    <td style="padding: 0.75rem;" th:text="${b.name}">Nombre</td>
-                    <td style="padding: 0.75rem;" th:text="${b.formattedBirthDate}">Fecha</td>
-                    <td style="padding: 0.75rem; text-align: right; color: var(--danger-color, #dc3545);" th:text="${T(cl.casero.migration.util.CurrencyUtil).format(b.debt)}">$0</td>
-                    <td style="padding: 0.75rem;" th:text="${b.lastPaymentDate != null ? #temporals.format(b.lastPaymentDate, 'dd MMM yyyy') : 'Sin abonos'}">Fecha</td>
+                <tr th:each="b : ${birthdays}" style="border-bottom: 1px solid var(--border-color, #dee2e6); background: var(--card-bg, #fff);">
+                    <td data-label="Nombre" style="padding: 0.75rem;" th:text="${b.name}">Nombre</td>
+                    <td data-label="Cumpleaños" style="padding: 0.75rem;" th:text="${b.formattedBirthDate}">Fecha</td>
+                    <td data-label="Deuda Actual" style="padding: 0.75rem; text-align: right; color: var(--danger-color, #dc3545); font-weight: bold;" th:text="${T(cl.casero.migration.util.CurrencyUtil).format(b.debt)}">$0</td>
+                    <td data-label="Último Abono" style="padding: 0.75rem; text-align: right;" th:text="${b.lastPaymentDate != null ? #temporals.format(b.lastPaymentDate, 'dd MMM yyyy') : 'Sin abonos'}">Fecha</td>
                 </tr>
                 <tr th:if="${#lists.isEmpty(birthdays)}">
                     <td colspan="4" style="padding: 1.5rem; text-align: center; color: var(--text-muted, #6c757d);">No hay más cumpleaños registrados para este mes.</td>

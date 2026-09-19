@@ -46,6 +46,6 @@ test.describe('Dashboard View', () => {
     await page.waitForURL('**/dashboard/birthdays');
     
     // Verify it reached the birthdays view by looking for its specific UI elements or title
-    await expect(page.locator('a.btn', { hasText: 'Volver' })).toBeVisible();
+    await expect(page.locator('h2', { hasText: 'Próximos Cumpleaños del Mes' })).toBeVisible();
   });
 });

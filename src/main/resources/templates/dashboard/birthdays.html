@@ -18,38 +18,39 @@
             }
             tr {
                 border: 1px solid var(--border-color, #dee2e6);
-                border-radius: 8px;
-                margin-bottom: 1rem;
-                padding: 0.5rem;
+                border-radius: 12px;
+                margin-bottom: 1.5rem;
+                padding: 1rem;
+                box-shadow: 0 4px 10px rgba(0,0,0,0.15);
             }
             tr:last-child {
                 margin-bottom: 0;
             }
             td {
                 border: none !important;
-                padding: 0.5rem 0 !important;
+                padding: 0.75rem 0 !important;
                 text-align: right !important;
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
                 border-bottom: 1px solid var(--border-color, #dee2e6) !important;
+                font-size: 0.95rem;
             }
             td:last-child {
                 border-bottom: none !important;
             }
             td::before {
                 content: attr(data-label);
-                font-weight: bold;
+                font-weight: 600;
                 text-align: left;
                 padding-right: 1rem;
-                color: var(--text-color);
+                color: var(--text-muted, #6c757d);
             }
         }
     </style>
 
-    <div class="header-actions" style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; margin-bottom: 1rem;">
-        <h2 style="margin: 0;">🎂 Próximos Cumpleaños del Mes</h2>
-        <a th:href="@{/dashboard}" class="btn" style="background: var(--secondary-bg, #6c757d); color: white; padding: 0.5rem 1rem; border-radius: 4px; text-decoration: none;">Volver</a>
+    <div class="header-actions" style="margin-top: 1.5rem; margin-bottom: 1.5rem;">
+        <h2 style="margin: 0; font-size: 1.5rem;">🎂 Próximos Cumpleaños del Mes</h2>
     </div>
 
     <div class="card" style="margin-top: 1rem; border: none; box-shadow: none; background: transparent; padding: 0;">
@@ -65,7 +66,10 @@
             <tbody>
                 <tr th:each="b : ${birthdays}" style="border-bottom: 1px solid var(--border-color, #dee2e6); background: var(--card-bg, #fff);">
                     <td data-label="Nombre" style="padding: 0.75rem;" th:text="${b.name}">Nombre</td>
-                    <td data-label="Cumpleaños" style="padding: 0.75rem;" th:text="${b.formattedBirthDate}">Fecha</td>
+                    <td data-label="Cumpleaños" style="padding: 0.75rem;">
+                        <span th:text="${b.formattedBirthDate}"></span>
+                        <span th:if="${b.age != null}" style="font-weight: 900; color: #fff; background-color: var(--primary-color, #0d6efd); padding: 0.2rem 0.6rem; border-radius: 50px; font-size: 0.85rem; margin-left: 0.5rem; display: inline-block; box-shadow: 0 2px 4px rgba(13,110,253,0.3);" th:text="${b.age} + ' años'"></span>
+                    </td>
                     <td data-label="Deuda Actual" style="padding: 0.75rem; text-align: right; color: var(--danger-color, #dc3545); font-weight: bold;" th:text="${T(cl.casero.migration.util.CurrencyUtil).format(b.debt)}">$0</td>
                     <td data-label="Último Abono" style="padding: 0.75rem; text-align: right;" th:text="${b.lastPaymentDate != null ? #temporals.format(b.lastPaymentDate, 'dd MMM yyyy') : 'Sin abonos'}">Fecha</td>
                 </tr>

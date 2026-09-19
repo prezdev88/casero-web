@@ -10,7 +10,9 @@
         <h2>📊 Dashboard</h2>
     </div>
 
-    <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-top: 1rem;">
+    <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-top: 1rem;">
+        
+        <!-- Tarjeta: Cumpleaños -->
         <div class="stat-card" style="background: var(--card-bg, #fff); padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center; cursor: pointer; transition: transform 0.2s;"
              th:onclick="|window.location.href='@{/dashboard/birthdays}'|">
             <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🎂</div>
@@ -18,6 +20,8 @@
             <p style="font-size: 2rem; font-weight: bold; margin: 0.5rem 0; color: var(--primary-color, #007bff);" th:text="${upcomingBirthdaysCount}">0</p>
             <span style="font-size: 0.9rem; color: var(--text-muted, #6c757d);">próximos este mes</span>
         </div>
+
+        <!-- Tarjeta: Deuda Total -->
         <div class="stat-card" style="background: var(--card-bg, #fff); padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center; cursor: pointer; transition: transform 0.2s;"
              th:onclick="|window.location.href='@{/statistics}'|">
             <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">💰</div>
@@ -25,6 +29,39 @@
             <p style="font-size: 2rem; font-weight: bold; margin: 0.5rem 0; color: var(--danger-color, #dc3545);" th:text="${T(cl.casero.migration.util.CurrencyUtil).format(totalDebt)}">$0</p>
             <span style="font-size: 0.9rem; color: var(--text-muted, #6c757d);">en la calle (por cobrar)</span>
         </div>
+
+        <!-- Tarjeta: Clientes Morosos -->
+        <div class="stat-card" style="background: var(--card-bg, #fff); padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center; cursor: pointer; transition: transform 0.2s;"
+             th:onclick="|window.location.href='@{/debtors}'|">
+            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">⚠️</div>
+            <h3 style="margin: 0; color: var(--text-color);">Morosos</h3>
+            <p style="font-size: 2rem; font-weight: bold; margin: 0.5rem 0; color: var(--warning-color, #ffc107);" th:text="${overdueCustomersCount}">0</p>
+            <span style="font-size: 0.9rem; color: var(--text-muted, #6c757d);">clientes en riesgo</span>
+        </div>
+
+        <!-- Tarjeta: Clientes Activos -->
+        <div class="stat-card" style="background: var(--card-bg, #fff); padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center; cursor: pointer; transition: transform 0.2s;"
+             th:onclick="|window.location.href='@{/customers}'|">
+            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📇</div>
+            <h3 style="margin: 0; color: var(--text-color);">Clientes Activos</h3>
+            <p style="font-size: 2rem; font-weight: bold; margin: 0.5rem 0; color: var(--success-color, #28a745);" th:text="${activeCustomersCount}">0</p>
+            <span style="font-size: 0.9rem; color: var(--text-muted, #6c757d);">registrados</span>
+        </div>
+
+        <!-- Tarjeta: Recaudación vs Ventas -->
+        <div class="stat-card" style="background: var(--card-bg, #fff); padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center; cursor: pointer; transition: transform 0.2s; grid-column: 1 / -1; display: flex; justify-content: space-around; align-items: center;"
+             th:onclick="|window.location.href='@{/statistics/monthly}'|">
+            <div>
+                <h3 style="margin: 0; color: var(--text-color); font-size: 1.1rem;">📈 Vendido este mes</h3>
+                <p style="font-size: 1.8rem; font-weight: bold; margin: 0.5rem 0; color: var(--danger-color, #dc3545);" th:text="${T(cl.casero.migration.util.CurrencyUtil).format(salesAmount)}">$0</p>
+            </div>
+            <div style="font-size: 2.5rem; opacity: 0.5;">⚖️</div>
+            <div>
+                <h3 style="margin: 0; color: var(--text-color); font-size: 1.1rem;">💵 Cobrado este mes</h3>
+                <p style="font-size: 1.8rem; font-weight: bold; margin: 0.5rem 0; color: var(--success-color, #28a745);" th:text="${T(cl.casero.migration.util.CurrencyUtil).format(paymentsAmount)}">$0</p>
+            </div>
+        </div>
+
     </div>
 </div>
 </body>

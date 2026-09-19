@@ -6,17 +6,21 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
 
 import cl.casero.migration.service.dto.CustomerBirthdayDTO;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.repository.query.Param;
 public interface CustomerRepository extends JpaRepository<Customer, Long> {
 
+    @EntityGraph(attributePaths = {"sector"})
     Optional<Customer> findByIdAndEnabledTrue(Long id);
 
+    @EntityGraph(attributePaths = {"sector"})
     List<Customer> findAllByEnabledTrue();
 
     @Query(value = """
@@ -40,10 +44,13 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
                 OR translate(lower(s.name), 'áéíóúñ', 'aeioun') LIKE translate(lower(concat('%', :filter, '%')), 'áéíóúñ', 'aeioun')
               )
             """)
+    @EntityGraph(attributePaths = {"sector"})
     Page<Customer> search(@Param("filter") String filter, Pageable pageable);
 
+    @EntityGraph(attributePaths = {"sector"})
     Page<Customer> findAllByEnabledTrueOrderByDebtDesc(Pageable pageable);
 
+    @EntityGraph(attributePaths = {"sector"})
     Page<Customer> findAllByEnabledTrueOrderByDebtAsc(Pageable pageable);
 
     long countByEnabledTrue();

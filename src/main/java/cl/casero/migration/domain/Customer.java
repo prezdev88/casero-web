@@ -27,7 +27,7 @@ public class Customer {
     @Column(nullable = false)
     private String name;
 
-    @ManyToOne(optional = false)
+    @ManyToOne(fetch = jakarta.persistence.FetchType.LAZY, optional = false)
     @JoinColumn(name = "sector_id")
     private Sector sector;
 

@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
@@ -19,6 +20,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             WHERE c.id = :customerId
               AND c.enabled = true
             """)
+    @EntityGraph(attributePaths = {"customer", "customer.sector"})
     Page<Transaction> findVisibleByCustomerId(@Param("customerId") Long customerId, Pageable pageable);
 
     @Query("""
@@ -29,6 +31,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
               AND c.enabled = true
             ORDER BY t.date DESC, t.id DESC
             """)
+    @EntityGraph(attributePaths = {"customer", "customer.sector"})
     List<Transaction> findVisibleByCustomerIdOrderByDateDescIdDesc(@Param("customerId") Long customerId);
 
     @Query("""
@@ -39,6 +42,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
               AND c.enabled = true
             ORDER BY t.createdAt DESC, t.id DESC
             """)
+    @EntityGraph(attributePaths = {"customer", "customer.sector"})
     Page<Transaction> findLatestVisibleByCustomerId(@Param("customerId") Long customerId, Pageable pageable);
 
     @Query("""
@@ -47,6 +51,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             JOIN t.customer c
             WHERE c.enabled = true
             """)
+    @EntityGraph(attributePaths = {"customer", "customer.sector"})
     Page<Transaction> findAllVisible(Pageable pageable);
 
     @Query("""
@@ -56,6 +61,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             WHERE c.enabled = true
               AND t.type = :type
             """)
+    @EntityGraph(attributePaths = {"customer", "customer.sector"})
     Page<Transaction> findVisibleByType(@Param("type") TransactionType type, Pageable pageable);
 
     @Query("""
@@ -87,6 +93,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             WHERE c.enabled = true
               AND t.date BETWEEN :start AND :end
             """)
+    @EntityGraph(attributePaths = {"customer", "customer.sector"})
     List<Transaction> findVisibleByDateBetween(@Param("start") LocalDate start, @Param("end") LocalDate end);
 
     @Query(value = """

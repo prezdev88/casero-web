@@ -19,6 +19,6 @@ test.describe('Finished Cards View', () => {
     await expect(page.locator('h2', { hasText: '🎉 Cuentas Saldadas Este Mes' })).toBeVisible();
     
     // 4. Verify back button exists
-    await expect(page.locator('a.btn', { hasText: 'Volver al Dashboard' })).toBeVisible();
+    await expect(page.locator('a.btn', { hasText: 'Volver a Datos importantes' })).toBeVisible();
   });
 });

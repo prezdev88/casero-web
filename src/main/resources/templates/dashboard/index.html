@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: head('Dashboard - Casero Web')}"></head>
+<head th:replace="~{fragments/head :: head('Datos importantes - Casero Web')}"></head>
 <body>
 <div th:replace="~{fragments/navbar :: navbar}"></div>
 <div class="container">
@@ -26,11 +26,43 @@
     </style>
 
     <div class="header-actions" style="margin-top: 1rem; margin-bottom: 1rem;">
-        <h2>📊 Dashboard</h2>
+        <h2>📊 Datos importantes</h2>
     </div>
 
     <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-top: 1rem;">
         
+        <!-- Tarjeta: Recaudación vs Ventas -->
+        <div style="background: var(--card-bg, #fff); padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center; cursor: pointer; transition: transform 0.2s; grid-column: 1 / -1; " class="stat-card balance-card"
+             th:onclick="|window.location.href='@{/statistics/monthly}'|">
+            <div>
+                <h3 style="margin: 0; color: var(--text-color); font-size: 1.1rem;">📈 Vendido este mes</h3>
+                <p style="font-size: 1.8rem; font-weight: bold; margin: 0.5rem 0; color: var(--danger-color, #dc3545);" th:text="${T(cl.casero.migration.util.CurrencyUtil).format(salesAmount)}">$0</p>
+                <div style="font-size: 0.9rem; font-weight: bold; margin-top: -0.25rem;">
+                    <span th:if="${salesAmount >= lastMonthSales}" style="color: var(--success-color, #28a745);">
+                        ↑ +<span th:text="${T(cl.casero.migration.util.CurrencyUtil).format(salesAmount - lastMonthSales)}"></span>
+                    </span>
+                    <span th:if="${salesAmount < lastMonthSales}" style="color: var(--danger-color, #dc3545);">
+                        ↓ -<span th:text="${T(cl.casero.migration.util.CurrencyUtil).format(lastMonthSales - salesAmount)}"></span>
+                    </span>
+                    <span style="color: var(--text-muted, #6c757d); font-weight: normal; margin-left: 0.25rem;" title="Comparado con el mismo día del mes anterior">vs. misma fecha mes ant.</span>
+                </div>
+            </div>
+            <div style="font-size: 2.5rem; opacity: 0.5;">⚖️</div>
+            <div>
+                <h3 style="margin: 0; color: var(--text-color); font-size: 1.1rem;">💵 Cobrado este mes</h3>
+                <p style="font-size: 1.8rem; font-weight: bold; margin: 0.5rem 0; color: var(--success-color, #28a745);" th:text="${T(cl.casero.migration.util.CurrencyUtil).format(paymentsAmount)}">$0</p>
+                <div style="font-size: 0.9rem; font-weight: bold; margin-top: -0.25rem;">
+                    <span th:if="${paymentsAmount >= lastMonthPayments}" style="color: var(--success-color, #28a745);">
+                        ↑ +<span th:text="${T(cl.casero.migration.util.CurrencyUtil).format(paymentsAmount - lastMonthPayments)}"></span>
+                    </span>
+                    <span th:if="${paymentsAmount < lastMonthPayments}" style="color: var(--danger-color, #dc3545);">
+                        ↓ -<span th:text="${T(cl.casero.migration.util.CurrencyUtil).format(lastMonthPayments - paymentsAmount)}"></span>
+                    </span>
+                    <span style="color: var(--text-muted, #6c757d); font-weight: normal; margin-left: 0.25rem;" title="Comparado con el mismo día del mes anterior">vs. misma fecha mes ant.</span>
+                </div>
+            </div>
+        </div>
+
         <!-- Tarjeta: Cumpleaños -->
         <div style="background: var(--card-bg, #fff); padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center; cursor: pointer; transition: transform 0.2s;"
              th:onclick="|window.location.href='@{/dashboard/birthdays}'|">
@@ -109,37 +141,7 @@
             <span style="font-size: 0.9rem; color: var(--text-muted, #6c757d);">entregadas este mes</span>
         </div>
 
-        <!-- Tarjeta: Recaudación vs Ventas -->
-        <div style="background: var(--card-bg, #fff); padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center; cursor: pointer; transition: transform 0.2s; grid-column: 1 / -1; " class="stat-card balance-card"
-             th:onclick="|window.location.href='@{/statistics/monthly}'|">
-            <div>
-                <h3 style="margin: 0; color: var(--text-color); font-size: 1.1rem;">📈 Vendido este mes</h3>
-                <p style="font-size: 1.8rem; font-weight: bold; margin: 0.5rem 0; color: var(--danger-color, #dc3545);" th:text="${T(cl.casero.migration.util.CurrencyUtil).format(salesAmount)}">$0</p>
-                <div style="font-size: 0.9rem; font-weight: bold; margin-top: -0.25rem;">
-                    <span th:if="${salesAmount >= lastMonthSales}" style="color: var(--success-color, #28a745);">
-                        ↑ +<span th:text="${T(cl.casero.migration.util.CurrencyUtil).format(salesAmount - lastMonthSales)}"></span>
-                    </span>
-                    <span th:if="${salesAmount < lastMonthSales}" style="color: var(--danger-color, #dc3545);">
-                        ↓ -<span th:text="${T(cl.casero.migration.util.CurrencyUtil).format(lastMonthSales - salesAmount)}"></span>
-                    </span>
-                    <span style="color: var(--text-muted, #6c757d); font-weight: normal; margin-left: 0.25rem;" title="Comparado con el mismo día del mes anterior">vs. misma fecha mes ant.</span>
-                </div>
-            </div>
-            <div style="font-size: 2.5rem; opacity: 0.5;">⚖️</div>
-            <div>
-                <h3 style="margin: 0; color: var(--text-color); font-size: 1.1rem;">💵 Cobrado este mes</h3>
-                <p style="font-size: 1.8rem; font-weight: bold; margin: 0.5rem 0; color: var(--success-color, #28a745);" th:text="${T(cl.casero.migration.util.CurrencyUtil).format(paymentsAmount)}">$0</p>
-                <div style="font-size: 0.9rem; font-weight: bold; margin-top: -0.25rem;">
-                    <span th:if="${paymentsAmount >= lastMonthPayments}" style="color: var(--success-color, #28a745);">
-                        ↑ +<span th:text="${T(cl.casero.migration.util.CurrencyUtil).format(paymentsAmount - lastMonthPayments)}"></span>
-                    </span>
-                    <span th:if="${paymentsAmount < lastMonthPayments}" style="color: var(--danger-color, #dc3545);">
-                        ↓ -<span th:text="${T(cl.casero.migration.util.CurrencyUtil).format(lastMonthPayments - paymentsAmount)}"></span>
-                    </span>
-                    <span style="color: var(--text-muted, #6c757d); font-weight: normal; margin-left: 0.25rem;" title="Comparado con el mismo día del mes anterior">vs. misma fecha mes ant.</span>
-                </div>
-            </div>
-        </div>
+
 
     </div>
 

@@ -15,7 +15,7 @@ test.describe('Dashboard View', () => {
     await page.waitForURL('**/dashboard');
 
     // 3. Verify the main header
-    await expect(page.locator('h2', { hasText: '📊 Dashboard' })).toBeVisible();
+    await expect(page.locator('h2', { hasText: '📊 Datos importantes' })).toBeVisible();
 
     // 4. Verify stat cards are visible by their headings
     await expect(page.locator('h3', { hasText: 'Cumpleaños' })).toBeVisible();

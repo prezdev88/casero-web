@@ -18,6 +18,13 @@
             <p style="font-size: 2rem; font-weight: bold; margin: 0.5rem 0; color: var(--primary-color, #007bff);" th:text="${upcomingBirthdaysCount}">0</p>
             <span style="font-size: 0.9rem; color: var(--text-muted, #6c757d);">próximos este mes</span>
         </div>
+        <div class="stat-card" style="background: var(--card-bg, #fff); padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center; cursor: pointer; transition: transform 0.2s;"
+             th:onclick="|window.location.href='@{/statistics}'|">
+            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">💰</div>
+            <h3 style="margin: 0; color: var(--text-color);">Deuda Total</h3>
+            <p style="font-size: 2rem; font-weight: bold; margin: 0.5rem 0; color: var(--danger-color, #dc3545);" th:text="${T(cl.casero.migration.util.CurrencyUtil).format(totalDebt)}">$0</p>
+            <span style="font-size: 0.9rem; color: var(--text-muted, #6c757d);">en la calle (por cobrar)</span>
+        </div>
     </div>
 </div>
 </body>

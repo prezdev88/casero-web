@@ -1,4 +1,5 @@
 package cl.casero.migration.service;
+import java.util.List;
 
 import cl.casero.migration.domain.Customer;
 import cl.casero.migration.service.dto.CreateCustomerForm;
@@ -8,6 +9,7 @@ import cl.casero.migration.repository.CustomerRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import cl.casero.migration.service.dto.CustomerBirthdayDTO;
 public interface CustomerService {
     Page<Customer> search(String filter, Pageable pageable);
 
@@ -34,4 +36,6 @@ public interface CustomerService {
     long count();
 
     Page<CustomerRepository.SectorCountView> getCustomersCountBySector(Pageable pageable);
+    long getUpcomingBirthdaysThisMonthCount(int month, int day);
+    List<CustomerBirthdayDTO> getUpcomingBirthdays(int month, int day);
 }

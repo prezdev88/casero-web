@@ -8,6 +8,8 @@ import cl.casero.migration.service.CustomerService;
 import cl.casero.migration.service.dto.CreateCustomerForm;
 import cl.casero.migration.service.dto.OverdueCustomerSummary;
 import lombok.AllArgsConstructor;
+import cl.casero.migration.service.dto.CustomerBirthdayDTO;
+import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -16,6 +18,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional
+
+
 @AllArgsConstructor
 public class CustomerServiceImpl implements CustomerService {
 
@@ -119,5 +123,14 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public Page<CustomerRepository.SectorCountView> getCustomersCountBySector(Pageable pageable) {
         return customerRepository.countBySector(pageable);
+    }
+    @Override
+    public long getUpcomingBirthdaysThisMonthCount(int month, int day) {
+        return customerRepository.countUpcomingBirthdaysThisMonth(month, day);
+    }
+
+    @Override
+    public List<CustomerBirthdayDTO> getUpcomingBirthdays(int month, int day) {
+        return customerRepository.findUpcomingBirthdaysThisMonth(month, day);
     }
 }

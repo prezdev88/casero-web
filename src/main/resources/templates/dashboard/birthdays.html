@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('Cumpleaños - Casero Web')}"></head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+<div class="container">
+    <div th:replace="~{fragments/messages :: messages}"></div>
+
+    <div class="header-actions" style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; margin-bottom: 1rem;">
+        <h2 style="margin: 0;">🎂 Próximos Cumpleaños del Mes</h2>
+        <a th:href="@{/dashboard}" class="btn" style="background: var(--secondary-bg, #6c757d); color: white; padding: 0.5rem 1rem; border-radius: 4px; text-decoration: none;">Volver</a>
+    </div>
+
+    <div class="card table-responsive" style="margin-top: 1rem;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+            <thead>
+                <tr style="border-bottom: 2px solid var(--border-color, #dee2e6);">
+                    <th style="padding: 0.75rem;">Nombre</th>
+                    <th style="padding: 0.75rem;">Cumpleaños</th>
+                    <th style="padding: 0.75rem; text-align: right;">Deuda Actual</th>
+                    <th style="padding: 0.75rem;">Último Abono</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="b : ${birthdays}" style="border-bottom: 1px solid var(--border-color, #dee2e6);">
+                    <td style="padding: 0.75rem;" th:text="${b.name}">Nombre</td>
+                    <td style="padding: 0.75rem;" th:text="${b.formattedBirthDate}">Fecha</td>
+                    <td style="padding: 0.75rem; text-align: right; color: var(--danger-color, #dc3545);" th:text="${T(cl.casero.migration.util.CurrencyUtil).format(b.debt)}">$0</td>
+                    <td style="padding: 0.75rem;" th:text="${b.lastPaymentDate != null ? #temporals.format(b.lastPaymentDate, 'dd MMM yyyy') : 'Sin abonos'}">Fecha</td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(birthdays)}">
+                    <td colspan="4" style="padding: 1.5rem; text-align: center; color: var(--text-muted, #6c757d);">No hay más cumpleaños registrados para este mes.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+</body>
+</html>

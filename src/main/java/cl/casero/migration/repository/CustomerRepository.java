@@ -1,4 +1,5 @@
 package cl.casero.migration.repository;
+import java.util.List;
 
 import cl.casero.migration.domain.Customer;
 import org.springframework.data.domain.Page;
@@ -7,9 +8,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.util.List;
 import java.util.Optional;
 
+import cl.casero.migration.service.dto.CustomerBirthdayDTO;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 public interface CustomerRepository extends JpaRepository<Customer, Long> {
 
     Optional<Customer> findByIdAndEnabledTrue(Long id);
@@ -142,4 +145,12 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
         String getLast_payment();
         Integer getMonths_overdue();
     }
+    @Query("SELECT COUNT(c) FROM Customer c WHERE c.enabled = true AND c.birthMonth = :month AND c.birthDay >= :day")
+    long countUpcomingBirthdaysThisMonth(@Param("month") int month, @Param("day") int day);
+
+    @Query("SELECT new cl.casero.migration.service.dto.CustomerBirthdayDTO(c.name, c.birthDay, c.birthMonth, c.debt, " +
+           "(SELECT MAX(t.date) FROM Transaction t WHERE t.customer.id = c.id AND t.type = 'PAYMENT')) " +
+           "FROM Customer c WHERE c.enabled = true AND c.birthMonth = :month AND c.birthDay >= :day " +
+           "ORDER BY c.birthDay ASC")
+    List<CustomerBirthdayDTO> findUpcomingBirthdaysThisMonth(@Param("month") int month, @Param("day") int day);
 }

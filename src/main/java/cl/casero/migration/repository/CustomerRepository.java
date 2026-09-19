@@ -144,6 +144,27 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
             nativeQuery = true)
     Page<OverdueCustomerView> findOverdueCustomers(Pageable pageable, @Param("months") int months);
 
+    @Query(value = """
+            WITH last_payments AS (
+                SELECT
+                    c.id,
+                    c.debt,
+                    MAX(t.date) AS last_payment_date
+                FROM customer c
+                LEFT JOIN transaction t
+                    ON t.customer_id = c.id
+                   AND t.type = 'PAYMENT'
+                WHERE c.enabled = true AND c.debt > 0
+                GROUP BY c.id, c.debt
+            )
+            SELECT COALESCE(SUM(lp.debt), 0)
+            FROM last_payments lp
+            WHERE lp.last_payment_date IS NULL
+               OR lp.last_payment_date < CURRENT_DATE - (:months * INTERVAL '1 month')
+            """,
+            nativeQuery = true)
+    long sumOverdueDebt(@Param("months") int months);
+
     interface OverdueCustomerView {
         Long getId();
         String getName();

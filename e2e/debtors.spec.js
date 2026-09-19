@@ -18,4 +18,16 @@ test.describe('Debtors View', () => {
     // 3. Verify the main header
     await expect(page.locator('h2', { hasText: 'Morosos' })).toBeVisible();
   });
+
+  test('should navigate to debtors from Capital en Riesgo card', async ({ page }) => {
+    await page.goto(`${BASE_URL}/login`);
+    await page.getByTestId('login-pin').fill(ADMIN_PIN);
+    await page.waitForURL('**/customers');
+
+    await page.goto(`${BASE_URL}/dashboard`);
+    await page.locator('h3', { hasText: 'Capital en Riesgo' }).click();
+    await page.waitForURL('**/debtors');
+    
+    await expect(page.locator('h2', { hasText: 'Morosos' })).toBeVisible();
+  });
 });

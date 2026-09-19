@@ -254,4 +254,23 @@ public class TransactionServiceImpl implements TransactionService {
         return transactionRepository.findSalesThisMonth(start, end);
     }
 
+    @Override
+    public List<cl.casero.migration.repository.TransactionRepository.TopCustomerProjection> getTopCustomersThisMonth() {
+        LocalDate today = LocalDate.now();
+        LocalDate start = today.withDayOfMonth(1);
+        LocalDate end = today.withDayOfMonth(today.lengthOfMonth());
+        return transactionRepository.findTopCustomers(start, end);
+    }
+    @Override
+    public long getSalesSum(LocalDate start, LocalDate end) {
+        Integer sum = transactionRepository.sumByTypeAndDateRange(TransactionType.SALE, start, end);
+        return sum != null ? sum : 0;
+    }
+
+    @Override
+    public long getPaymentsSum(LocalDate start, LocalDate end) {
+        Integer sum = transactionRepository.sumByTypeAndDateRange(TransactionType.PAYMENT, start, end);
+        return sum != null ? sum : 0;
+    }
+
 }

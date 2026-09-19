@@ -33,6 +33,8 @@ public interface CustomerService {
 
     Page<OverdueCustomerSummary> getOverdueCustomers(Pageable pageable, int months);
 
+    long getOverdueDebt(int months);
+
     long count();
 
     Page<CustomerRepository.SectorCountView> getCustomersCountBySector(Pageable pageable);

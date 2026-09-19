@@ -55,8 +55,22 @@
             <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">⚠️</div>
             <h3 style="margin: 0; color: var(--text-color);">Morosos</h3>
             <p style="font-size: 2rem; font-weight: bold; margin: 0.5rem 0; color: var(--warning-color, #ffc107);" th:text="${overdueCustomersCount}">0</p>
-            <span style="font-size: 0.9rem; color: var(--text-muted, #6c757d);">clientes en riesgo</span>
+            <span style="font-size: 0.85rem; color: var(--text-muted, #6c757d); line-height: 1.2; display: inline-block;">
+                tienen deuda y llevan<br>+1 mes sin hacer abonos
+            </span>
         </div>
+
+        <!-- Tarjeta: Capital en Riesgo -->
+        <div style="background: var(--card-bg, #fff); padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center; cursor: pointer; transition: transform 0.2s;"
+             th:onclick="|window.location.href='@{/debtors}'|">
+            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🚨</div>
+            <h3 style="margin: 0; color: var(--text-color);">Capital en Riesgo</h3>
+            <p style="font-size: 2rem; font-weight: bold; margin: 0.5rem 0; color: var(--danger-color, #dc3545);" th:text="${T(cl.casero.migration.util.CurrencyUtil).format(overdueDebt)}">$0</p>
+            <span style="font-size: 0.85rem; color: var(--text-muted, #6c757d); line-height: 1.2; display: inline-block;">
+                suma del dinero que deben<br>los clientes morosos
+            </span>
+        </div>
+
 
         <!-- Tarjeta: Clientes Activos -->
         <div style="background: var(--card-bg, #fff); padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center; cursor: pointer; transition: transform 0.2s;"
@@ -101,16 +115,52 @@
             <div>
                 <h3 style="margin: 0; color: var(--text-color); font-size: 1.1rem;">📈 Vendido este mes</h3>
                 <p style="font-size: 1.8rem; font-weight: bold; margin: 0.5rem 0; color: var(--danger-color, #dc3545);" th:text="${T(cl.casero.migration.util.CurrencyUtil).format(salesAmount)}">$0</p>
+                <div style="font-size: 0.9rem; font-weight: bold; margin-top: -0.25rem;">
+                    <span th:if="${salesAmount >= lastMonthSales}" style="color: var(--success-color, #28a745);">
+                        ↑ +<span th:text="${T(cl.casero.migration.util.CurrencyUtil).format(salesAmount - lastMonthSales)}"></span>
+                    </span>
+                    <span th:if="${salesAmount < lastMonthSales}" style="color: var(--danger-color, #dc3545);">
+                        ↓ -<span th:text="${T(cl.casero.migration.util.CurrencyUtil).format(lastMonthSales - salesAmount)}"></span>
+                    </span>
+                    <span style="color: var(--text-muted, #6c757d); font-weight: normal; margin-left: 0.25rem;" title="Comparado con el mismo día del mes anterior">vs. misma fecha mes ant.</span>
+                </div>
             </div>
             <div style="font-size: 2.5rem; opacity: 0.5;">⚖️</div>
             <div>
                 <h3 style="margin: 0; color: var(--text-color); font-size: 1.1rem;">💵 Cobrado este mes</h3>
                 <p style="font-size: 1.8rem; font-weight: bold; margin: 0.5rem 0; color: var(--success-color, #28a745);" th:text="${T(cl.casero.migration.util.CurrencyUtil).format(paymentsAmount)}">$0</p>
+                <div style="font-size: 0.9rem; font-weight: bold; margin-top: -0.25rem;">
+                    <span th:if="${paymentsAmount >= lastMonthPayments}" style="color: var(--success-color, #28a745);">
+                        ↑ +<span th:text="${T(cl.casero.migration.util.CurrencyUtil).format(paymentsAmount - lastMonthPayments)}"></span>
+                    </span>
+                    <span th:if="${paymentsAmount < lastMonthPayments}" style="color: var(--danger-color, #dc3545);">
+                        ↓ -<span th:text="${T(cl.casero.migration.util.CurrencyUtil).format(lastMonthPayments - paymentsAmount)}"></span>
+                    </span>
+                    <span style="color: var(--text-muted, #6c757d); font-weight: normal; margin-left: 0.25rem;" title="Comparado con el mismo día del mes anterior">vs. misma fecha mes ant.</span>
+                </div>
             </div>
         </div>
 
     </div>
 
+    <!-- Top Mejores Clientes del Mes -->
+    <div style="margin-top: 2rem; background: var(--card-bg, #fff); padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <h3 style="margin-top: 0; color: var(--text-color); margin-bottom: 1.5rem;">🏆 Mejores Pagadores (Top 3 del Mes)</h3>
+        <ul style="list-style: none; padding: 0; margin: 0;">
+            <li th:each="topCustomer, iterStat : ${topCustomers}" style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid var(--border-color, #dee2e6);">
+                <span>
+                    <span th:if="${iterStat.index == 0}">🥇</span>
+                    <span th:if="${iterStat.index == 1}">🥈</span>
+                    <span th:if="${iterStat.index == 2}">🥉</span>
+                    <span th:text="${topCustomer.customerName}" style="font-weight: bold; margin-left: 0.5rem;"></span>
+                </span>
+                <span style="color: var(--success-color, #28a745); font-weight: bold;" th:text="${T(cl.casero.migration.util.CurrencyUtil).format(topCustomer.totalPaid)}">$0</span>
+            </li>
+            <li th:if="${topCustomers.isEmpty()}" style="color: var(--text-muted, #6c757d); text-align: center; padding: 1rem 0;">
+                No hay abonos registrados este mes aún.
+            </li>
+        </ul>
+    </div>
     <!-- Gráfico Visual de los Últimos 6 Meses -->
     <div style="margin-top: 2rem; background: var(--card-bg, #fff); padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
         <h3 style="margin-top: 0; color: var(--text-color); margin-bottom: 1.5rem;">📊 Evolución: Vendido vs Cobrado (Último Semestre)</h3>

@@ -86,6 +86,26 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
                                   @Param("start") LocalDate start,
                                   @Param("end") LocalDate end);
 
+    interface TopCustomerProjection {
+        String getCustomerName();
+        Integer getTotalPaid();
+    }
+
+    @Query(value = """
+            SELECT 
+                c.name AS customerName, 
+                SUM(t.amount) AS totalPaid 
+            FROM transaction t
+            JOIN customer c ON t.customer_id = c.id
+            WHERE t.type = 'PAYMENT' 
+              AND c.enabled = true
+              AND t.date BETWEEN :start AND :end
+            GROUP BY c.id, c.name
+            ORDER BY totalPaid DESC
+            LIMIT 3
+            """, nativeQuery = true)
+    List<TopCustomerProjection> findTopCustomers(@Param("start") LocalDate start, @Param("end") LocalDate end);
+
     @Query("""
             SELECT t
             FROM Transaction t

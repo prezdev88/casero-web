@@ -38,5 +38,8 @@ public interface TransactionService {
 
     List<Transaction> getFinishedCardsThisMonth();
     List<Transaction> getSalesThisMonth();
+    List<cl.casero.migration.repository.TransactionRepository.TopCustomerProjection> getTopCustomersThisMonth();
+    long getSalesSum(LocalDate start, LocalDate end);
+    long getPaymentsSum(LocalDate start, LocalDate end);
 
 }

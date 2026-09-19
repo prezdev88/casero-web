@@ -21,6 +21,7 @@ test.describe('Dashboard View', () => {
     await expect(page.locator('h3', { hasText: 'Cumpleaños' })).toBeVisible();
     await expect(page.locator('h3', { hasText: 'Deuda Total' })).toBeVisible();
     await expect(page.locator('h3', { hasText: 'Morosos' })).toBeVisible();
+    await expect(page.locator('h3', { hasText: 'Capital en Riesgo' })).toBeVisible();
     await expect(page.locator('h3', { hasText: 'Clientes Activos' })).toBeVisible();
     await expect(page.locator('h3', { hasText: 'Deuda Promedio' })).toBeVisible();
     await expect(page.locator('h3', { hasText: 'Cuentas Saldadas' })).toBeVisible();
@@ -29,6 +30,12 @@ test.describe('Dashboard View', () => {
     // The balance card contains two headings
     await expect(page.locator('h3', { hasText: 'Vendido este mes' })).toBeVisible();
     await expect(page.locator('h3', { hasText: 'Cobrado este mes' })).toBeVisible();
+
+    // Verify the MTD text is present
+    await expect(page.locator('span', { hasText: 'vs. misma fecha mes ant.' }).first()).toBeVisible();
+
+    // Verify Top 3 Customers block is present
+    await expect(page.locator('h3', { hasText: 'Mejores Pagadores' })).toBeVisible();
 
     // 5. Verify the Chart canvas is present
     const chartCanvas = page.locator('canvas#salesChart');

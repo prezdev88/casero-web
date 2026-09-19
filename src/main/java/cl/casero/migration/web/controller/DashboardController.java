@@ -40,18 +40,33 @@ public class DashboardController {
         
         // 4. Overdue Customers (morosos) - defined as 1+ months overdue in the service layer
         long overdueCustomersCount = customerService.getOverdueCustomers(PageRequest.of(0, 1), 1).getTotalElements();
+        long overdueDebt = customerService.getOverdueDebt(1);
         
         // 5. Monthly Sales/Payments (Optimized)
         cl.casero.migration.domain.MonthlyStatistic stats = statisticsService.getMonthlyStatistic(today.getMonthValue(), today.getYear());
         long salesAmount = stats.getSalesCount(); // refers to sales sum
         long paymentsAmount = stats.getPaymentsCount(); // refers to payments sum
 
+        // Last month to compare (Month-To-Date)
+        LocalDate lastMonth = today.minusMonths(1);
+        LocalDate startOfLastMonth = lastMonth.withDayOfMonth(1);
+        
+        long lastMonthSales = transactionService.getSalesSum(startOfLastMonth, lastMonth);
+        long lastMonthPayments = transactionService.getPaymentsSum(startOfLastMonth, lastMonth);
+
+        // Top 3 customers
+        List<cl.casero.migration.repository.TransactionRepository.TopCustomerProjection> topCustomers = transactionService.getTopCustomersThisMonth();
+
         model.addAttribute("upcomingBirthdaysCount", upcomingBirthdaysCount);
         model.addAttribute("totalDebt", totalDebt);
         model.addAttribute("activeCustomersCount", activeCustomersCount);
         model.addAttribute("overdueCustomersCount", overdueCustomersCount);
+        model.addAttribute("overdueDebt", overdueDebt);
         model.addAttribute("salesAmount", salesAmount);
         model.addAttribute("paymentsAmount", paymentsAmount);
+        model.addAttribute("lastMonthSales", lastMonthSales);
+        model.addAttribute("lastMonthPayments", lastMonthPayments);
+        model.addAttribute("topCustomers", topCustomers);
         
         // Extra stats
         int averageDebt = statisticsService.getAverageDebt();

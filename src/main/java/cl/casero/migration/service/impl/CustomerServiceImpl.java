@@ -116,6 +116,11 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
+    public long getOverdueDebt(int months) {
+        int sanitizedMonths = Math.max(months, 1);
+        return customerRepository.sumOverdueDebt(sanitizedMonths);
+    }
+    @Override
     public long count() {
         return customerRepository.countByEnabledTrue();
     }

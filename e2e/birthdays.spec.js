@@ -43,7 +43,7 @@ test.describe('Birthdays Dashboard', () => {
     await page.waitForURL('**/dashboard');
 
     // 5. Verificar que el contador de cumpleaños sea distinto de 0 (porque acabamos de agregar uno para hoy)
-    const birthdayCard = page.locator('.stat-card').filter({ hasText: 'Cumpleaños' });
+    const birthdayCard = page.locator('h3:has-text("Cumpleaños")').locator('..');
     await expect(birthdayCard).toBeVisible();
     
     // Obtenemos el texto del número grande y validamos que no sea "0"

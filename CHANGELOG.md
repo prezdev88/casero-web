@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.24.1](https://github.com/prezdev88/casero-web/compare/v1.24.0...v1.24.1) (2026-09-19)
+
+
+### Bug Fixes
+
+* **dashboard:** update navigation and headers to reflect 'Datos importantes' ([55c4081](https://github.com/prezdev88/casero-web/commit/55c40816e7cd2fc72c6bfc65fba137d1e732c138))
+
 ## [1.24.0](https://github.com/prezdev88/casero-web/compare/v1.23.0...v1.24.0) (2026-09-19)
 
 

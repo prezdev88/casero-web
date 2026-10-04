@@ -28,15 +28,7 @@
                th:attr="data-customer-score=${score}"
                data-testid="customer-card">
                 <div class="customer-card__row">
-                    <span class="customer-card__name">
-                        <span th:text="${customer.name}">Nombre</span>
-                        <span th:if="${customer.isBirthdayOn(today)}"
-                              th:with="birthdayAge=${customer.getBirthdayAgeOn(today)}"
-                              class="customer-card__birthday">
-                            <span aria-hidden="true">🎂</span>
-                            <span th:text="${birthdayAge != null ? 'Hoy cumple ' + birthdayAge + (birthdayAge == 1 ? ' año' : ' años') : 'Hoy está de cumpleaños'}">Hoy está de cumpleaños</span>
-                        </span>
-                    </span>
+                    <span class="customer-card__name" th:text="${customer.name}">Nombre</span>
                     <span class="customer-score-chip"
                           th:classappend="${score != null ? ' score-chip--' + T(cl.casero.migration.util.CustomerScoreColor).bucket(score) : ''}">
                         <strong th:text="${score != null ? #numbers.formatDecimal(score, 1, 'DEFAULT', 2, 'DEFAULT') : '--'}"
@@ -44,6 +36,12 @@
                     </span>
                 </div>
                 <span class="customer-card__address" th:text="${customer.address}">Dirección</span>
+                <span th:if="${customer.isBirthdayOn(today)}"
+                      th:with="birthdayAge=${customer.getBirthdayAgeOn(today)}"
+                      class="customer-card__birthday">
+                    <span aria-hidden="true">🎂</span>
+                    <span th:text="${birthdayAge != null ? '(Hoy cumple ' + birthdayAge + (birthdayAge == 1 ? ' año)' : ' años)') : '(Hoy está de cumpleaños)'}">(Hoy está de cumpleaños)</span>
+                </span>
                 <span class="customer-card__debt customer-card__debt--red"
                       th:text="${formattedDebt}">$0</span>
             </a>
@@ -434,20 +432,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const name = document.createElement('span');
         name.className = 'customer-card__name';
         name.textContent = customer.name;
-        if (customer.birthdayToday) {
-            const birthday = document.createElement('span');
-            birthday.className = 'customer-card__birthday';
-            const birthdayIcon = document.createElement('span');
-            birthdayIcon.setAttribute('aria-hidden', 'true');
-            birthdayIcon.textContent = '🎂';
-            birthday.appendChild(birthdayIcon);
-            const birthdayMessage = typeof customer.birthdayAge === 'number'
-                ? `Hoy cumple ${customer.birthdayAge} ${customer.birthdayAge === 1 ? 'año' : 'años'}`
-                : 'Hoy está de cumpleaños';
-            birthday.appendChild(document.createTextNode(` ${birthdayMessage}`));
-            name.appendChild(document.createTextNode(' '));
-            name.appendChild(birthday);
-        }
         row.appendChild(name);
 
         const score = document.createElement('span');
@@ -467,6 +451,20 @@ document.addEventListener('DOMContentLoaded', () => {
         address.className = 'customer-card__address';
         address.textContent = customer.address || '';
         link.appendChild(address);
+
+        if (customer.birthdayToday) {
+            const birthday = document.createElement('span');
+            birthday.className = 'customer-card__birthday';
+            const birthdayIcon = document.createElement('span');
+            birthdayIcon.setAttribute('aria-hidden', 'true');
+            birthdayIcon.textContent = '🎂';
+            birthday.appendChild(birthdayIcon);
+            const birthdayMessage = typeof customer.birthdayAge === 'number'
+                ? `Hoy cumple ${customer.birthdayAge} ${customer.birthdayAge === 1 ? 'año' : 'años'}`
+                : 'Hoy está de cumpleaños';
+            birthday.appendChild(document.createTextNode(` (${birthdayMessage})`));
+            link.appendChild(birthday);
+        }
 
         const debt = document.createElement('span');
         debt.className = 'customer-card__debt customer-card__debt--red';

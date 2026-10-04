@@ -47,8 +47,9 @@ const scenarios = [
   },
 ];
 
-async function expectBirthdayNotice(card, expectedMessage) {
+async function expectBirthdayNotice(card, expectedMessage, customerName) {
   await expect(card).toBeVisible();
+  await expect(card.locator('.customer-card__name')).toHaveText(customerName);
   const notice = card.locator('.customer-card__birthday');
   if (expectedMessage === null) {
     await expect(notice).toHaveCount(0);
@@ -57,7 +58,12 @@ async function expectBirthdayNotice(card, expectedMessage) {
     return;
   }
   await expect(notice).toBeVisible();
-  await expect(notice).toHaveText(`🎂 ${expectedMessage}`);
+  await expect(notice).toHaveText(`🎂 (${expectedMessage})`);
+  const addressBounds = await card.locator('.customer-card__address').boundingBox();
+  const noticeBounds = await notice.boundingBox();
+  const debtBounds = await card.locator('.customer-card__debt').boundingBox();
+  expect(noticeBounds.y).toBeGreaterThanOrEqual(addressBounds.y + addressBounds.height);
+  expect(debtBounds.y).toBeGreaterThanOrEqual(noticeBounds.y + noticeBounds.height);
 }
 
 test.describe('Aviso de cumpleaños en la búsqueda de clientes', () => {
@@ -99,11 +105,12 @@ test.describe('Aviso de cumpleaños en la búsqueda de clientes', () => {
         await page.getByTestId('nav-customers').click();
         await page.waitForURL('**/customers');
         await page.getByTestId('customer-search-input').fill(customerName);
-        await expectBirthdayNotice(card, scenario.expectedMessage);
+        await expectBirthdayNotice(card, scenario.expectedMessage, customerName);
 
         // Check the server-rendered list when opening a search URL directly.
+        await page.setViewportSize({ width: 390, height: 844 });
         await page.goto(`${BASE_URL}/customers?q=${encodeURIComponent(customerName)}`);
-        await expectBirthdayNotice(card, scenario.expectedMessage);
+        await expectBirthdayNotice(card, scenario.expectedMessage, customerName);
       } finally {
         // Soft-delete only the customer created by this test.
         await page.goto(customerDetailUrl);

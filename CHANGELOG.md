@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.24.2](https://github.com/prezdev88/casero-web/compare/v1.24.1...v1.24.2) (2026-10-04)
+
+
+### Refactors
+
+* **birthdays:** update birthday logic to include all birthdays this month ([d359f1e](https://github.com/prezdev88/casero-web/commit/d359f1e1c9f8cea24c4e561ee06d26f92e9b05ee))
+
 ### [1.24.1](https://github.com/prezdev88/casero-web/compare/v1.24.0...v1.24.1) (2026-09-19)
 
 

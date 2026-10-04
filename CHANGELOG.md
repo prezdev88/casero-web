@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.25.0](https://github.com/prezdev88/casero-web/compare/v1.24.2...v1.25.0) (2026-10-04)
+
+
+### Features
+
+* **birthdays:** enhance birthday features with age calculation and notifications ([aea4beb](https://github.com/prezdev88/casero-web/commit/aea4beb524e8355a4f6d8dfe18caa203db2d4dcc))
+
+
+### Bug Fixes
+
+* **customers:** update birthday notice display with customer name and improved styling ([03f0139](https://github.com/prezdev88/casero-web/commit/03f01393a67150426bc3d5ea680d89962e6cd7a6))
+
 ### [1.24.2](https://github.com/prezdev88/casero-web/compare/v1.24.1...v1.24.2) (2026-10-04)
 
 

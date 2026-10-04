@@ -6,9 +6,9 @@ const BASE_URL = process.env.BASE_URL || 'http://localhost:8080/casero';
 test.describe('Birthdays Dashboard', () => {
   test('acceder al dashboard y ver tabla de cumpleaños', async ({ page }) => {
     test.setTimeout(60000);
-    // Calcular la fecha de hoy para asegurar que caiga dentro de "lo que queda del mes"
+    // Use the first day to include birthdays that have already passed this month.
     const today = new Date();
-    const currentDay = today.getDate().toString();
+    const birthdayDay = '1';
     const currentMonth = (today.getMonth() + 1).toString();
     const customerName = `Cumpleañero E2E ${Date.now()}`;
 
@@ -25,7 +25,7 @@ test.describe('Birthdays Dashboard', () => {
     await page.getByTestId('customer-create-submit').click();
     await page.waitForURL('**/customers');
 
-    // 3. Buscarlo y editar su cumpleaños para que sea HOY
+    // 3. Set the birthday to the first day of the current month.
     await page.getByTestId('customer-search-input').fill(customerName);
     const createdCard = page.getByTestId('customer-card').filter({ hasText: customerName }).first();
     await createdCard.waitFor();
@@ -34,7 +34,7 @@ test.describe('Birthdays Dashboard', () => {
     
     // Añadir fecha
     await page.getByRole('link', { name: /añadir fecha de nacimiento/i }).click();
-    await page.locator('select[name="day"]').selectOption(currentDay);
+    await page.locator('select[name="day"]').selectOption(birthdayDay);
     await page.locator('select[name="month"]').selectOption(currentMonth);
     await page.getByRole('button', { name: 'Guardar' }).click();
 
@@ -42,7 +42,7 @@ test.describe('Birthdays Dashboard', () => {
     await page.getByTestId('nav-dashboard').click();
     await page.waitForURL('**/dashboard');
 
-    // 5. Verificar que el contador de cumpleaños sea distinto de 0 (porque acabamos de agregar uno para hoy)
+    // 5. Verify the count includes the birthday on the first day of the month.
     const birthdayCard = page.locator('h3:has-text("Cumpleaños")').locator('..');
     await expect(birthdayCard).toBeVisible();
     

@@ -38,6 +38,6 @@ public interface CustomerService {
     long count();
 
     Page<CustomerRepository.SectorCountView> getCustomersCountBySector(Pageable pageable);
-    long getUpcomingBirthdaysThisMonthCount(int month, int day);
-    List<CustomerBirthdayDTO> getUpcomingBirthdays(int month, int day);
+    long getBirthdaysThisMonthCount(int month);
+    List<CustomerBirthdayDTO> getBirthdaysThisMonth(int month);
 }

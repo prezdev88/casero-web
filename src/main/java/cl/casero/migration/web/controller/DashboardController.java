@@ -3,6 +3,7 @@ package cl.casero.migration.web.controller;
 import cl.casero.migration.service.CustomerService;
 import cl.casero.migration.service.StatisticsService;
 import cl.casero.migration.service.TransactionService;
+import cl.casero.migration.service.dto.CustomerBirthdayDTO;
 import cl.casero.migration.service.dto.TransactionMonthlySummary;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Controller;
@@ -29,8 +30,9 @@ public class DashboardController {
     public String index(Model model) {
         LocalDate today = LocalDate.now();
         
-        // 1. Upcoming Birthdays
-        long upcomingBirthdaysCount = customerService.getUpcomingBirthdaysThisMonthCount(today.getMonthValue(), today.getDayOfMonth());
+        // 1. Birthdays this month
+        int currentMonth = today.getMonthValue();
+        long birthdaysCount = customerService.getBirthdaysThisMonthCount(currentMonth);
         
         // 2. Total Debt
         int totalDebt = statisticsService.getTotalDebt();
@@ -57,7 +59,7 @@ public class DashboardController {
         // Top 3 customers
         List<cl.casero.migration.repository.TransactionRepository.TopCustomerProjection> topCustomers = transactionService.getTopCustomersThisMonth();
 
-        model.addAttribute("upcomingBirthdaysCount", upcomingBirthdaysCount);
+        model.addAttribute("birthdaysCount", birthdaysCount);
         model.addAttribute("totalDebt", totalDebt);
         model.addAttribute("activeCustomersCount", activeCustomersCount);
         model.addAttribute("overdueCustomersCount", overdueCustomersCount);
@@ -104,7 +106,9 @@ public class DashboardController {
     @GetMapping("/birthdays")
     public String birthdays(Model model) {
         LocalDate today = LocalDate.now();
-        model.addAttribute("birthdays", customerService.getUpcomingBirthdays(today.getMonthValue(), today.getDayOfMonth()));
+        int currentMonth = today.getMonthValue();
+        List<CustomerBirthdayDTO> monthlyBirthdays = customerService.getBirthdaysThisMonth(currentMonth);
+        model.addAttribute("birthdays", monthlyBirthdays);
         return "dashboard/birthdays";
     }
 

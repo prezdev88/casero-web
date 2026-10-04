@@ -173,12 +173,12 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
         String getLast_payment();
         Integer getMonths_overdue();
     }
-    @Query("SELECT COUNT(c) FROM Customer c WHERE c.enabled = true AND c.birthMonth = :month AND c.birthDay >= :day")
-    long countUpcomingBirthdaysThisMonth(@Param("month") int month, @Param("day") int day);
+    @Query("SELECT COUNT(c) FROM Customer c WHERE c.enabled = true AND c.birthMonth = :month AND c.birthDay IS NOT NULL")
+    long countBirthdaysThisMonth(@Param("month") int month);
 
     @Query("SELECT new cl.casero.migration.service.dto.CustomerBirthdayDTO(c.name, c.birthDay, c.birthMonth, c.birthYear, c.debt, " +
            "(SELECT MAX(t.date) FROM Transaction t WHERE t.customer.id = c.id AND t.type = 'PAYMENT')) " +
-           "FROM Customer c WHERE c.enabled = true AND c.birthMonth = :month AND c.birthDay >= :day " +
+           "FROM Customer c WHERE c.enabled = true AND c.birthMonth = :month AND c.birthDay IS NOT NULL " +
            "ORDER BY c.birthDay ASC")
-    List<CustomerBirthdayDTO> findUpcomingBirthdaysThisMonth(@Param("month") int month, @Param("day") int day);
+    List<CustomerBirthdayDTO> findBirthdaysThisMonth(@Param("month") int month);
 }

@@ -130,12 +130,12 @@ public class CustomerServiceImpl implements CustomerService {
         return customerRepository.countBySector(pageable);
     }
     @Override
-    public long getUpcomingBirthdaysThisMonthCount(int month, int day) {
-        return customerRepository.countUpcomingBirthdaysThisMonth(month, day);
+    public long getBirthdaysThisMonthCount(int month) {
+        return customerRepository.countBirthdaysThisMonth(month);
     }
 
     @Override
-    public List<CustomerBirthdayDTO> getUpcomingBirthdays(int month, int day) {
-        return customerRepository.findUpcomingBirthdaysThisMonth(month, day);
+    public List<CustomerBirthdayDTO> getBirthdaysThisMonth(int month) {
+        return customerRepository.findBirthdaysThisMonth(month);
     }
 }

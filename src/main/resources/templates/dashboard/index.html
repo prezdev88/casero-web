@@ -68,8 +68,8 @@
              th:onclick="|window.location.href='@{/dashboard/birthdays}'|">
             <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🎂</div>
             <h3 style="margin: 0; color: var(--text-color);">Cumpleaños</h3>
-            <p style="font-size: 2rem; font-weight: bold; margin: 0.5rem 0; color: var(--primary-color, #007bff);" th:text="${upcomingBirthdaysCount}">0</p>
-            <span style="font-size: 0.9rem; color: var(--text-muted, #6c757d);">próximos este mes</span>
+            <p style="font-size: 2rem; font-weight: bold; margin: 0.5rem 0; color: var(--primary-color, #007bff);" th:text="${birthdaysCount}">0</p>
+            <span style="font-size: 0.9rem; color: var(--text-muted, #6c757d);">todos los de este mes</span>
         </div>
 
         <!-- Tarjeta: Deuda Total -->

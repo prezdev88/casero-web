@@ -50,7 +50,7 @@
     </style>
 
     <div class="header-actions" style="margin-top: 1.5rem; margin-bottom: 1.5rem;">
-        <h2 style="margin: 0; font-size: 1.5rem;">🎂 Próximos Cumpleaños del Mes</h2>
+        <h2 style="margin: 0; font-size: 1.5rem;">🎂 Cumpleaños del Mes</h2>
     </div>
 
     <div class="card" style="margin-top: 1rem; border: none; box-shadow: none; background: transparent; padding: 0;">
@@ -74,7 +74,7 @@
                     <td data-label="Último Abono" style="padding: 0.75rem; text-align: right;" th:text="${b.lastPaymentDate != null ? #temporals.format(b.lastPaymentDate, 'dd MMM yyyy') : 'Sin abonos'}">Fecha</td>
                 </tr>
                 <tr th:if="${#lists.isEmpty(birthdays)}">
-                    <td colspan="4" style="padding: 1.5rem; text-align: center; color: var(--text-muted, #6c757d);">No hay más cumpleaños registrados para este mes.</td>
+                    <td colspan="4" style="padding: 1.5rem; text-align: center; color: var(--text-muted, #6c757d);">No hay cumpleaños registrados para este mes.</td>
                 </tr>
             </tbody>
         </table>

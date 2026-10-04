@@ -37,6 +37,8 @@ test.describe('Birthdays Dashboard', () => {
     await page.locator('select[name="day"]').selectOption(birthdayDay);
     await page.locator('select[name="month"]').selectOption(currentMonth);
     await page.getByRole('button', { name: 'Guardar' }).click();
+    await page.waitForURL(/\/customers\/\d+$/);
+    const customerDetailUrl = page.url();
 
     // 4. Navegar al Dashboard usando el enlace del menú superior
     await page.getByTestId('nav-dashboard').click();
@@ -58,5 +60,12 @@ test.describe('Birthdays Dashboard', () => {
     const table = page.locator('table');
     await expect(table).toBeVisible();
     await expect(table.locator('td', { hasText: customerName })).toBeVisible();
+
+    // 8. Open the exact customer detail page from the birthday list.
+    const customerLink = table.getByRole('link', { name: customerName, exact: true });
+    await expect(customerLink).toBeVisible();
+    await customerLink.click();
+    await page.waitForURL(customerDetailUrl);
+    await expect(page.locator('.customer-header h2')).toContainText(customerName);
   });
 });

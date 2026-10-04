@@ -9,6 +9,7 @@ import java.time.LocalDate;
 @Setter
 @AllArgsConstructor
 public class CustomerBirthdayDTO {
+    private Long customerId;
     private String name;
     private Integer birthDay;
     private Integer birthMonth;

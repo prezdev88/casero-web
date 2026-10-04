@@ -30,6 +30,7 @@ import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -64,6 +65,8 @@ import cl.casero.migration.web.security.CaseroUserDetails;
 @RequestMapping("/customers")
 public class CustomerController {
 
+    private static final ZoneId DEFAULT_ZONE = ZoneId.of("America/Santiago");
+
     private final CustomerService customerService;
     private final CustomerScoreService customerScoreService;
     private final TransactionService transactionService;
@@ -86,6 +89,8 @@ public class CustomerController {
         model.addAttribute("customersPage", customersPage);
         model.addAttribute("query", query == null ? "" : query);
         model.addAttribute("showResults", hasQuery);
+        LocalDate today = LocalDate.now(DEFAULT_ZONE);
+        model.addAttribute("today", today);
 
         return "customers/list";
     }
@@ -119,16 +124,23 @@ public class CustomerController {
     ) {
         Page<Customer> result = searchCustomers(query, page, size);
         Map<Long, Double> scores = customerScoreService.calculateScores(result.getContent());
+        LocalDate today = LocalDate.now(DEFAULT_ZONE);
         List<CustomerSearchResult> content = result.getContent()
                 .stream()
-                .map(customer -> new CustomerSearchResult(
+                .map(customer -> {
+                    boolean birthdayToday = customer.isBirthdayOn(today);
+                    Integer birthdayAge = customer.getBirthdayAgeOn(today);
+                    return new CustomerSearchResult(
                         customer.getId(),
                         customer.getName(),
                         customer.getAddress(),
                         customer.getFormattedBirthDate(),
                         CurrencyUtil.format(customer.getDebt()),
                         customer.getDebt(),
-                        scores.getOrDefault(customer.getId(), CustomerScoreCalculator.minScore())))
+                        scores.getOrDefault(customer.getId(), CustomerScoreCalculator.minScore()),
+                        birthdayToday,
+                        birthdayAge);
+                })
                 .toList();
         
         return new CustomerPageResponse(
@@ -823,7 +835,9 @@ public class CustomerController {
         String formattedBirthDate,
         String formattedDebt,
         Integer debtValue,
-        Double score
+        Double score,
+        boolean birthdayToday,
+        Integer birthdayAge
     ) {}
 
     public record CustomerPageResponse(

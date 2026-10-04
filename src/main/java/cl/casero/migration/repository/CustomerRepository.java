@@ -176,7 +176,7 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
     @Query("SELECT COUNT(c) FROM Customer c WHERE c.enabled = true AND c.birthMonth = :month AND c.birthDay IS NOT NULL")
     long countBirthdaysThisMonth(@Param("month") int month);
 
-    @Query("SELECT new cl.casero.migration.service.dto.CustomerBirthdayDTO(c.name, c.birthDay, c.birthMonth, c.birthYear, c.debt, " +
+    @Query("SELECT new cl.casero.migration.service.dto.CustomerBirthdayDTO(c.id, c.name, c.birthDay, c.birthMonth, c.birthYear, c.debt, " +
            "(SELECT MAX(t.date) FROM Transaction t WHERE t.customer.id = c.id AND t.type = 'PAYMENT')) " +
            "FROM Customer c WHERE c.enabled = true AND c.birthMonth = :month AND c.birthDay IS NOT NULL " +
            "ORDER BY c.birthDay ASC")

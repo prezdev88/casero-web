@@ -65,7 +65,11 @@
             </thead>
             <tbody>
                 <tr th:each="b : ${birthdays}" style="border-bottom: 1px solid var(--border-color, #dee2e6); background: var(--card-bg, #fff);">
-                    <td data-label="Nombre" style="padding: 0.75rem;" th:text="${b.name}">Nombre</td>
+                    <td data-label="Nombre" style="padding: 0.75rem;">
+                        <a th:href="@{/customers/{id}(id=${b.customerId})}"
+                           th:text="${b.name}"
+                           style="color: var(--primary-color, #007bff); text-decoration: underline;">Nombre</a>
+                    </td>
                     <td data-label="Cumpleaños" style="padding: 0.75rem;">
                         <span th:text="${b.formattedBirthDate}"></span>
                         <span th:if="${b.age != null}" style="font-weight: 900; color: #fff; background-color: var(--primary-color, #0d6efd); padding: 0.2rem 0.6rem; border-radius: 50px; font-size: 0.85rem; margin-left: 0.5rem; display: inline-block; box-shadow: 0 2px 4px rgba(13,110,253,0.3);" th:text="${b.age} + ' años'"></span>

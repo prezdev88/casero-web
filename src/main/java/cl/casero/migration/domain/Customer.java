@@ -12,6 +12,7 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -51,6 +52,19 @@ public class Customer {
 
     @Column(name = "birth_year")
     private Integer birthYear;
+
+    public boolean isBirthdayOn(LocalDate date) {
+        return birthDay != null && birthMonth != null
+                && birthDay == date.getDayOfMonth()
+                && birthMonth == date.getMonthValue();
+    }
+
+    public Integer getBirthdayAgeOn(LocalDate date) {
+        if (birthYear == null || !isBirthdayOn(date)) {
+            return null;
+        }
+        return date.getYear() - birthYear;
+    }
 
     public String getFormattedBirthDate() {
         if (birthDay == null || birthMonth == null) {

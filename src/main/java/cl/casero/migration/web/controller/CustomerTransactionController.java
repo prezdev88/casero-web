@@ -27,7 +27,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import cl.casero.migration.domain.Customer;
 import cl.casero.migration.domain.Transaction;
 import cl.casero.migration.domain.enums.TransactionType;
-import cl.casero.migration.service.CustomerService;
+import cl.casero.migration.service.CustomerQueries;
 import cl.casero.migration.service.TransactionCommands;
 import cl.casero.migration.service.TransactionQueries;
 import cl.casero.migration.service.dto.DebtForgivenessForm;
@@ -46,7 +46,7 @@ public class CustomerTransactionController {
 
     private static final int MAX_PAGE_SIZE = 50;
 
-    private final CustomerService customerService;
+    private final CustomerQueries customerQueries;
     private final TransactionQueries transactionQueries;
     private final TransactionCommands transactionCommands;
     private final CustomerAuditLogger customerAuditLogger;
@@ -195,7 +195,7 @@ public class CustomerTransactionController {
 
     @GetMapping("/{id}/actions/payment")
     public String showPaymentForm(@PathVariable Long id, Model model) {
-        Customer customer = customerService.get(id);
+        Customer customer = customerQueries.get(id);
         model.addAttribute("customer", customer);
 
         if (!model.containsAttribute("paymentForm")) {
@@ -210,7 +210,7 @@ public class CustomerTransactionController {
 
     @GetMapping("/{id}/actions/sale")
     public String showSaleForm(@PathVariable Long id, Model model) {
-        Customer customer = customerService.get(id);
+        Customer customer = customerQueries.get(id);
         model.addAttribute("customer", customer);
 
         if (!model.containsAttribute("saleForm")) {
@@ -225,7 +225,7 @@ public class CustomerTransactionController {
 
     @GetMapping("/{id}/actions/refund")
     public String showRefundForm(@PathVariable Long id, Model model) {
-        Customer customer = customerService.get(id);
+        Customer customer = customerQueries.get(id);
         model.addAttribute("customer", customer);
 
         if (!model.containsAttribute("refundForm")) {
@@ -240,7 +240,7 @@ public class CustomerTransactionController {
 
     @GetMapping("/{id}/actions/fault-discount")
     public String showFaultDiscountForm(@PathVariable Long id, Model model) {
-        Customer customer = customerService.get(id);
+        Customer customer = customerQueries.get(id);
         model.addAttribute("customer", customer);
 
         if (!model.containsAttribute("faultDiscountForm")) {
@@ -255,7 +255,7 @@ public class CustomerTransactionController {
 
     @GetMapping("/{id}/actions/forgiveness")
     public String showForgivenessForm(@PathVariable Long id, Model model) {
-        Customer customer = customerService.get(id);
+        Customer customer = customerQueries.get(id);
         model.addAttribute("customer", customer);
 
         if (!model.containsAttribute("debtForgivenessForm")) {

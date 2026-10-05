@@ -1,6 +1,6 @@
 package cl.casero.migration.web.controller;
 
-import cl.casero.migration.service.CustomerService;
+import cl.casero.migration.service.CustomerQueries;
 import cl.casero.migration.service.dto.OverdueCustomerSummary;
 import lombok.AllArgsConstructor;
 
@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 @RequestMapping("/debtors")
 public class DebtorController {
 
-    private final CustomerService customerService;
+    private final CustomerQueries customerQueries;
 
     @GetMapping
     public String listDebtors(
@@ -35,7 +35,7 @@ public class DebtorController {
 
         if (hasFilter) {
             appliedMonths = Math.max(months, 1);
-            debtorsPage = customerService.getOverdueCustomers(pageable, appliedMonths);
+            debtorsPage = customerQueries.getOverdueCustomers(pageable, appliedMonths);
         }
 
         model.addAttribute("hasFilter", hasFilter);

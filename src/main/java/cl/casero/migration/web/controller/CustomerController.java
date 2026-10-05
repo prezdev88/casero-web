@@ -26,7 +26,7 @@ import cl.casero.migration.domain.Customer;
 import cl.casero.migration.domain.Transaction;
 import cl.casero.migration.domain.enums.TransactionType;
 import cl.casero.migration.service.CustomerScoreService;
-import cl.casero.migration.service.CustomerService;
+import cl.casero.migration.service.CustomerQueries;
 import cl.casero.migration.service.TransactionQueries;
 import cl.casero.migration.util.CurrencyUtil;
 import cl.casero.migration.util.CustomerScoreCalculator;
@@ -41,7 +41,7 @@ public class CustomerController {
     private static final ZoneId DEFAULT_ZONE = ZoneId.of("America/Santiago");
     private static final int MAX_PAGE_SIZE = 50;
 
-    private final CustomerService customerService;
+    private final CustomerQueries customerQueries;
     private final CustomerScoreService customerScoreService;
     private final TransactionQueries transactionQueries;
 
@@ -104,7 +104,7 @@ public class CustomerController {
         int sanitizedSize = Math.min(positiveSize, MAX_PAGE_SIZE);
         Sort sort = Sort.by(ascending ? Sort.Direction.ASC : Sort.Direction.DESC, "createdAt");
         Pageable pageable = PageRequest.of(sanitizedPage, sanitizedSize, sort);
-        Customer customer = customerService.get(id);
+        Customer customer = customerQueries.get(id);
         CustomerScoreService.ScorePresentation scorePresentation = customerScoreService.getScorePresentation(customer);
         double score = scorePresentation.score();
         String explanation = scorePresentation.explanation();
@@ -136,7 +136,7 @@ public class CustomerController {
         }
 
         String filter = query.trim();
-        return customerService.search(filter, pageable);
+        return customerQueries.search(filter, pageable);
     }
 
     private Map<String, String> buildReportTypeOptions() {

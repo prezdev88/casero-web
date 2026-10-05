@@ -38,7 +38,7 @@ class CustomerTransactionReportServiceTest {
     private static final LocalDate FUTURE_DATE = LocalDate.parse("2027-01-01");
 
     @Mock
-    private CustomerService customerService;
+    private CustomerQueries customerQueries;
 
     @Mock
     private TransactionQueries transactionQueries;
@@ -49,7 +49,7 @@ class CustomerTransactionReportServiceTest {
     @BeforeEach
     void setUp() {
         Clock clock = Clock.fixed(REPORT_INSTANT, ZoneOffset.UTC);
-        reportService = new CustomerTransactionReportService(customerService, transactionQueries, clock);
+        reportService = new CustomerTransactionReportService(customerQueries, transactionQueries, clock);
         customer = new Customer();
         customer.setId(CUSTOMER_ID);
     }
@@ -174,7 +174,7 @@ class CustomerTransactionReportServiceTest {
     @Test
     void preservesMissingCustomerFailure() {
         CustomerNotFoundException failure = new CustomerNotFoundException(CUSTOMER_ID);
-        doThrow(failure).when(customerService).get(CUSTOMER_ID);
+        doThrow(failure).when(customerQueries).get(CUSTOMER_ID);
         TransactionReportCriteria criteria = new TransactionReportCriteria(ReportRange.ALL, null, null);
 
         assertThatThrownBy(() -> reportService.prepare(CUSTOMER_ID, criteria)).isSameAs(failure);
@@ -182,7 +182,7 @@ class CustomerTransactionReportServiceTest {
     }
 
     private CustomerTransactionReportData prepare(TransactionReportCriteria criteria, List<Transaction> transactions) {
-        doReturn(customer).when(customerService).get(CUSTOMER_ID);
+        doReturn(customer).when(customerQueries).get(CUSTOMER_ID);
         doReturn(transactions).when(transactionQueries).listAllByCustomer(CUSTOMER_ID);
         return reportService.prepare(CUSTOMER_ID, criteria);
     }

@@ -4,7 +4,8 @@ import cl.casero.migration.domain.Customer;
 import cl.casero.migration.repository.CustomerRepository;
 import cl.casero.migration.service.CustomerNotFoundException;
 import cl.casero.migration.service.SectorService;
-import cl.casero.migration.service.CustomerService;
+import cl.casero.migration.service.CustomerCommands;
+import cl.casero.migration.service.CustomerQueries;
 import cl.casero.migration.service.dto.CreateCustomerForm;
 import cl.casero.migration.service.dto.OverdueCustomerSummary;
 import lombok.AllArgsConstructor;
@@ -21,7 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 
 @AllArgsConstructor
-public class CustomerServiceImpl implements CustomerService {
+public class CustomerServiceImpl implements CustomerQueries, CustomerCommands {
 
     private final SectorService sectorService;
     private final CustomerRepository customerRepository;

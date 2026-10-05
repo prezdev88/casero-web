@@ -1,7 +1,7 @@
 package cl.casero.migration.web.controller;
 
 import cl.casero.migration.domain.Transaction;
-import cl.casero.migration.service.CustomerService;
+import cl.casero.migration.service.CustomerQueries;
 import cl.casero.migration.service.TransactionQueries;
 import lombok.AllArgsConstructor;
 
@@ -20,13 +20,13 @@ import java.util.List;
 @RequestMapping("/admin/customers")
 public class AdminCustomerController {
 
-    private final CustomerService customerService;
+    private final CustomerQueries customerQueries;
     private final TransactionQueries transactionQueries;
 
     @ResponseBody
     @GetMapping("/{id}/transactions/json")
     public ResponseEntity<List<TransactionExportItem>> exportTransactions(@PathVariable Long id) {
-        customerService.get(id);
+        customerQueries.get(id);
 
         List<TransactionExportItem> items = transactionQueries.listAllByCustomer(id)
                 .stream()

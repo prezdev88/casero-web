@@ -21,12 +21,12 @@ public class CustomerTransactionReportService {
     private static final int DEFAULT_REPORT_MONTHS = 12;
     private static final int MAX_REPORT_MONTHS = 60;
 
-    private final CustomerService customerService;
+    private final CustomerQueries customerQueries;
     private final TransactionQueries transactionQueries;
     private final Clock reportClock;
 
     public CustomerTransactionReportData prepare(Long customerId, TransactionReportCriteria criteria) {
-        Customer customer = customerService.get(customerId);
+        Customer customer = customerQueries.get(customerId);
         List<Transaction> transactions = transactionQueries.listAllByCustomer(customerId);
         ReportRange range = criteria.range();
         String rangeLabel;

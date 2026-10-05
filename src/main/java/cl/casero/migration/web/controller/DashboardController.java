@@ -1,6 +1,6 @@
 package cl.casero.migration.web.controller;
 
-import cl.casero.migration.service.CustomerService;
+import cl.casero.migration.service.CustomerQueries;
 import cl.casero.migration.service.StatisticsService;
 import cl.casero.migration.service.TransactionQueries;
 import cl.casero.migration.service.dto.CustomerBirthdayDTO;
@@ -22,7 +22,7 @@ import java.util.Locale;
 @RequiredArgsConstructor
 public class DashboardController {
 
-    private final CustomerService customerService;
+    private final CustomerQueries customerQueries;
     private final StatisticsService statisticsService;
     private final TransactionQueries transactionQueries;
 
@@ -32,17 +32,17 @@ public class DashboardController {
         
         // 1. Birthdays this month
         int currentMonth = today.getMonthValue();
-        long birthdaysCount = customerService.getBirthdaysThisMonthCount(currentMonth);
+        long birthdaysCount = customerQueries.getBirthdaysThisMonthCount(currentMonth);
         
         // 2. Total Debt
         int totalDebt = statisticsService.getTotalDebt();
         
         // 3. Active Customers
-        long activeCustomersCount = customerService.count();
+        long activeCustomersCount = customerQueries.count();
         
         // 4. Overdue Customers (morosos) - defined as 1+ months overdue in the service layer
-        long overdueCustomersCount = customerService.getOverdueCustomers(PageRequest.of(0, 1), 1).getTotalElements();
-        long overdueDebt = customerService.getOverdueDebt(1);
+        long overdueCustomersCount = customerQueries.getOverdueCustomers(PageRequest.of(0, 1), 1).getTotalElements();
+        long overdueDebt = customerQueries.getOverdueDebt(1);
         
         // 5. Monthly Sales/Payments (Optimized)
         cl.casero.migration.domain.MonthlyStatistic stats = statisticsService.getMonthlyStatistic(today.getMonthValue(), today.getYear());
@@ -107,7 +107,7 @@ public class DashboardController {
     public String birthdays(Model model) {
         LocalDate today = LocalDate.now();
         int currentMonth = today.getMonthValue();
-        List<CustomerBirthdayDTO> monthlyBirthdays = customerService.getBirthdaysThisMonth(currentMonth);
+        List<CustomerBirthdayDTO> monthlyBirthdays = customerQueries.getBirthdaysThisMonth(currentMonth);
         model.addAttribute("birthdays", monthlyBirthdays);
         return "dashboard/birthdays";
     }

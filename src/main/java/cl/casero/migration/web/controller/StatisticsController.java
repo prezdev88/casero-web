@@ -3,7 +3,7 @@ package cl.casero.migration.web.controller;
 import cl.casero.migration.domain.Customer;
 import cl.casero.migration.domain.MonthlyStatistic;
 import cl.casero.migration.repository.CustomerRepository;
-import cl.casero.migration.service.CustomerService;
+import cl.casero.migration.service.CustomerQueries;
 import cl.casero.migration.service.StatisticsService;
 import lombok.AllArgsConstructor;
 
@@ -23,7 +23,7 @@ import java.time.LocalDate;
 @RequestMapping("/statistics")
 public class StatisticsController {
 
-    private final CustomerService customerService;
+    private final CustomerQueries customerQueries;
     private final StatisticsService statisticsService;
 
     @GetMapping
@@ -31,8 +31,8 @@ public class StatisticsController {
         model.addAttribute("totalDebt", statisticsService.getTotalDebt());
         model.addAttribute("averageDebt", statisticsService.getAverageDebt());
         model.addAttribute("customersCount", statisticsService.getCustomersCount());
-        model.addAttribute("topDebtors", customerService.getTopDebtors(PageRequest.of(0, 10)).getContent());
-        model.addAttribute("bestCustomers", customerService.getBestCustomers(PageRequest.of(0, 10)).getContent());
+        model.addAttribute("topDebtors", customerQueries.getTopDebtors(PageRequest.of(0, 10)).getContent());
+        model.addAttribute("bestCustomers", customerQueries.getBestCustomers(PageRequest.of(0, 10)).getContent());
 
         return "statistics/summary";
     }
@@ -76,7 +76,7 @@ public class StatisticsController {
         int sanitizedPage = Math.max(page, 0);
         int sanitizedSize = Math.min(Math.max(size, 1), 100);
         PageRequest pageable = PageRequest.of(sanitizedPage, sanitizedSize);
-        Page<Customer> debtorsPage = customerService.getTopDebtors(pageable);
+        Page<Customer> debtorsPage = customerQueries.getTopDebtors(pageable);
 
         model.addAttribute("debtorsPage", debtorsPage);
 
@@ -92,7 +92,7 @@ public class StatisticsController {
         int sanitizedPage = Math.max(page, 0);
         int sanitizedSize = Math.min(Math.max(size, 1), 100);
         PageRequest pageable = PageRequest.of(sanitizedPage, sanitizedSize);
-        Page<Customer> bestCustomersPage = customerService.getBestCustomers(pageable);
+        Page<Customer> bestCustomersPage = customerQueries.getBestCustomers(pageable);
 
         model.addAttribute("customersPage", bestCustomersPage);
         
@@ -108,7 +108,7 @@ public class StatisticsController {
         int sanitizedPage = Math.max(page, 0);
         int sanitizedSize = Math.min(Math.max(size, 1), 100);
         PageRequest pageable = PageRequest.of(sanitizedPage, sanitizedSize);
-        Page<CustomerRepository.SectorCountView> sectorsPage = customerService.getCustomersCountBySector(pageable);
+        Page<CustomerRepository.SectorCountView> sectorsPage = customerQueries.getCustomersCountBySector(pageable);
 
         model.addAttribute("sectorsPage", sectorsPage);
         

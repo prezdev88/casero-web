@@ -60,7 +60,8 @@ import cl.casero.migration.domain.enums.UserRole;
 import cl.casero.migration.service.AuditEventService;
 import cl.casero.migration.service.CustomerReportService;
 import cl.casero.migration.service.CustomerScoreService;
-import cl.casero.migration.service.CustomerService;
+import cl.casero.migration.service.CustomerCommands;
+import cl.casero.migration.service.CustomerQueries;
 import cl.casero.migration.service.CustomerTransactionReportService;
 import cl.casero.migration.service.SectorService;
 import cl.casero.migration.service.StatisticsService;
@@ -84,13 +85,18 @@ class CustomerRoutesTest {
     private static final int MAX_RANKING_PAGE_SIZE = 100;
     private static final int CUSTOMER_DEBT = 200;
     private static final int PAYMENT_AMOUNT = 100;
+    private static final int PROFILE_BIRTH_DAY = 4;
+    private static final int PROFILE_BIRTH_MONTH = 10;
     private static final double CUSTOMER_SCORE = 4.0;
     private static final String FORM_DATE = "2026-10-04";
     private static final Instant REPORT_INSTANT = Instant.parse("2026-10-04T12:00:00Z");
     private static final ZoneId CUSTOMER_ZONE = ZoneId.of("America/Santiago");
 
     @Mock
-    private CustomerService customerService;
+    private CustomerQueries customerQueries;
+
+    @Mock
+    private CustomerCommands customerCommands;
 
     @Mock
     private CustomerScoreService customerScoreService;
@@ -130,15 +136,15 @@ class CustomerRoutesTest {
         customer.setSector(sector);
 
         CustomerAuditLogger auditLogger = new CustomerAuditLogger(auditEventService);
-        CustomerController customerViews = new CustomerController(customerService, customerScoreService, transactionQueries);
+        CustomerController customerViews = new CustomerController(customerQueries, customerScoreService, transactionQueries);
         CustomerManagementController management = new CustomerManagementController(
-                customerService, sectorService, statisticsService, auditLogger);
+                customerQueries, customerCommands, sectorService, statisticsService, auditLogger);
         CustomerTransactionController transactions = new CustomerTransactionController(
-                customerService, transactionQueries, transactionCommands, auditLogger);
+                customerQueries, transactionQueries, transactionCommands, auditLogger);
         CustomerRankingController ranking = new CustomerRankingController(customerScoreService);
         reportClock = Clock.fixed(REPORT_INSTANT, ZoneOffset.UTC);
         CustomerTransactionReportService reportPreparation = new CustomerTransactionReportService(
-                customerService, transactionQueries, reportClock);
+                customerQueries, transactionQueries, reportClock);
         CustomerReportController reports = new CustomerReportController(reportPreparation, customerReportService);
         InternalResourceViewResolver viewResolver = new InternalResourceViewResolver("/test-views/", ".html");
         StandaloneMockMvcBuilder builder = MockMvcBuilders.standaloneSetup(
@@ -160,7 +166,7 @@ class CustomerRoutesTest {
         "birthdate/edit, customers/actions/birthdate-edit, updateBirthdateForm"
     })
     void keepsActionViewsAndPreservedForms(String action, String expectedView, String formAttribute) throws Exception {
-        doReturn(customer).when(customerService).get(CUSTOMER_ID);
+        doReturn(customer).when(customerQueries).get(CUSTOMER_ID);
         Object preservedForm = new Object();
         String path = "/customers/" + CUSTOMER_ID + "/actions/" + action;
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders.get(path);
@@ -201,7 +207,7 @@ class CustomerRoutesTest {
         BindingResult validation = (BindingResult) flash.get(bindingKey);
         boolean hasErrors = validation.hasErrors();
         assertThat(hasErrors).isTrue();
-        verifyNoInteractions(customerService, transactionQueries, transactionCommands, auditEventService);
+        verifyNoInteractions(customerQueries, customerCommands, transactionQueries, transactionCommands, auditEventService);
     }
 
     @ParameterizedTest
@@ -229,6 +235,15 @@ class CustomerRoutesTest {
         String redirect = route.equals("delete") ? "/customers" : "/customers/" + CUSTOMER_ID;
         assertRedirect(result, redirect);
 
+        if (route.equals("address")) {
+            verify(customerCommands).updateAddress(CUSTOMER_ID, "  New\n Address  ");
+        } else if (route.equals("sector")) {
+            verify(customerCommands).updateSector(CUSTOMER_ID, SECTOR_ID);
+        } else if (route.equals("delete")) {
+            verify(customerCommands).delete(CUSTOMER_ID);
+        }
+
+        verifyNoInteractions(customerQueries);
         Map<String, Object> payload = captureAnonymousAudit();
         assertThat(payload).containsOnlyKeys("type", "data").containsEntry("type", actionType);
         Map<?, ?> data = (Map<?, ?>) payload.get("data");
@@ -264,6 +279,9 @@ class CustomerRoutesTest {
         MvcResult birthdateResult = mockMvc.perform(birthdateRequest).andReturn();
         assertRedirect(birthdateResult, redirect);
 
+        verify(customerCommands).updateName(CUSTOMER_ID, "New Name");
+        verify(customerCommands).updateBirthdate(CUSTOMER_ID, PROFILE_BIRTH_DAY, PROFILE_BIRTH_MONTH, null);
+        verifyNoInteractions(customerQueries);
         ArgumentCaptor<Map<String, Object>> captor = ArgumentCaptor.captor();
         VerificationMode expectedEvents = times(UPDATED_PROFILE_EVENT_COUNT);
         AuditEventService auditVerification = verify(auditEventService, expectedEvents);
@@ -283,7 +301,7 @@ class CustomerRoutesTest {
 
     @Test
     void createsCustomerAndAuditsTheAuthenticatedActor() throws Exception {
-        CustomerService creationStub = doReturn(customer).when(customerService);
+        CustomerCommands creationStub = doReturn(customer).when(customerCommands);
         CreateCustomerForm matchedForm = any(CreateCustomerForm.class);
         creationStub.create(matchedForm);
         AppUser actor = new AppUser();
@@ -299,6 +317,7 @@ class CustomerRoutesTest {
         MvcResult result = mockMvc.perform(request).andReturn();
         assertRedirect(result, "/customers");
 
+        verifyNoInteractions(customerQueries);
         Map<String, Object> data = Map.of("customerId", CUSTOMER_ID, "name", "Test Customer",
                 "sectorId", SECTOR_ID, "address", "Test Address");
         Map<String, Object> payload = Map.of("type", "CREATE_CUSTOMER", "data", data);
@@ -336,7 +355,7 @@ class CustomerRoutesTest {
         Pageable pageable = PageRequest.of(0, PAGE_SIZE);
         List<Customer> customers = List.of(customer);
         Page<Customer> page = new PageImpl<>(customers, pageable, 1);
-        doReturn(page).when(customerService).search("Test", pageable);
+        doReturn(page).when(customerQueries).search("Test", pageable);
         Map<Long, Double> scores = Map.of(CUSTOMER_ID, CUSTOMER_SCORE);
         doReturn(scores).when(customerScoreService).calculateScores(customers);
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders.get("/customers");
@@ -438,7 +457,7 @@ class CustomerRoutesTest {
         String rangeLabel = filtered ? "Últimos 1 mes" : "Todas las transacciones";
         TransactionType filterType = filtered ? TransactionType.PAYMENT : null;
         byte[] pdf = "%PDF-test".getBytes(StandardCharsets.US_ASCII);
-        doReturn(customer).when(customerService).get(CUSTOMER_ID);
+        doReturn(customer).when(customerQueries).get(CUSTOMER_ID);
         doReturn(transactions).when(transactionQueries).listAllByCustomer(CUSTOMER_ID);
         doReturn(pdf).when(customerReportService).generateTransactionsReport(customer, selected, rangeLabel, filterType);
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders.get(

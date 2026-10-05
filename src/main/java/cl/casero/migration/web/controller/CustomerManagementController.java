@@ -18,7 +18,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import cl.casero.migration.domain.Customer;
 import cl.casero.migration.domain.Sector;
-import cl.casero.migration.service.CustomerService;
+import cl.casero.migration.service.CustomerCommands;
+import cl.casero.migration.service.CustomerQueries;
 import cl.casero.migration.service.SectorService;
 import cl.casero.migration.service.StatisticsService;
 import cl.casero.migration.service.dto.CreateCustomerForm;
@@ -34,7 +35,8 @@ import cl.casero.migration.web.util.CustomerFormRedirect;
 @RequestMapping("/customers")
 public class CustomerManagementController {
 
-    private final CustomerService customerService;
+    private final CustomerQueries customerQueries;
+    private final CustomerCommands customerCommands;
     private final SectorService sectorService;
     private final StatisticsService statisticsService;
     private final CustomerAuditLogger customerAuditLogger;
@@ -69,7 +71,7 @@ public class CustomerManagementController {
             return "redirect:/customers/new";
         }
 
-        Customer created = customerService.create(form);
+        Customer created = customerCommands.create(form);
         redirectAttributes.addFlashAttribute("message", "Cliente creado correctamente");
         customerAuditLogger.logCustomerCreated(created, authentication, request);
 
@@ -90,7 +92,7 @@ public class CustomerManagementController {
         }
 
         String address = form.getNewAddress();
-        customerService.updateAddress(id, address);
+        customerCommands.updateAddress(id, address);
         redirectAttributes.addFlashAttribute("successMessage", "Dirección actualizada");
         customerAuditLogger.logAddressUpdate(id, form, authentication, request);
 
@@ -111,7 +113,7 @@ public class CustomerManagementController {
         }
 
         Long sectorId = form.getSectorId();
-        customerService.updateSector(id, sectorId);
+        customerCommands.updateSector(id, sectorId);
         redirectAttributes.addFlashAttribute("successMessage", "Sector actualizado");
         customerAuditLogger.logSectorUpdate(id, form, authentication, request);
 
@@ -125,7 +127,7 @@ public class CustomerManagementController {
         Authentication authentication,
         HttpServletRequest request
     ) {
-        customerService.delete(id);
+        customerCommands.delete(id);
         redirectAttributes.addFlashAttribute("successMessage", "Cliente eliminado");
         customerAuditLogger.logCustomerDeleted(id, authentication, request);
 
@@ -134,14 +136,14 @@ public class CustomerManagementController {
 
     @GetMapping("/{id}/actions/address")
     public String viewAddress(@PathVariable Long id, Model model) {
-        Customer customer = customerService.get(id);
+        Customer customer = customerQueries.get(id);
         model.addAttribute("customer", customer);
         return "customers/actions/address";
     }
 
     @GetMapping("/{id}/actions/address/edit")
     public String editAddress(@PathVariable Long id, Model model) {
-        Customer customer = customerService.get(id);
+        Customer customer = customerQueries.get(id);
         model.addAttribute("customer", customer);
 
         if (!model.containsAttribute("updateAddressForm")) {
@@ -167,7 +169,7 @@ public class CustomerManagementController {
         }
 
         String name = form.getNewName();
-        customerService.updateName(id, name);
+        customerCommands.updateName(id, name);
         redirectAttributes.addFlashAttribute("successMessage", "Nombre actualizado");
         customerAuditLogger.logNameUpdate(id, form, authentication, request);
 
@@ -176,7 +178,7 @@ public class CustomerManagementController {
 
     @GetMapping("/{id}/actions/name/edit")
     public String editName(@PathVariable Long id, Model model) {
-        Customer customer = customerService.get(id);
+        Customer customer = customerQueries.get(id);
         model.addAttribute("customer", customer);
 
         if (!model.containsAttribute("updateNameForm")) {
@@ -190,7 +192,7 @@ public class CustomerManagementController {
 
     @GetMapping("/{id}/actions/sector/edit")
     public String editSector(@PathVariable Long id, Model model) {
-        Customer customer = customerService.get(id);
+        Customer customer = customerQueries.get(id);
         model.addAttribute("customer", customer);
 
         if (!model.containsAttribute("updateSectorForm")) {
@@ -223,7 +225,7 @@ public class CustomerManagementController {
         Integer day = form.getDay();
         Integer month = form.getMonth();
         Integer year = form.getYear();
-        customerService.updateBirthdate(id, day, month, year);
+        customerCommands.updateBirthdate(id, day, month, year);
         redirectAttributes.addFlashAttribute("successMessage", "Fecha de nacimiento actualizada");
         customerAuditLogger.logBirthdateUpdate(id, form, authentication, request);
 
@@ -232,7 +234,7 @@ public class CustomerManagementController {
 
     @GetMapping("/{id}/actions/birthdate/edit")
     public String editBirthdate(@PathVariable Long id, Model model) {
-        Customer customer = customerService.get(id);
+        Customer customer = customerQueries.get(id);
         model.addAttribute("customer", customer);
 
         if (!model.containsAttribute("updateBirthdateForm")) {

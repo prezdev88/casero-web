@@ -20,9 +20,7 @@ Implementación de D04 y las tres filas D05 de [improvements.md](improvements.md
 
 **Evidencia.** `generateTransactionsReport` tiene un solo consumidor de producción, el controlador de informes. La selección y filtrado ya se extraen a `CustomerTransactionReportService`, con criterios propios. El renderizador consume nombre, dirección, sector y deuda del cliente, y fecha, tipo, detalle, importe y saldo de los movimientos. El resultado preparado copia la lista, pero comparte sus entidades.
 
-**Decisión actual.** Conservar esa frontera y la composición especializada del PDF. El renderizador sigue dependiendo de la forma de las entidades; no se afirma que el modelo del informe sea una instantánea profunda. No se encontró un segundo consumidor o un requisito de reproducción independiente que justifique otra representación en esta tanda.
-
-**Cuándo retomarlo.** Archivado de informes reproducibles, generación en segundo plano, cierre de sesión de persistencia antes del renderizado o un segundo formato requieren datos autónomos. Preparar entonces una instantánea del cliente y filas del informe antes de renderizar; comprobar períodos, selección por tipo, orden, etiquetas, signos de importes, datos de sector y contenido del PDF.
+**Implementado.** La preparación captura nombre, dirección, sector y deuda en `ReportCustomerData`, y las columnas del informe en `ReportTransactionData`. El renderizador recibe un único `CustomerTransactionReportData`, sin imports ni referencias de entidades JPA. La copia es independiente también de los elementos y sus relaciones. Las pruebas comprueban cambios posteriores de entidades, selección, orden y contenido real de los seis tipos y el informe vacío. El nombre de descarga y la respuesta HTTP se conservan.
 
 ## D05 — Identidad del principal de seguridad
 
@@ -34,4 +32,4 @@ Implementación de D04 y las tres filas D05 de [improvements.md](improvements.md
 
 ## Estado y alcance de validación
 
-De las cuatro filas solicitadas, **1 están implementadas y 3 pendientes**. La tabla contiene **24 de 27 filas completadas**. La última suite aprobó **252 pruebas** con `mvn -o test`; no se ejecutó base de datos real ni navegador.
+De las cuatro filas solicitadas, **2 están implementadas y 2 pendientes**. La tabla contiene **25 de 27 filas completadas**. La última suite aprobó **260 pruebas** con `mvn -o test`; no se ejecutó base de datos real ni navegador.

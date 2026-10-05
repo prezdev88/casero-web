@@ -78,6 +78,9 @@ import cl.casero.migration.service.command.SaleCommand;
 import cl.casero.migration.service.dto.AuditContext;
 import cl.casero.migration.service.dto.CreateCustomerForm;
 import cl.casero.migration.service.dto.CustomerRankingEntry;
+import cl.casero.migration.service.dto.CustomerTransactionReportData;
+import cl.casero.migration.service.dto.ReportCustomerData;
+import cl.casero.migration.service.dto.ReportTransactionData;
 import cl.casero.migration.service.dto.CustomerScorePresentation;
 import cl.casero.migration.util.CustomerScoreCalculator.ScoreResult;
 import cl.casero.migration.util.CustomerScoreCalculator;
@@ -569,7 +572,21 @@ class CustomerRoutesTest {
         byte[] pdf = "%PDF-test".getBytes(StandardCharsets.US_ASCII);
         doReturn(customer).when(customerQueries).get(CUSTOMER_ID);
         doReturn(transactions).when(transactionQueries).listAllByCustomer(CUSTOMER_ID);
-        doReturn(pdf).when(customerReportService).generateTransactionsReport(customer, selected, rangeLabel, filterType);
+        String name = customer.getName();
+        String address = customer.getAddress();
+        Sector sector = customer.getSector();
+        String sectorName = sector.getName();
+        Integer debt = customer.getDebt();
+        ReportCustomerData reportCustomer = new ReportCustomerData(name, address, sectorName, debt);
+        List<ReportTransactionData> rows = selected.stream()
+                .map(transaction -> {
+                    LocalDate date = transaction.getDate();
+                    TransactionType transactionType = transaction.getType();
+                    return new ReportTransactionData(date, transactionType, null, null, null);
+                })
+                .toList();
+        CustomerTransactionReportData report = new CustomerTransactionReportData(reportCustomer, rows, rangeLabel, filterType);
+        doReturn(pdf).when(customerReportService).generateTransactionsReport(report);
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders.get(
                 "/customers/{id}/reports/transactions", CUSTOMER_ID);
         request.param("range", range);

@@ -1,7 +1,5 @@
 package cl.casero.migration.web.controller;
 
-import java.util.List;
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -13,8 +11,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import cl.casero.migration.domain.Customer;
-import cl.casero.migration.domain.Transaction;
 import cl.casero.migration.domain.enums.TransactionType;
 import cl.casero.migration.service.CustomerReportService;
 import cl.casero.migration.service.CustomerTransactionReportService;
@@ -42,12 +38,8 @@ public class CustomerReportController {
         TransactionType filterType = parseReportType(typeParam);
         TransactionReportCriteria criteria = new TransactionReportCriteria(range, monthsParam, filterType);
         CustomerTransactionReportData report = customerTransactionReportService.prepare(id, criteria);
-        Customer customer = report.customer();
-        List<Transaction> transactions = report.transactions();
-        String rangeLabel = report.rangeLabel();
-        TransactionType selectedType = report.filterType();
-        byte[] pdf = customerReportService.generateTransactionsReport(customer, transactions, rangeLabel, selectedType);
-        String customerName = customer.getName();
+        byte[] pdf = customerReportService.generateTransactionsReport(report);
+        String customerName = report.customer().name();
         String safeName = (customerName != null) ? customerName.replaceAll("[^a-zA-Z0-9]+", "-") : "cliente";
         String filename = "casero-informe-" + safeName + ".pdf";
 

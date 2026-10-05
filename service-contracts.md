@@ -133,7 +133,7 @@ La localización pertenece a los presentadores. El gráfico recibe listas estruc
 - Rango `MONTHS`: meses nulos o menores que uno usan doce; valores mayores se limitan a sesenta. El corte inclusivo es el primer día del mes actual menos `months - 1` meses, según el reloj inyectado.
 - El filtro mensual elimina fechas nulas y anteriores al corte. No introduce un extremo superior: conserva fechas futuras si cumplen el corte.
 - Tipo nulo incluye todas las categorías; otro tipo filtra por igualdad, sin alterar el orden.
-- El resultado copia la colección de movimientos, pero comparte las entidades. No representa una instantánea profunda e inmutable del cliente o sus relaciones.
+- El resultado captura campos escalares en `ReportCustomerData` y `ReportTransactionData`, y protege la lista con `List.copyOf`. No comparte entidades ni relaciones: los cambios posteriores del cliente, sector o movimientos no modifican esos datos. El renderizador recibe el resultado completo como única entrada.
 
 El renderizador conserva la responsabilidad de componer el PDF y sus etiquetas. La entrega HTTP y la traducción de la ausencia del cliente pertenecen al controlador y al manejador web.
 
@@ -175,14 +175,14 @@ El proveedor de autenticación obtiene la huella, consulta ese contrato y verifi
 
 ## Evidencia y uso al sustituir implementaciones
 
-La suite actual pasó con **252 pruebas, cero fallos, errores u omisiones**, mediante `mvn -o test`. Casos relevantes:
+La suite actual pasó con **260 pruebas, cero fallos, errores u omisiones**, mediante `mvn -o test`. Casos relevantes:
 
 | Contrato | Pruebas existentes |
 | --- | --- |
 | Clientes y movimientos | `CustomerServicesTest`, `TransactionCommandServiceTest`, `TransactionQueryServiceTest` |
 | Evaluación, ranking y umbral | `CustomerScoreServicesTest`, `CustomerRankingServiceTest`, `CustomerScoreWindowTest` |
 | Dashboard, cumpleaños y presentación | `DashboardServiceTest`, `DashboardTopCustomersTest`, `CustomerBirthdayPresenterTest`, `CustomerBirthDateFormatterTest`, `CustomerBirthDateViewsTest`, `TransactionPresentationViewsTest` |
-| Preparación del PDF y rutas | `CustomerTransactionReportServiceTest`, `CustomerRoutesTest` |
+| Preparación del PDF y rutas | `CustomerTransactionReportServiceTest`, `CustomerReportServiceTest`, `CustomerRoutesTest` |
 | Auditoría | `ConfiguredAuditPolicyTest`, `AuditEventServiceImplTest`, `AuditQueryServiceTest`, `AuditActionTest`, `AuditEmittersTest`, `AuditContextFactoryTest` |
 | Credenciales | `UserCredentialLookupServiceTest` |
 

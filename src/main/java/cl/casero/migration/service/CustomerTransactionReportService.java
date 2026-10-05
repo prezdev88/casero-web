@@ -9,8 +9,11 @@ import org.springframework.stereotype.Service;
 
 import cl.casero.migration.domain.Customer;
 import cl.casero.migration.domain.Transaction;
+import cl.casero.migration.domain.Sector;
 import cl.casero.migration.domain.enums.TransactionType;
 import cl.casero.migration.service.dto.CustomerTransactionReportData;
+import cl.casero.migration.service.dto.ReportCustomerData;
+import cl.casero.migration.service.dto.ReportTransactionData;
 import cl.casero.migration.service.dto.TransactionReportCriteria;
 import cl.casero.migration.service.dto.TransactionReportCriteria.ReportRange;
 
@@ -43,7 +46,29 @@ public class CustomerTransactionReportService {
         TransactionType filterType = criteria.filterType();
         List<Transaction> selectedTransactions = filterByType(transactions, filterType);
 
-        return new CustomerTransactionReportData(customer, selectedTransactions, rangeLabel, filterType);
+        ReportCustomerData reportCustomer = toReportCustomer(customer);
+        List<ReportTransactionData> rows = selectedTransactions.stream()
+                .map(this::toReportTransaction)
+                .toList();
+        return new CustomerTransactionReportData(reportCustomer, rows, rangeLabel, filterType);
+    }
+
+    private ReportCustomerData toReportCustomer(Customer customer) {
+        String name = customer.getName();
+        String address = customer.getAddress();
+        Sector sector = customer.getSector();
+        String sectorName = (sector != null) ? sector.getName() : "No asignado";
+        Integer debt = customer.getDebt();
+        return new ReportCustomerData(name, address, sectorName, debt);
+    }
+
+    private ReportTransactionData toReportTransaction(Transaction transaction) {
+        LocalDate date = transaction.getDate();
+        TransactionType type = transaction.getType();
+        String detail = transaction.getDetail();
+        Integer amount = transaction.getAmount();
+        Integer balance = transaction.getBalance();
+        return new ReportTransactionData(date, type, detail, amount, balance);
     }
 
     private int sanitizeMonths(Integer requestedMonths) {

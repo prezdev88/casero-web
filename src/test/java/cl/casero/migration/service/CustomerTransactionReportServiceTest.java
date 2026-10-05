@@ -10,6 +10,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -23,8 +24,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import cl.casero.migration.domain.Customer;
 import cl.casero.migration.domain.Transaction;
+import cl.casero.migration.domain.Sector;
 import cl.casero.migration.domain.enums.TransactionType;
 import cl.casero.migration.service.dto.CustomerTransactionReportData;
+import cl.casero.migration.service.dto.ReportCustomerData;
+import cl.casero.migration.service.dto.ReportTransactionData;
 import cl.casero.migration.service.dto.TransactionReportCriteria;
 import cl.casero.migration.service.dto.TransactionReportCriteria.ReportRange;
 
@@ -81,12 +85,14 @@ class CustomerTransactionReportServiceTest {
 
         CustomerTransactionReportData report = prepare(criteria, transactions);
 
-        List<Transaction> selected = report.transactions();
+        List<ReportTransactionData> selected = report.transactions();
         String label = report.rangeLabel();
-        Customer reportCustomer = report.customer();
-        assertThat(selected).containsExactly(onBoundary, future);
+        ReportCustomerData reportCustomer = report.customer();
+        assertReportRows(selected, onBoundary, future);
         assertThat(label).isEqualTo(expectedLabel);
-        assertThat(reportCustomer).isSameAs(customer);
+        String customerName = reportCustomer.name();
+        String originalName = customer.getName();
+        assertThat(customerName).isEqualTo(originalName);
         assertThat(transactions).containsExactly(beforeBoundary, onBoundary, undated, future);
     }
 
@@ -100,9 +106,9 @@ class CustomerTransactionReportServiceTest {
 
         CustomerTransactionReportData report = prepare(criteria, transactions);
 
-        List<Transaction> selected = report.transactions();
+        List<ReportTransactionData> selected = report.transactions();
         String label = report.rangeLabel();
-        assertThat(selected).containsExactly(onBoundary);
+        assertReportRows(selected, onBoundary);
         assertThat(label).isEqualTo("Últimos 12 meses");
     }
 
@@ -116,10 +122,10 @@ class CustomerTransactionReportServiceTest {
 
         CustomerTransactionReportData report = prepare(criteria, transactions);
 
-        List<Transaction> selected = report.transactions();
+        List<ReportTransactionData> selected = report.transactions();
         String label = report.rangeLabel();
         TransactionType filterType = report.filterType();
-        assertThat(selected).containsExactly(undated, oldPayment, future);
+        assertReportRows(selected, undated, oldPayment, future);
         assertThat(label).isEqualTo("Todas las transacciones");
         assertThat(filterType).isNull();
     }
@@ -138,9 +144,9 @@ class CustomerTransactionReportServiceTest {
 
         CustomerTransactionReportData report = prepare(criteria, transactions);
 
-        List<Transaction> selected = report.transactions();
+        List<ReportTransactionData> selected = report.transactions();
         TransactionType filterType = report.filterType();
-        assertThat(selected).containsExactly(currentPayment, futurePayment);
+        assertReportRows(selected, currentPayment, futurePayment);
         assertThat(filterType).isEqualTo(TransactionType.PAYMENT);
     }
 
@@ -155,8 +161,8 @@ class CustomerTransactionReportServiceTest {
 
         CustomerTransactionReportData report = prepare(criteria, transactions);
 
-        List<Transaction> selected = report.transactions();
-        assertThat(selected).containsExactly(undatedPayment, oldPayment);
+        List<ReportTransactionData> selected = report.transactions();
+        assertReportRows(selected, undatedPayment, oldPayment);
     }
 
     @ParameterizedTest
@@ -167,7 +173,7 @@ class CustomerTransactionReportServiceTest {
 
         CustomerTransactionReportData report = prepare(criteria, transactions);
 
-        List<Transaction> selected = report.transactions();
+        List<ReportTransactionData> selected = report.transactions();
         assertThat(selected).isEmpty();
     }
 
@@ -179,6 +185,53 @@ class CustomerTransactionReportServiceTest {
 
         assertThatThrownBy(() -> reportService.prepare(CUSTOMER_ID, criteria)).isSameAs(failure);
         verifyNoInteractions(transactionQueries);
+    }
+
+    @Test
+    void capturesValuesBeforeEntitiesAndRelationshipsChange() {
+        Sector sector = new Sector();
+        sector.setName("Original sector");
+        customer.setName("Original customer");
+        customer.setAddress("Original address");
+        customer.setDebt(1);
+        customer.setSector(sector);
+        Transaction movement = transaction(DEFAULT_CUTOFF, TransactionType.PAYMENT);
+        movement.setDetail("Original detail");
+        movement.setAmount(1);
+        movement.setBalance(0);
+        List<Transaction> movements = List.of(movement);
+        TransactionReportCriteria criteria = new TransactionReportCriteria(ReportRange.ALL, null, null);
+        CustomerTransactionReportData report = prepare(criteria, movements);
+
+        customer.setName("Changed customer");
+        customer.setAddress("Changed address");
+        customer.setDebt(0);
+        sector.setName("Changed sector");
+        movement.setDetail("Changed detail");
+        movement.setAmount(0);
+        movement.setDate(FUTURE_DATE);
+        ReportCustomerData expectedCustomer = new ReportCustomerData("Original customer", "Original address", "Original sector", 1);
+        ReportTransactionData expectedRow = new ReportTransactionData(DEFAULT_CUTOFF, TransactionType.PAYMENT, "Original detail", 1, 0);
+        ReportCustomerData actualCustomer = report.customer();
+        List<ReportTransactionData> actualRows = report.transactions();
+        assertThat(actualCustomer).isEqualTo(expectedCustomer);
+        assertThat(actualRows).containsExactly(expectedRow);
+        assertThatThrownBy(actualRows::clear).isInstanceOf(UnsupportedOperationException.class);
+    }
+
+    private void assertReportRows(List<ReportTransactionData> actual, Transaction... expected) {
+        List<ReportTransactionData> rows = new ArrayList<>();
+        for (Transaction transaction : expected) {
+            LocalDate date = transaction.getDate();
+            TransactionType type = transaction.getType();
+            String detail = transaction.getDetail();
+            Integer amount = transaction.getAmount();
+            Integer balance = transaction.getBalance();
+            ReportTransactionData row = new ReportTransactionData(date, type, detail, amount, balance);
+            rows.add(row);
+        }
+
+        assertThat(actual).containsExactlyElementsOf(rows);
     }
 
     private CustomerTransactionReportData prepare(TransactionReportCriteria criteria, List<Transaction> transactions) {

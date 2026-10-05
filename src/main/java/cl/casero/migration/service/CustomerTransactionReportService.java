@@ -7,13 +7,13 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import cl.casero.migration.domain.Customer;
-import cl.casero.migration.domain.Transaction;
-import cl.casero.migration.domain.Sector;
 import cl.casero.migration.domain.enums.TransactionType;
+import cl.casero.migration.service.dto.CustomerDetails;
 import cl.casero.migration.service.dto.CustomerTransactionReportData;
 import cl.casero.migration.service.dto.ReportCustomerData;
 import cl.casero.migration.service.dto.ReportTransactionData;
+import cl.casero.migration.service.dto.SectorSummary;
+import cl.casero.migration.service.dto.TransactionDetails;
 import cl.casero.migration.service.dto.TransactionReportCriteria;
 import cl.casero.migration.service.dto.TransactionReportCriteria.ReportRange;
 
@@ -29,8 +29,8 @@ public class CustomerTransactionReportService {
     private final Clock reportClock;
 
     public CustomerTransactionReportData prepare(Long customerId, TransactionReportCriteria criteria) {
-        Customer customer = customerQueries.get(customerId);
-        List<Transaction> transactions = transactionQueries.listAllByCustomer(customerId);
+        CustomerDetails customer = customerQueries.get(customerId);
+        List<TransactionDetails> transactions = transactionQueries.listAllByCustomer(customerId);
         ReportRange range = criteria.range();
         String rangeLabel;
 
@@ -44,7 +44,7 @@ public class CustomerTransactionReportService {
         }
 
         TransactionType filterType = criteria.filterType();
-        List<Transaction> selectedTransactions = filterByType(transactions, filterType);
+        List<TransactionDetails> selectedTransactions = filterByType(transactions, filterType);
 
         ReportCustomerData reportCustomer = toReportCustomer(customer);
         List<ReportTransactionData> rows = selectedTransactions.stream()
@@ -53,16 +53,16 @@ public class CustomerTransactionReportService {
         return new CustomerTransactionReportData(reportCustomer, rows, rangeLabel, filterType);
     }
 
-    private ReportCustomerData toReportCustomer(Customer customer) {
+    private ReportCustomerData toReportCustomer(CustomerDetails customer) {
         String name = customer.getName();
         String address = customer.getAddress();
-        Sector sector = customer.getSector();
+        SectorSummary sector = customer.getSector();
         String sectorName = (sector != null) ? sector.getName() : "No asignado";
         Integer debt = customer.getDebt();
         return new ReportCustomerData(name, address, sectorName, debt);
     }
 
-    private ReportTransactionData toReportTransaction(Transaction transaction) {
+    private ReportTransactionData toReportTransaction(TransactionDetails transaction) {
         LocalDate date = transaction.getDate();
         TransactionType type = transaction.getType();
         String detail = transaction.getDetail();
@@ -79,7 +79,7 @@ public class CustomerTransactionReportService {
         return Math.min(requestedMonths, MAX_REPORT_MONTHS);
     }
 
-    private List<Transaction> filterByMonths(List<Transaction> transactions, int months) {
+    private List<TransactionDetails> filterByMonths(List<TransactionDetails> transactions, int months) {
         if (transactions == null || transactions.isEmpty()) {
             return List.of();
         }
@@ -93,7 +93,7 @@ public class CustomerTransactionReportService {
                 .toList();
     }
 
-    private List<Transaction> filterByType(List<Transaction> transactions, TransactionType filterType) {
+    private List<TransactionDetails> filterByType(List<TransactionDetails> transactions, TransactionType filterType) {
         if (filterType == null) {
             return transactions;
         }
@@ -103,7 +103,7 @@ public class CustomerTransactionReportService {
                 .toList();
     }
 
-    private boolean isOnOrAfter(Transaction transaction, LocalDate cutoff) {
+    private boolean isOnOrAfter(TransactionDetails transaction, LocalDate cutoff) {
         LocalDate date = transaction.getDate();
         return date != null && !date.isBefore(cutoff);
     }

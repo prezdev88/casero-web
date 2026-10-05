@@ -5,20 +5,20 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import cl.casero.migration.domain.Customer;
 import cl.casero.migration.service.dto.CustomerBirthdayDTO;
+import cl.casero.migration.service.dto.CustomerDetails;
 import cl.casero.migration.service.dto.OverdueCustomerSummary;
 import cl.casero.migration.service.dto.SectorCustomerCount;
 
 public interface CustomerQueries {
 
-    Page<Customer> search(String filter, Pageable pageable);
+    Page<CustomerDetails> search(String filter, Pageable pageable);
 
-    Customer get(Long id);
+    CustomerDetails get(Long id);
 
-    Page<Customer> getTopDebtors(Pageable pageable);
+    Page<CustomerDetails> getTopDebtors(Pageable pageable);
 
-    Page<Customer> getBestCustomers(Pageable pageable);
+    Page<CustomerDetails> getBestCustomers(Pageable pageable);
 
     Page<OverdueCustomerSummary> getOverdueCustomers(Pageable pageable, int months);
 

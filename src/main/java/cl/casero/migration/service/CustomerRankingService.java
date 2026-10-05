@@ -8,14 +8,15 @@ import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import cl.casero.migration.domain.Customer;
 import cl.casero.migration.repository.CustomerRepository;
 import cl.casero.migration.service.dto.CustomerRankingEntry;
+import cl.casero.migration.service.dto.CustomerScoreInput;
 import cl.casero.migration.service.dto.CustomerScorePresentation;
 import cl.casero.migration.util.CustomerScoreSummary;
 
@@ -37,7 +38,8 @@ public class CustomerRankingService {
             return new PageImpl<>(emptyRanking, effectivePageable, 0);
         }
 
-        Map<Long, CustomerScoreSummary> summaries = customerScoreService.calculateScoreSummaries(customers);
+        List<CustomerScoreInput> inputs = customers.stream().map(this::toScoreInput).toList();
+        Map<Long, CustomerScoreSummary> summaries = customerScoreService.calculateScoreSummaries(inputs);
         List<CustomerRankingEntry> ranking = new ArrayList<>();
         for (Customer customer : customers) {
             Long customerId = customer.getId();
@@ -49,6 +51,12 @@ public class CustomerRankingService {
         Comparator<CustomerRankingEntry> comparator = buildRankingComparator(ascending);
         ranking.sort(comparator);
         return paginate(ranking, effectivePageable);
+    }
+
+    private CustomerScoreInput toScoreInput(Customer customer) {
+        Long id = customer.getId();
+        Integer debt = customer.getDebt();
+        return new CustomerScoreInput(id, debt);
     }
 
     private CustomerRankingEntry buildEntry(Customer customer, CustomerScoreSummary summary) {

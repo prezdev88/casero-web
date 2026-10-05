@@ -6,26 +6,26 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import cl.casero.migration.domain.Transaction;
 import cl.casero.migration.domain.enums.TransactionType;
 import cl.casero.migration.service.dto.TopCustomerSummary;
+import cl.casero.migration.service.dto.TransactionDetails;
 import cl.casero.migration.service.dto.TransactionMonthlySummary;
 
 public interface TransactionQueries {
 
-    Page<Transaction> listAll(TransactionType type, Pageable pageable);
+    Page<TransactionDetails> listAll(TransactionType type, Pageable pageable);
 
-    Page<Transaction> listByCustomer(Long customerId, Pageable pageable);
+    Page<TransactionDetails> listByCustomer(Long customerId, Pageable pageable);
 
-    List<Transaction> listAllByCustomer(Long customerId);
+    List<TransactionDetails> listAllByCustomer(Long customerId);
 
-    List<Transaction> listRecentByCustomer(Long customerId, int limit);
+    List<TransactionDetails> listRecentByCustomer(Long customerId, int limit);
 
     List<TransactionMonthlySummary> getMonthlySummary(LocalDate start, LocalDate end);
 
-    List<Transaction> getFinishedCardsThisMonth();
+    List<TransactionDetails> getFinishedCardsThisMonth();
 
-    List<Transaction> getSalesThisMonth();
+    List<TransactionDetails> getSalesThisMonth();
 
     List<TopCustomerSummary> getTopCustomersThisMonth();
 

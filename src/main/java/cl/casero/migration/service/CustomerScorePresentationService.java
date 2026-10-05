@@ -6,7 +6,7 @@ import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import cl.casero.migration.domain.Customer;
+import cl.casero.migration.service.dto.CustomerScoreInput;
 import cl.casero.migration.service.dto.CustomerScorePresentation;
 import cl.casero.migration.util.CustomerScoreCalculator;
 import cl.casero.migration.util.CustomerScoreNarrator;
@@ -19,16 +19,16 @@ public class CustomerScorePresentationService {
 
     private final CustomerScoreService customerScoreService;
 
-    public CustomerScorePresentation getScorePresentation(Customer customer) {
+    public CustomerScorePresentation getScorePresentation(CustomerScoreInput customer) {
         if (customer == null) {
             double minimumScore = CustomerScoreCalculator.minScore();
             List<CycleScore> emptyCycles = List.of();
             return new CustomerScorePresentation(minimumScore, "", emptyCycles);
         }
 
-        List<Customer> customers = List.of(customer);
+        List<CustomerScoreInput> customers = List.of(customer);
         Map<Long, CustomerScoreSummary> summaries = customerScoreService.calculateScoreSummaries(customers);
-        Long customerId = customer.getId();
+        Long customerId = customer.id();
         CustomerScoreSummary summary = summaries.get(customerId);
         return present(summary);
     }

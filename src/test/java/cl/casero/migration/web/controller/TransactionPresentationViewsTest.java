@@ -16,8 +16,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.MockMvc;
@@ -34,6 +34,8 @@ import cl.casero.migration.domain.Customer;
 import cl.casero.migration.domain.Transaction;
 import cl.casero.migration.domain.enums.TransactionType;
 import cl.casero.migration.service.TransactionQueries;
+import cl.casero.migration.service.dto.TransactionDetails;
+import cl.casero.migration.support.ReadModelFixtures;
 import cl.casero.migration.util.TransactionTypePresentation;
 import cl.casero.migration.util.TransactionTypeUtil;
 
@@ -90,7 +92,8 @@ class TransactionPresentationViewsTest {
         Sort sort = dateSort.and(creationSort);
         Pageable pageable = PageRequest.of(0, PAGE_SIZE, sort);
         List<Transaction> content = List.of(transaction);
-        Page<Transaction> page = new PageImpl<>(content, pageable, 1);
+        List<TransactionDetails> data = ReadModelFixtures.transactions(content);
+        Page<TransactionDetails> page = new PageImpl<>(data, pageable, 1);
         doReturn(page).when(queries).listAll(type, pageable);
         String typeName = type.name();
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders.get("/transactions");

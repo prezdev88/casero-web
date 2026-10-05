@@ -22,19 +22,22 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import cl.casero.migration.domain.Customer;
-import cl.casero.migration.domain.Transaction;
+import cl.casero.migration.domain.CustomerBirthDate;
 import cl.casero.migration.domain.enums.TransactionType;
 import cl.casero.migration.service.CustomerQueries;
 import cl.casero.migration.service.CustomerScorePresentationService;
 import cl.casero.migration.service.CustomerScoreService;
 import cl.casero.migration.service.TransactionQueries;
+import cl.casero.migration.service.dto.CustomerDetails;
+import cl.casero.migration.service.dto.CustomerScoreInput;
 import cl.casero.migration.service.dto.CustomerScorePresentation;
+import cl.casero.migration.service.dto.TransactionDetails;
+import cl.casero.migration.service.mapping.ReadModelMapper;
 import cl.casero.migration.util.CurrencyUtil;
 import cl.casero.migration.util.CustomerScoreCalculator;
 import cl.casero.migration.util.CustomerScoreSummary;
-import cl.casero.migration.util.TransactionTypeUtil;
 import cl.casero.migration.util.TransactionTypePresentation;
+import cl.casero.migration.util.TransactionTypeUtil;
 import cl.casero.migration.web.presentation.CustomerBirthDateFormatter;
 
 @Controller
@@ -59,10 +62,11 @@ public class CustomerController {
         Model model
     ) {
         boolean hasQuery = query != null && !query.isBlank();
-        Page<Customer> customersPage = searchCustomers(query, page, size);
+        Page<CustomerDetails> customersPage = searchCustomers(query, page, size);
 
-        List<Customer> customers = customersPage.getContent();
-        Map<Long, Double> scores = customerScoreService.calculateScores(customers);
+        List<CustomerDetails> customers = customersPage.getContent();
+        List<CustomerScoreInput> inputs = customers.stream().map(ReadModelMapper::scoreInput).toList();
+        Map<Long, Double> scores = customerScoreService.calculateScores(inputs);
         LocalDate birthDateReferenceDate = LocalDate.now();
         Map<Long, String> birthDates = formatBirthDates(customers, birthDateReferenceDate);
         model.addAttribute("customerBirthDates", birthDates);
@@ -83,9 +87,10 @@ public class CustomerController {
         @RequestParam(value = "page", defaultValue = "0") int page,
         @RequestParam(value = "size", defaultValue = "10") int size
     ) {
-        Page<Customer> result = searchCustomers(query, page, size);
-        List<Customer> customers = result.getContent();
-        Map<Long, Double> scores = customerScoreService.calculateScores(customers);
+        Page<CustomerDetails> result = searchCustomers(query, page, size);
+        List<CustomerDetails> customers = result.getContent();
+        List<CustomerScoreInput> inputs = customers.stream().map(ReadModelMapper::scoreInput).toList();
+        Map<Long, Double> scores = customerScoreService.calculateScores(inputs);
         LocalDate today = LocalDate.now(DEFAULT_ZONE);
         List<CustomerSearchResult> content = customers.stream()
                 .map(customer -> toSearchResult(customer, scores, today))
@@ -113,8 +118,9 @@ public class CustomerController {
         int sanitizedSize = Math.min(positiveSize, MAX_PAGE_SIZE);
         Sort sort = Sort.by(ascending ? Sort.Direction.ASC : Sort.Direction.DESC, "createdAt");
         Pageable pageable = PageRequest.of(sanitizedPage, sanitizedSize, sort);
-        Customer customer = customerQueries.get(id);
-        CustomerScorePresentation scorePresentation = presentationService.getScorePresentation(customer);
+        CustomerDetails customer = customerQueries.get(id);
+        CustomerScoreInput scoreInput = ReadModelMapper.scoreInput(customer);
+        CustomerScorePresentation scorePresentation = presentationService.getScorePresentation(scoreInput);
         double score = scorePresentation.score();
         String explanation = scorePresentation.explanation();
         List<CustomerScoreSummary.CycleScore> cycles = scorePresentation.cycles();
@@ -123,7 +129,7 @@ public class CustomerController {
         List<CustomerScoreSummary.CycleScore> reversedCycles = new ArrayList<>(cycles);
         Collections.reverse(reversedCycles);
         model.addAttribute("customerScoreCycles", reversedCycles);
-        Page<Transaction> transactions = transactionQueries.listByCustomer(id, pageable);
+        Page<TransactionDetails> transactions = transactionQueries.listByCustomer(id, pageable);
 
         LocalDate birthDateReferenceDate = LocalDate.now();
         String birthDate = birthDateFormatter.format(customer, birthDateReferenceDate);
@@ -139,9 +145,9 @@ public class CustomerController {
         return "customers/detail";
     }
 
-    private Map<Long, String> formatBirthDates(List<Customer> customers, LocalDate referenceDate) {
+    private Map<Long, String> formatBirthDates(List<CustomerDetails> customers, LocalDate referenceDate) {
         Map<Long, String> birthDates = new LinkedHashMap<>();
-        for (Customer customer : customers) {
+        for (CustomerDetails customer : customers) {
             Long customerId = customer.getId();
             String birthDate = birthDateFormatter.format(customer, referenceDate);
             birthDates.put(customerId, birthDate);
@@ -150,7 +156,7 @@ public class CustomerController {
         return birthDates;
     }
 
-    private Page<Customer> searchCustomers(String query, int page, int size) {
+    private Page<CustomerDetails> searchCustomers(String query, int page, int size) {
         int sanitizedPage = Math.max(page, 0);
         int positiveSize = Math.max(size, 1);
         int sanitizedSize = Math.min(positiveSize, MAX_PAGE_SIZE);
@@ -177,7 +183,7 @@ public class CustomerController {
     }
 
     private CustomerSearchResult toSearchResult(
-        Customer customer,
+        CustomerDetails customer,
         Map<Long, Double> scores,
         LocalDate today
     ) {
@@ -190,8 +196,9 @@ public class CustomerController {
         String formattedDebt = CurrencyUtil.format(debt);
         double minimumScore = CustomerScoreCalculator.minScore();
         Double score = scores.getOrDefault(customerId, minimumScore);
-        boolean birthdayToday = customer.isBirthdayOn(today);
-        Integer birthdayAge = customer.getBirthdayAgeOn(today);
+        CustomerBirthDate birthDate = customer.getBirthDate();
+        boolean birthdayToday = birthDate.isBirthdayOn(today);
+        Integer birthdayAge = birthDate.getBirthdayAgeOn(today);
 
         return new CustomerSearchResult(
                 customerId,

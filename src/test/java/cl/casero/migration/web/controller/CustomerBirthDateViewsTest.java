@@ -17,8 +17,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -34,12 +34,15 @@ import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 
 import cl.casero.migration.domain.Customer;
 import cl.casero.migration.domain.Sector;
-import cl.casero.migration.domain.Transaction;
 import cl.casero.migration.service.CustomerQueries;
 import cl.casero.migration.service.CustomerScorePresentationService;
 import cl.casero.migration.service.CustomerScoreService;
 import cl.casero.migration.service.TransactionQueries;
+import cl.casero.migration.service.dto.CustomerDetails;
+import cl.casero.migration.service.dto.CustomerScoreInput;
 import cl.casero.migration.service.dto.CustomerScorePresentation;
+import cl.casero.migration.service.dto.TransactionDetails;
+import cl.casero.migration.support.ReadModelFixtures;
 import cl.casero.migration.util.CustomerScoreSummary.CycleScore;
 import cl.casero.migration.web.presentation.CustomerBirthDateFormatter;
 
@@ -180,21 +183,27 @@ class CustomerBirthDateViewsTest {
         Pageable pageable = PageRequest.of(0, PAGE_SIZE);
         List<Customer> customers = List.of(datedCustomer, undatedCustomer);
         int customerCount = customers.size();
-        Page<Customer> page = new PageImpl<>(customers, pageable, customerCount);
+        List<CustomerDetails> data = ReadModelFixtures.customers(customers);
+        Page<CustomerDetails> page = new PageImpl<>(data, pageable, customerCount);
         Map<Long, Double> scoreResults = Map.of(CUSTOMER_ID, SCORE, OTHER_CUSTOMER_ID, SCORE);
         doReturn(page).when(queries).search("Customer", pageable);
-        doReturn(scoreResults).when(scores).calculateScores(customers);
+        List<CustomerScoreInput> inputs = ReadModelFixtures.scores(customers);
+        doReturn(scoreResults).when(scores).calculateScores(inputs);
     }
 
     private void prepareDetail(Customer customer) {
         Long id = customer.getId();
         Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
         Pageable pageable = PageRequest.of(0, PAGE_SIZE, sort);
-        Page<Transaction> page = Page.empty(pageable);
+        Page<TransactionDetails> page = Page.empty(pageable);
         List<CycleScore> cycles = List.of();
         CustomerScorePresentation presentation = new CustomerScorePresentation(SCORE, "", cycles);
-        doReturn(customer).when(queries).get(id);
-        doReturn(presentation).when(presentations).getScorePresentation(customer);
+        CustomerDetails data = ReadModelFixtures.customer(customer);
+        Long customerId = customer.getId();
+        Integer debt = customer.getDebt();
+        CustomerScoreInput scoreInput = new CustomerScoreInput(customerId, debt);
+        doReturn(data).when(queries).get(id);
+        doReturn(presentation).when(presentations).getScorePresentation(scoreInput);
         doReturn(page).when(transactions).listByCustomer(id, pageable);
     }
 

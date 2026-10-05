@@ -9,6 +9,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
 import cl.casero.migration.domain.Customer;
+import cl.casero.migration.service.dto.CustomerDetails;
+import cl.casero.migration.support.ReadModelFixtures;
 
 class CustomerBirthDateFormatterTest {
 
@@ -31,7 +33,8 @@ class CustomerBirthDateFormatterTest {
         customer.setBirthMonth(month);
         String expected = BIRTH_DAY + " de " + monthName;
 
-        String label = formatter.format(customer, REFERENCE_DATE);
+        CustomerDetails data = ReadModelFixtures.customer(customer);
+        String label = formatter.format(data, REFERENCE_DATE);
 
         assertThat(label).isEqualTo(expected);
     }
@@ -46,7 +49,8 @@ class CustomerBirthDateFormatterTest {
         customer.setBirthMonth(month);
         customer.setBirthYear(BIRTH_YEAR);
 
-        String label = formatter.format(customer, REFERENCE_DATE);
+        CustomerDetails data = ReadModelFixtures.customer(customer);
+        String label = formatter.format(data, REFERENCE_DATE);
 
         assertThat(label).isNull();
     }
@@ -75,7 +79,8 @@ class CustomerBirthDateFormatterTest {
         customer.setBirthMonth(month);
         customer.setBirthYear(year);
 
-        String label = formatter.format(customer, referenceDate);
+        CustomerDetails data = ReadModelFixtures.customer(customer);
+        String label = formatter.format(data, referenceDate);
 
         assertThat(label).isEqualTo(expected);
     }
@@ -92,7 +97,8 @@ class CustomerBirthDateFormatterTest {
         Integer birthdayAge = customer.getBirthdayAgeOn(REFERENCE_DATE);
         boolean previousDayBirthday = customer.isBirthdayOn(previousDay);
         Integer previousDayBirthdayAge = customer.getBirthdayAgeOn(previousDay);
-        String previousDayLabel = formatter.format(customer, previousDay);
+        CustomerDetails data = ReadModelFixtures.customer(customer);
+        String previousDayLabel = formatter.format(data, previousDay);
 
         assertThat(birthday).isTrue();
         assertThat(birthdayAge).isEqualTo(BIRTHDAY_AGE);

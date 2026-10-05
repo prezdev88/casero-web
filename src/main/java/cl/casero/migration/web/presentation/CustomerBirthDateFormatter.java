@@ -8,7 +8,7 @@ import java.util.List;
 
 import org.springframework.stereotype.Component;
 
-import cl.casero.migration.domain.Customer;
+import cl.casero.migration.service.dto.CustomerDetails;
 
 @Component
 public class CustomerBirthDateFormatter {
@@ -19,7 +19,7 @@ public class CustomerBirthDateFormatter {
             "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
             "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre");
 
-    public String format(Customer customer, LocalDate referenceDate) {
+    public String format(CustomerDetails customer, LocalDate referenceDate) {
         Integer birthDay = customer.getBirthDay();
         Integer birthMonth = customer.getBirthMonth();
         String label = formatDayAndMonth(birthDay, birthMonth);
@@ -46,7 +46,7 @@ public class CustomerBirthDateFormatter {
         return day + " de " + monthName;
     }
 
-    private int calculateAge(Customer customer, LocalDate referenceDate) {
+    private int calculateAge(CustomerDetails customer, LocalDate referenceDate) {
         int birthYear = customer.getBirthYear();
         int birthMonth = customer.getBirthMonth();
         int birthDay = customer.getBirthDay();
@@ -61,7 +61,7 @@ public class CustomerBirthDateFormatter {
         return (currentMonth < birthMonth) ? age - 1 : age;
     }
 
-    private boolean isValidBirthDate(Customer customer) {
+    private boolean isValidBirthDate(CustomerDetails customer) {
         int birthYear = customer.getBirthYear();
         int birthMonth = customer.getBirthMonth();
         if (birthYear < Year.MIN_VALUE || birthYear > Year.MAX_VALUE

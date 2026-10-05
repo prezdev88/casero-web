@@ -16,8 +16,10 @@ import cl.casero.migration.repository.CustomerRepository.SectorCountView;
 import cl.casero.migration.service.CustomerNotFoundException;
 import cl.casero.migration.service.CustomerQueries;
 import cl.casero.migration.service.dto.CustomerBirthdayDTO;
+import cl.casero.migration.service.dto.CustomerDetails;
 import cl.casero.migration.service.dto.OverdueCustomerSummary;
 import cl.casero.migration.service.dto.SectorCustomerCount;
+import cl.casero.migration.service.mapping.ReadModelMapper;
 
 @Service
 @Transactional(readOnly = true)
@@ -27,29 +29,33 @@ public class CustomerQueryService implements CustomerQueries {
     private final CustomerRepository customerRepository;
 
     @Override
-    public Page<Customer> search(String filter, Pageable pageable) {
+    public Page<CustomerDetails> search(String filter, Pageable pageable) {
         if (filter == null || filter.isBlank()) {
             return Page.empty(pageable);
         }
 
         String trimmedFilter = filter.trim();
-        return customerRepository.search(trimmedFilter, pageable);
+        Page<Customer> customers = customerRepository.search(trimmedFilter, pageable);
+        return customers.map(ReadModelMapper::customer);
     }
 
     @Override
-    public Customer get(Long id) {
+    public CustomerDetails get(Long id) {
         Optional<Customer> result = customerRepository.findByIdAndEnabledTrue(id);
-        return result.orElseThrow(() -> new CustomerNotFoundException(id));
+        Customer customer = result.orElseThrow(() -> new CustomerNotFoundException(id));
+        return ReadModelMapper.customer(customer);
     }
 
     @Override
-    public Page<Customer> getTopDebtors(Pageable pageable) {
-        return customerRepository.findAllByEnabledTrueOrderByDebtDesc(pageable);
+    public Page<CustomerDetails> getTopDebtors(Pageable pageable) {
+        Page<Customer> customers = customerRepository.findAllByEnabledTrueOrderByDebtDesc(pageable);
+        return customers.map(ReadModelMapper::customer);
     }
 
     @Override
-    public Page<Customer> getBestCustomers(Pageable pageable) {
-        return customerRepository.findAllByEnabledTrueOrderByDebtAsc(pageable);
+    public Page<CustomerDetails> getBestCustomers(Pageable pageable) {
+        Page<Customer> customers = customerRepository.findAllByEnabledTrueOrderByDebtAsc(pageable);
+        return customers.map(ReadModelMapper::customer);
     }
 
     @Override

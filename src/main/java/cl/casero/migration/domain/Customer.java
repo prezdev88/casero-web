@@ -1,5 +1,9 @@
 package cl.casero.migration.domain;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -11,10 +15,6 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Getter
@@ -54,15 +54,16 @@ public class Customer {
     private Integer birthYear;
 
     public boolean isBirthdayOn(LocalDate date) {
-        return birthDay != null && birthMonth != null
-                && birthDay == date.getDayOfMonth()
-                && birthMonth == date.getMonthValue();
+        CustomerBirthDate birthday = birthDate();
+        return birthday.isBirthdayOn(date);
     }
 
     public Integer getBirthdayAgeOn(LocalDate date) {
-        if (birthYear == null || !isBirthdayOn(date)) {
-            return null;
-        }
-        return date.getYear() - birthYear;
+        CustomerBirthDate birthday = birthDate();
+        return birthday.getBirthdayAgeOn(date);
+    }
+
+    private CustomerBirthDate birthDate() {
+        return new CustomerBirthDate(birthDay, birthMonth, birthYear);
     }
 }

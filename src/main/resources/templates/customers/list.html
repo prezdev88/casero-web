@@ -36,8 +36,8 @@
                     </span>
                 </div>
                 <span class="customer-card__address" th:text="${customer.address}">Dirección</span>
-                <span th:if="${customer.isBirthdayOn(today)}"
-                      th:with="birthdayAge=${customer.getBirthdayAgeOn(today)}"
+                <span th:if="${customer.birthDate.isBirthdayOn(today)}"
+                      th:with="birthdayAge=${customer.birthDate.getBirthdayAgeOn(today)}"
                       class="customer-card__birthday">
                     <span aria-hidden="true">🎂</span>
                     <span th:text="${birthdayAge != null ? '(Hoy cumple ' + birthdayAge + (birthdayAge == 1 ? ' año)' : ' años)') : '(Hoy está de cumpleaños)'}">(Hoy está de cumpleaños)</span>

@@ -7,7 +7,7 @@ Documento de L03 en [improvements.md](improvements.md). Describe el comportamien
 - Los importes representan pesos enteros, sin conversión de moneda ni redondeo decimal. Los tipos existentes son `int`/`Integer` y `long` para algunos agregados; devolver `long` no cambia el tipo de la suma realizada por el repositorio.
 - Las fechas financieras son `LocalDate`. Los rangos con `BETWEEN` incluyen ambos extremos. Los meses son meses calendario, no bloques de treinta días.
 - Los comandos financieros reciben records de aplicación, creados por el adaptador tras validar sus formularios web. Otros servicios mantienen sus entradas actuales. Las anotaciones de los formularios no garantizan validación automática al invocar directamente un servicio. Identificadores, fechas y paginación deben ser válidos salvo los casos opcionales descritos abajo.
-- Las consultas no modifican el dominio. Las implementaciones de `CustomerQueries`, `TransactionQueries`, `AuditQueries` y `UserCredentialLookup` usan transacciones de solo lectura a través del proxy de Spring. Esto no convierte sus entidades devueltas en objetos inmutables.
+- Las consultas no modifican el dominio. Las implementaciones de `CustomerQueries`, `TransactionQueries`, `AuditQueries` y `UserCredentialLookup` usan transacciones de solo lectura a través del proxy de Spring. Las consultas de clientes y movimientos convierten entidades a valores inmutables dentro de la transacción; no exponen relaciones JPA. La auditoría mantiene sus resultados actuales y credenciales se documentan en su sección propia.
 - Los comandos de clientes y movimientos usan transacciones de escritura a través del proxy. La anotación no ofrece la misma garantía al construir una instancia directamente ni demuestra protección frente a escrituras concurrentes.
 - No hay un criterio universal de desempate. Se documentan los órdenes explícitos; los empates restantes conservan las limitaciones de la consulta existente.
 
@@ -16,7 +16,7 @@ Documento de L03 en [improvements.md](improvements.md). Describe el comportamien
 | Operación | Ausencia, selección y orden |
 | --- | --- |
 | `search(filter, pageable)` | Filtro nulo o en blanco: página vacía con la paginación recibida. En otro caso aplica `trim` y busca clientes habilitados por nombre, dirección o sector, ignorando mayúsculas y los caracteres acentuados contemplados por la consulta. Orden principal por nombre ascendente. |
-| `get(id)` | Devuelve un cliente habilitado con sector precargado. Ausente o deshabilitado: `CustomerNotFoundException`. La traducción a HTTP 404 corresponde al adaptador web. |
+| `get(id)` | Devuelve `CustomerDetails` de un cliente habilitado, con valores de sector copiados dentro de la transacción. Ausente o deshabilitado: `CustomerNotFoundException`. La traducción a HTTP 404 corresponde al adaptador web. |
 | `getTopDebtors(pageable)` | Clientes habilitados, deuda descendente. |
 | `getBestCustomers(pageable)` | Clientes habilitados, deuda ascendente. |
 | `getOverdueCustomers(pageable, months)` | Meses menores que uno se normalizan a uno. Contenido de clientes habilitados con deuda positiva, sin abonos o con último abono anterior al umbral. El umbral usa `CURRENT_DATE` de la base de datos. Orden: clientes con abonos antes que los que nunca abonaron; dentro del primer grupo, último abono descendente. |
@@ -63,7 +63,7 @@ La atomicidad exigida a una alternativa incluye saldo, movimiento y estadística
 
 ## TransactionQueries
 
-Visible significa que el cliente del movimiento está habilitado. Las consultas que devuelven entidades precargan cliente y sector.
+Visible significa que el cliente del movimiento está habilitado. Las consultas de movimientos convierten entidades con cliente y sector precargados a `TransactionDetails`, con referencias inmutables de lectura. Las páginas conservan su metadata y los resultados no comparten estado mutable con las entidades.
 
 | Operación | Resultado y períodos |
 | --- | --- |
@@ -82,6 +82,8 @@ Visible significa que el cliente del movimiento está habilitado. Las consultas 
 ## Puntuación y ranking
 
 ### CustomerScoreService
+
+Recibe `CustomerScoreInput`, con identificador y deuda, sin entidades persistentes. El ranking y los adaptadores preparan esas entradas.
 
 - Colección nula o vacía: mapa vacío. Clientes sin identificador no generan resultados. Los elementos de una colección no deben ser nulos: el primer recorrido obtiene sus identificadores.
 - Consulta ciclos una vez por lote de identificadores y transmite la ventana de pago perfecto del calculador: actualmente 45 días. La SQL clasifica como tardíos los intervalos estrictamente mayores que esa ventana.
@@ -175,7 +177,7 @@ El proveedor de autenticación obtiene la huella, consulta ese contrato y verifi
 
 ## Evidencia y uso al sustituir implementaciones
 
-La suite actual pasó con **260 pruebas, cero fallos, errores u omisiones**, mediante `mvn -o test`. Casos relevantes:
+La suite actual pasó con **262 pruebas, cero fallos, errores u omisiones**, mediante `mvn -o test`. Casos relevantes:
 
 | Contrato | Pruebas existentes |
 | --- | --- |

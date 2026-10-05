@@ -20,7 +20,9 @@ import cl.casero.migration.repository.TransactionRepository;
 import cl.casero.migration.repository.TransactionRepository.TopCustomerProjection;
 import cl.casero.migration.service.TransactionQueries;
 import cl.casero.migration.service.dto.TopCustomerSummary;
+import cl.casero.migration.service.dto.TransactionDetails;
 import cl.casero.migration.service.dto.TransactionMonthlySummary;
+import cl.casero.migration.service.mapping.ReadModelMapper;
 
 @Service
 @Transactional(readOnly = true)
@@ -34,33 +36,37 @@ public class TransactionQueryService implements TransactionQueries {
     private final Clock reportClock;
 
     @Override
-    public Page<Transaction> listAll(TransactionType type, Pageable pageable) {
+    public Page<TransactionDetails> listAll(TransactionType type, Pageable pageable) {
         if (type == null) {
-            return transactionRepository.findAllVisible(pageable);
+            Page<Transaction> transactions = transactionRepository.findAllVisible(pageable);
+        return transactions.map(ReadModelMapper::transaction);
         }
 
-        return transactionRepository.findVisibleByType(type, pageable);
+        Page<Transaction> transactions = transactionRepository.findVisibleByType(type, pageable);
+        return transactions.map(ReadModelMapper::transaction);
     }
 
     @Override
-    public Page<Transaction> listByCustomer(Long customerId, Pageable pageable) {
-        return transactionRepository.findVisibleByCustomerId(customerId, pageable);
+    public Page<TransactionDetails> listByCustomer(Long customerId, Pageable pageable) {
+        Page<Transaction> transactions = transactionRepository.findVisibleByCustomerId(customerId, pageable);
+        return transactions.map(ReadModelMapper::transaction);
     }
 
     @Override
-    public List<Transaction> listAllByCustomer(Long customerId) {
-        return transactionRepository.findVisibleByCustomerIdOrderByDateDescIdDesc(customerId);
-    }
-
-    @Override
-    public List<Transaction> listRecentByCustomer(Long customerId, int limit) {
+    public List<TransactionDetails> listAllByCustomer(Long customerId) {
         List<Transaction> transactions = transactionRepository.findVisibleByCustomerIdOrderByDateDescIdDesc(customerId);
+        return transactions.stream().map(ReadModelMapper::transaction).toList();
+    }
+
+    @Override
+    public List<TransactionDetails> listRecentByCustomer(Long customerId, int limit) {
+        List<TransactionDetails> transactions = listAllByCustomer(customerId);
 
         if (limit <= 0 || transactions.size() <= limit) {
             return transactions;
         }
 
-        List<Transaction> firstTransactions = transactions.subList(0, limit);
+        List<TransactionDetails> firstTransactions = transactions.subList(0, limit);
         return new ArrayList<>(firstTransactions);
     }
 
@@ -99,19 +105,21 @@ public class TransactionQueryService implements TransactionQueries {
     }
 
     @Override
-    public List<Transaction> getFinishedCardsThisMonth() {
+    public List<TransactionDetails> getFinishedCardsThisMonth() {
         MonthRange range = currentMonth();
         LocalDate start = range.start();
         LocalDate end = range.end();
-        return transactionRepository.findFinishedCards(start, end);
+        List<Transaction> transactions = transactionRepository.findFinishedCards(start, end);
+        return transactions.stream().map(ReadModelMapper::transaction).toList();
     }
 
     @Override
-    public List<Transaction> getSalesThisMonth() {
+    public List<TransactionDetails> getSalesThisMonth() {
         MonthRange range = currentMonth();
         LocalDate start = range.start();
         LocalDate end = range.end();
-        return transactionRepository.findSalesThisMonth(start, end);
+        List<Transaction> transactions = transactionRepository.findSalesThisMonth(start, end);
+        return transactions.stream().map(ReadModelMapper::transaction).toList();
     }
 
     @Override

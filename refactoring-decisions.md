@@ -12,9 +12,7 @@ Implementación de D04 y las tres filas D05 de [improvements.md](improvements.md
 
 **Evidencia.** Búsqueda y detalle de clientes, listados de movimientos y exportaciones siguen utilizando entidades. Los resultados analíticos que ya tienen forma propia usan DTOs: sector, morosidad, top, series mensuales, cumpleaños, ranking y puntuaciones. Los contratos dejaron de exponer las proyecciones del repositorio para sector y top.
 
-**Decisión actual.** Mantener la conversión selectiva realizada. No reemplazar todos los resultados por copias de entidades con idénticos campos. Los consumidores actuales todavía conocen entidades mutables; una transacción de lectura o una copia de la lista no elimina ese acoplamiento.
-
-**Cuándo retomarlo.** Un consumidor necesita un conjunto estrecho de datos, aislamiento de JPA, una salida pública estable o valores inmutables. Crear el resultado para ese caso y convertirlo dentro del servicio correspondiente. Verificar ausencia, filtros de habilitación, orden, paginación y los datos realmente utilizados por cada consumidor antes de retirar el contrato anterior.
+**Implementado.** Las cuatro consultas de clientes que exponían entidades devuelven `CustomerDetails`. Las siete consultas de movimientos que exponían entidades devuelven `TransactionDetails`, con una referencia de cliente limitada a identificador, nombre y sector. Son valores inmutables, construidos dentro del servicio de lectura y sin entidades ni colecciones persistentes. Los agregados analíticos conservan sus DTOs. Se adaptaron vistas, exportación, informe y puntuación; esta última recibe `CustomerScoreInput` con identificador y deuda. Pruebas independientes comprueban datos, ausencia, orden y metadata de páginas, además de cambios posteriores en las entidades y relaciones. Los comandos de creación y otras áreas fuera de estas consultas conservan sus contratos actuales.
 
 ## D05 — Datos propios del renderizador PDF
 
@@ -32,4 +30,4 @@ Implementación de D04 y las tres filas D05 de [improvements.md](improvements.md
 
 ## Estado y alcance de validación
 
-De las cuatro filas solicitadas, **2 están implementadas y 2 pendientes**. La tabla contiene **25 de 27 filas completadas**. La última suite aprobó **260 pruebas** con `mvn -o test`; no se ejecutó base de datos real ni navegador.
+De las cuatro filas solicitadas, **3 están implementadas y 1 pendientes**. La tabla contiene **26 de 27 filas completadas**. La última suite aprobó **262 pruebas** con `mvn -o test`; no se ejecutó base de datos real ni navegador.

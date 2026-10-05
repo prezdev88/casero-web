@@ -43,7 +43,10 @@ import cl.casero.migration.service.CustomerQueries;
 import cl.casero.migration.service.SectorService;
 import cl.casero.migration.service.dto.CreateCustomerForm;
 import cl.casero.migration.service.dto.CustomerBirthdayDTO;
+import cl.casero.migration.service.dto.CustomerDetails;
 import cl.casero.migration.service.dto.OverdueCustomerSummary;
+import cl.casero.migration.service.dto.SectorSummary;
+import cl.casero.migration.support.ReadModelFixtures;
 
 @ExtendWith(MockitoExtension.class)
 class CustomerServicesTest {
@@ -263,9 +266,9 @@ class CustomerServicesTest {
     void keepsBlankSearchesEmptyWithoutQueryingTheRepository(String filter) {
         Pageable pageable = PageRequest.of(0, PAGE_SIZE);
 
-        Page<Customer> result = queries.search(filter, pageable);
+        Page<CustomerDetails> result = queries.search(filter, pageable);
 
-        List<Customer> content = result.getContent();
+        List<CustomerDetails> content = result.getContent();
         Pageable actualPageable = result.getPageable();
         assertThat(content).isEmpty();
         assertThat(actualPageable).isEqualTo(pageable);
@@ -279,9 +282,15 @@ class CustomerServicesTest {
         Page<Customer> page = new PageImpl<>(content, pageable, TOTAL_CUSTOMERS);
         doReturn(page).when(repository).search("Test", pageable);
 
-        Page<Customer> result = queries.search("  Test  ", pageable);
+        Page<CustomerDetails> result = queries.search("  Test  ", pageable);
 
-        assertThat(result).isSameAs(page);
+        List<CustomerDetails> expected = ReadModelFixtures.customers(content);
+        List<CustomerDetails> actual = result.getContent();
+        Pageable actualPage = result.getPageable();
+        long total = result.getTotalElements();
+        assertThat(actual).containsExactlyElementsOf(expected);
+        assertThat(actualPage).isEqualTo(pageable);
+        assertThat(total).isEqualTo(TOTAL_CUSTOMERS);
     }
 
     @Test
@@ -307,9 +316,10 @@ class CustomerServicesTest {
         };
         doAnswer(answer).when(repository).findByIdAndEnabledTrue(CUSTOMER_ID);
 
-        Customer result = queries.get(CUSTOMER_ID);
+        CustomerDetails result = queries.get(CUSTOMER_ID);
 
-        assertThat(result).isSameAs(customer);
+        CustomerDetails expected = ReadModelFixtures.customer(customer);
+        assertThat(result).isEqualTo(expected);
         assertThat(queries).isNotSameAs(commands);
         int commits = manager.getCommitCount();
         boolean readOnly = manager.isReadOnly();
@@ -350,11 +360,14 @@ class CustomerServicesTest {
         doReturn(page).when(repository).findAllByEnabledTrueOrderByDebtDesc(pageable);
         doReturn(page).when(repository).findAllByEnabledTrueOrderByDebtAsc(pageable);
 
-        Page<Customer> topDebtors = queries.getTopDebtors(pageable);
-        Page<Customer> bestCustomers = queries.getBestCustomers(pageable);
+        Page<CustomerDetails> topDebtors = queries.getTopDebtors(pageable);
+        Page<CustomerDetails> bestCustomers = queries.getBestCustomers(pageable);
 
-        assertThat(topDebtors).isSameAs(page);
-        assertThat(bestCustomers).isSameAs(page);
+        List<CustomerDetails> expected = ReadModelFixtures.customers(content);
+        List<CustomerDetails> top = topDebtors.getContent();
+        List<CustomerDetails> best = bestCustomers.getContent();
+        assertThat(top).containsExactlyElementsOf(expected);
+        assertThat(best).containsExactlyElementsOf(expected);
     }
 
     @Test
@@ -372,6 +385,30 @@ class CustomerServicesTest {
         assertThat(count).isEqualTo(TOTAL_CUSTOMERS);
         assertThat(birthdayCount).isEqualTo(1);
         assertThat(result).isSameAs(birthdays);
+    }
+
+    @Test
+    void returnsCustomerValuesIndependentOfEntityAndSectorChanges() {
+        Sector sector = new Sector();
+        sector.setId(SECTOR_ID);
+        sector.setName("Original Sector");
+        customer.setSector(sector);
+        customer.setBirthDay(BIRTH_DAY);
+        customer.setBirthMonth(BIRTH_MONTH);
+        customer.setBirthYear(BIRTH_YEAR);
+        prepareExistingCustomer();
+
+        CustomerDetails result = queries.get(CUSTOMER_ID);
+
+        customer.setName("Changed Name");
+        customer.setAddress("Changed Address");
+        customer.setDebt(0);
+        customer.setBirthYear(null);
+        sector.setName("Changed Sector");
+        SectorSummary originalSector = new SectorSummary(SECTOR_ID, "Original Sector");
+        CustomerDetails expected = new CustomerDetails(CUSTOMER_ID, "Original Name", "Original Address",
+                EXISTING_DEBT, originalSector, BIRTH_DAY, BIRTH_MONTH, BIRTH_YEAR);
+        assertThat(result).isEqualTo(expected);
     }
 
     private void prepareExistingCustomer() {

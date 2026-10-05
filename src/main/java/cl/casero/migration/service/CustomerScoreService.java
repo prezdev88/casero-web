@@ -15,9 +15,9 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import cl.casero.migration.domain.Customer;
 import cl.casero.migration.repository.TransactionRepository;
 import cl.casero.migration.repository.TransactionRepository.CustomerCycleProjection;
+import cl.casero.migration.service.dto.CustomerScoreInput;
 import cl.casero.migration.util.CustomerScoreCalculator;
 import cl.casero.migration.util.CustomerScoreSummary;
 
@@ -29,13 +29,13 @@ public class CustomerScoreService {
 
     private final TransactionRepository transactionRepository;
 
-    public Map<Long, CustomerScoreSummary> calculateScoreSummaries(Collection<Customer> customers) {
+    public Map<Long, CustomerScoreSummary> calculateScoreSummaries(Collection<CustomerScoreInput> customers) {
         if (customers == null || customers.isEmpty()) {
             return Collections.emptyMap();
         }
 
         Set<Long> ids = customers.stream()
-                .map(Customer::getId)
+                .map(CustomerScoreInput::id)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
 
@@ -47,12 +47,12 @@ public class CustomerScoreService {
         Map<Long, CustomerScoreSummary> summaries = new HashMap<>();
 
         List<CustomerCycleProjection> emptyCycles = Collections.emptyList();
-        for (Customer customer : customers) {
+        for (CustomerScoreInput customer : customers) {
             if (customer == null) {
                 continue;
             }
 
-            Long id = customer.getId();
+            Long id = customer.id();
 
             if (id == null) {
                 continue;
@@ -67,21 +67,21 @@ public class CustomerScoreService {
         return summaries;
     }
 
-    public Map<Long, Double> calculateScores(Collection<Customer> customers) {
+    public Map<Long, Double> calculateScores(Collection<CustomerScoreInput> customers) {
         return calculateScoreSummaries(customers)
                 .entrySet()
                 .stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().score()));
     }
 
-    public double calculateScore(Customer customer) {
+    public double calculateScore(CustomerScoreInput customer) {
         if (customer == null) {
             return CustomerScoreCalculator.minScore();
         }
 
-        List<Customer> singleCustomer = List.of(customer);
+        List<CustomerScoreInput> singleCustomer = List.of(customer);
         Map<Long, CustomerScoreSummary> summaries = calculateScoreSummaries(singleCustomer);
-        Long customerId = customer.getId();
+        Long customerId = customer.id();
         CustomerScoreSummary summary = summaries.get(customerId);
 
         return summary != null ? summary.score() : CustomerScoreCalculator.minScore();
@@ -110,7 +110,7 @@ public class CustomerScoreService {
     }
 
     private CustomerScoreSummary buildSummary(
-        Customer customer,
+        CustomerScoreInput customer,
         List<CustomerCycleProjection> cycleProjections
     ) {
         List<CustomerScoreSummary.CycleScore> cycleScores = new ArrayList<>();
@@ -129,7 +129,7 @@ public class CustomerScoreService {
         }
 
         if (cycleScores.isEmpty()) {
-            boolean hasOutstandingDebt = customer != null && customer.getDebt() != null && customer.getDebt() > 0;
+            boolean hasOutstandingDebt = customer != null && customer.debt() != null && customer.debt() > 0;
             CustomerScoreCalculator.ScoreInputs fallbackInputs = new CustomerScoreCalculator.ScoreInputs(
                     0, null, null, null, null, null, null, null, hasOutstandingDebt);
             CustomerScoreCalculator.ScoreResult fallbackSummary = CustomerScoreCalculator.evaluate(fallbackInputs);

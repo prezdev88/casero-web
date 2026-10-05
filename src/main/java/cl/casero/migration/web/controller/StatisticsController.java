@@ -12,10 +12,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import cl.casero.migration.domain.Customer;
 import cl.casero.migration.domain.MonthlyStatistic;
 import cl.casero.migration.service.CustomerQueries;
 import cl.casero.migration.service.StatisticsService;
+import cl.casero.migration.service.dto.CustomerDetails;
 import cl.casero.migration.service.dto.SectorCustomerCount;
 
 @Controller
@@ -76,7 +76,7 @@ public class StatisticsController {
         int sanitizedPage = Math.max(page, 0);
         int sanitizedSize = Math.min(Math.max(size, 1), 100);
         PageRequest pageable = PageRequest.of(sanitizedPage, sanitizedSize);
-        Page<Customer> debtorsPage = customerQueries.getTopDebtors(pageable);
+        Page<CustomerDetails> debtorsPage = customerQueries.getTopDebtors(pageable);
 
         model.addAttribute("debtorsPage", debtorsPage);
 
@@ -92,7 +92,7 @@ public class StatisticsController {
         int sanitizedPage = Math.max(page, 0);
         int sanitizedSize = Math.min(Math.max(size, 1), 100);
         PageRequest pageable = PageRequest.of(sanitizedPage, sanitizedSize);
-        Page<Customer> bestCustomersPage = customerQueries.getBestCustomers(pageable);
+        Page<CustomerDetails> bestCustomersPage = customerQueries.getBestCustomers(pageable);
 
         model.addAttribute("customersPage", bestCustomersPage);
         

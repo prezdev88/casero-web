@@ -7,6 +7,7 @@ import static org.mockito.Mockito.doReturn;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 
@@ -21,14 +22,25 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.Answer;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+import cl.casero.migration.domain.Customer;
+import cl.casero.migration.domain.Sector;
 import cl.casero.migration.domain.Transaction;
 import cl.casero.migration.domain.enums.TransactionType;
 import cl.casero.migration.repository.TransactionRepository;
 import cl.casero.migration.service.TransactionQueries;
+import cl.casero.migration.service.dto.SectorSummary;
+import cl.casero.migration.service.dto.TransactionCustomerSummary;
+import cl.casero.migration.service.dto.TransactionDetails;
 import cl.casero.migration.service.dto.TransactionMonthlySummary;
+import cl.casero.migration.service.mapping.ReadModelMapper;
+import cl.casero.migration.support.ReadModelFixtures;
 
 @ExtendWith(MockitoExtension.class)
 class TransactionQueryServiceTest {
@@ -116,12 +128,14 @@ class TransactionQueryServiceTest {
         List<Transaction> transactions = List.of(first, second);
         doReturn(transactions).when(transactionRepository).findVisibleByCustomerIdOrderByDateDescIdDesc(CUSTOMER_ID);
 
-        List<Transaction> result = queries.listRecentByCustomer(CUSTOMER_ID, limit);
+        List<TransactionDetails> result = queries.listRecentByCustomer(CUSTOMER_ID, limit);
 
         if (limit == 1) {
-            assertThat(result).containsExactly(first);
+            TransactionDetails expected = ReadModelMapper.transaction(first);
+            assertThat(result).containsExactly(expected);
         } else {
-            assertThat(result).isSameAs(transactions).containsExactly(first, second);
+            List<TransactionDetails> expected = ReadModelFixtures.transactions(transactions);
+            assertThat(result).containsExactlyElementsOf(expected);
         }
     }
 
@@ -146,7 +160,7 @@ class TransactionQueryServiceTest {
             doAnswer(answer).when(transactionRepository).findSalesThisMonth(CURRENT_START, CURRENT_END);
             TransactionQueries transactionalQueries = context.getBean(TransactionQueries.class);
 
-            List<Transaction> result = transactionalQueries.getSalesThisMonth();
+            List<TransactionDetails> result = transactionalQueries.getSalesThisMonth();
 
             int begins = manager.getBeginCount();
             int commits = manager.getCommitCount();
@@ -156,6 +170,57 @@ class TransactionQueryServiceTest {
             assertThat(commits).isEqualTo(1);
             assertThat(readOnly).isTrue();
         }
+    }
+
+    @Test
+    void returnsIndependentMovementValuesAndPreservesPageMetadata() {
+        Customer customer = new Customer();
+        customer.setId(CUSTOMER_ID);
+        customer.setName("Original Customer");
+        Sector sector = new Sector();
+        sector.setId(CUSTOMER_ID);
+        sector.setName("Original Sector");
+        customer.setSector(sector);
+        Transaction movement = transaction(CURRENT_START, TransactionType.SALE, SALE_AMOUNT);
+        OffsetDateTime timestamp = REFERENCE_INSTANT.atOffset(ZoneOffset.UTC);
+        movement.setId(CUSTOMER_ID);
+        movement.setCustomer(customer);
+        movement.setCreatedAt(timestamp);
+        movement.setDetail("Original Detail");
+        movement.setBalance(SALE_AMOUNT);
+        movement.setItemCount(1);
+        List<Transaction> content = List.of(movement);
+        Pageable pageable = PageRequest.of(1, 1);
+        long total = DEFAULT_MONTH_COUNT;
+        Page<Transaction> page = new PageImpl<>(content, pageable, total);
+        doReturn(page).when(transactionRepository).findVisibleByType(TransactionType.SALE, pageable);
+        doReturn(page).when(transactionRepository).findVisibleByCustomerId(CUSTOMER_ID, pageable);
+        doReturn(content).when(transactionRepository).findFinishedCards(CURRENT_START, CURRENT_END);
+        doReturn(content).when(transactionRepository).findSalesThisMonth(CURRENT_START, CURRENT_END);
+
+        Page<TransactionDetails> result = queries.listAll(TransactionType.SALE, pageable);
+        Page<TransactionDetails> customerResult = queries.listByCustomer(CUSTOMER_ID, pageable);
+        List<TransactionDetails> finished = queries.getFinishedCardsThisMonth();
+        List<TransactionDetails> sales = queries.getSalesThisMonth();
+
+        movement.setAmount(0);
+        movement.setDetail("Changed Detail");
+        customer.setName("Changed Customer");
+        sector.setName("Changed Sector");
+        SectorSummary sectorData = new SectorSummary(CUSTOMER_ID, "Original Sector");
+        TransactionCustomerSummary customerData = new TransactionCustomerSummary(CUSTOMER_ID, "Original Customer", sectorData);
+        TransactionDetails expected = new TransactionDetails(CUSTOMER_ID, CURRENT_START, "Original Detail",
+                SALE_AMOUNT, SALE_AMOUNT, TransactionType.SALE, timestamp, 1, customerData);
+        List<TransactionDetails> rows = result.getContent();
+        List<TransactionDetails> customerRows = customerResult.getContent();
+        long actualTotal = result.getTotalElements();
+        Pageable actualPage = result.getPageable();
+        assertThat(rows).containsExactly(expected);
+        assertThat(customerRows).containsExactly(expected);
+        assertThat(finished).containsExactly(expected);
+        assertThat(sales).containsExactly(expected);
+        assertThat(actualTotal).isEqualTo(total);
+        assertThat(actualPage).isEqualTo(pageable);
     }
 
     private Transaction transaction(LocalDate date, TransactionType type, int amount) {

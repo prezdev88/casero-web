@@ -19,9 +19,9 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import cl.casero.migration.domain.Customer;
 import cl.casero.migration.repository.TransactionRepository;
 import cl.casero.migration.repository.TransactionRepository.CustomerCycleProjection;
+import cl.casero.migration.service.dto.CustomerScoreInput;
 import cl.casero.migration.service.dto.CustomerScorePresentation;
 import cl.casero.migration.util.CustomerScoreSummary;
 import cl.casero.migration.util.CustomerScoreSummary.CycleScore;
@@ -59,7 +59,7 @@ class CustomerScoreServicesTest {
     @Test
     void returnsEmptyScoresForNullAndEmptyCollectionsWithoutQuerying() {
         Map<Long, CustomerScoreSummary> nullSummaries = scores.calculateScoreSummaries(null);
-        List<Customer> emptyCustomers = List.of();
+        List<CustomerScoreInput> emptyCustomers = List.of();
         Map<Long, Double> emptyScores = scores.calculateScores(emptyCustomers);
 
         assertThat(nullSummaries).isEmpty();
@@ -84,7 +84,7 @@ class CustomerScoreServicesTest {
 
     @Test
     void presentsAnUnpersistedCustomerAsHavingNoEvaluableHistory() {
-        Customer customer = new Customer();
+        CustomerScoreInput customer = new CustomerScoreInput(null, 0);
         CustomerScorePresentation presentation = presentations.getScorePresentation(customer);
         double score = presentation.score();
         String explanation = presentation.explanation();
@@ -98,7 +98,7 @@ class CustomerScoreServicesTest {
 
     @Test
     void keepsMinimumScoreAndExplanationWhenTheCustomerHasNoCycles() {
-        Customer customer = customer(CUSTOMER_ID);
+        CustomerScoreInput customer = customer(CUSTOMER_ID);
         List<Long> ids = List.of(CUSTOMER_ID);
         List<CustomerCycleProjection> rows = List.of();
         doReturn(rows).when(repository).findCustomerCycleStats(ids, PERFECT_PAYMENT_WINDOW_DAYS);
@@ -116,9 +116,9 @@ class CustomerScoreServicesTest {
 
     @Test
     void groupsOneBatchOfCyclesAndKeepsEvaluationAverageDatesAndCycleOrder() {
-        Customer first = customer(CUSTOMER_ID);
-        Customer second = customer(OTHER_CUSTOMER_ID);
-        List<Customer> customers = List.of(first, second);
+        CustomerScoreInput first = customer(CUSTOMER_ID);
+        CustomerScoreInput second = customer(OTHER_CUSTOMER_ID);
+        List<CustomerScoreInput> customers = List.of(first, second);
         CustomerCycleProjection paid = projection(CUSTOMER_ID, 1, FIRST_CYCLE_DATE);
         CustomerCycleProjection other = projection(OTHER_CUSTOMER_ID, 1, FIRST_CYCLE_DATE);
         CustomerCycleProjection unpaid = projection(CUSTOMER_ID, 0, SECOND_CYCLE_DATE);
@@ -166,8 +166,8 @@ class CustomerScoreServicesTest {
         List<CustomerCycleProjection> rows = List.of(paid, unpaid);
         List<Long> ids = List.of(CUSTOMER_ID);
         doReturn(rows).when(repository).findCustomerCycleStats(ids, PERFECT_PAYMENT_WINDOW_DAYS);
-        Customer customer = customer(CUSTOMER_ID);
-        List<Customer> customers = List.of(customer);
+        CustomerScoreInput customer = customer(CUSTOMER_ID);
+        List<CustomerScoreInput> customers = List.of(customer);
         Map<Long, CustomerScoreSummary> summaries = scores.calculateScoreSummaries(customers);
         CustomerScoreSummary summary = summaries.get(CUSTOMER_ID);
 
@@ -188,11 +188,8 @@ class CustomerScoreServicesTest {
         verify(repository).findCustomerCycleStats(ids, PERFECT_PAYMENT_WINDOW_DAYS);
     }
 
-    private Customer customer(long id) {
-        Customer customer = new Customer();
-        customer.setId(id);
-        customer.setDebt(0);
-        return customer;
+    private CustomerScoreInput customer(long id) {
+        return new CustomerScoreInput(id, 0);
     }
 
     private CustomerCycleProjection projection(long customerId, int payments, LocalDate date) {

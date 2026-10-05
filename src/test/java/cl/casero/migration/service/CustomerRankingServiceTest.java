@@ -20,8 +20,8 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.MockMvc;
@@ -39,6 +39,8 @@ import cl.casero.migration.repository.CustomerRepository;
 import cl.casero.migration.repository.TransactionRepository;
 import cl.casero.migration.repository.TransactionRepository.CustomerCycleProjection;
 import cl.casero.migration.service.dto.CustomerRankingEntry;
+import cl.casero.migration.service.dto.CustomerScoreInput;
+import cl.casero.migration.support.ReadModelFixtures;
 import cl.casero.migration.util.CustomerScoreCalculator;
 import cl.casero.migration.util.CustomerScoreCalculator.ScoreInputs;
 import cl.casero.migration.util.CustomerScoreCalculator.ScoreResult;
@@ -106,7 +108,8 @@ class CustomerRankingServiceTest {
         assertThat(fallbackScore).isEqualTo(MINIMUM_SCORE);
         assertThat(fallbackCycles).isZero();
         verify(customers).findAllByEnabledTrue();
-        verify(scores).calculateScoreSummaries(enabled);
+        List<CustomerScoreInput> inputs = ReadModelFixtures.scores(enabled);
+        verify(scores).calculateScoreSummaries(inputs);
     }
 
     @Test
@@ -238,7 +241,8 @@ class CustomerRankingServiceTest {
                 ALPHA_ID, oneCycle, ZULU_ID, twoCycles, BETA_ID, twoCycles,
                 UNNAMED_ID, twoCycles, TIED_BETA_ID, twoCycles);
         doReturn(enabled).when(customers).findAllByEnabledTrue();
-        doReturn(summaries).when(scores).calculateScoreSummaries(enabled);
+        List<CustomerScoreInput> inputs = ReadModelFixtures.scores(enabled);
+        doReturn(summaries).when(scores).calculateScoreSummaries(inputs);
         return enabled;
     }
 

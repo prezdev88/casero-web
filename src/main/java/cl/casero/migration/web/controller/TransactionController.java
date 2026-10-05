@@ -1,13 +1,9 @@
 package cl.casero.migration.web.controller;
 
-import cl.casero.migration.domain.Transaction;
-import cl.casero.migration.domain.enums.TransactionType;
-import cl.casero.migration.service.TransactionQueries;
-import cl.casero.migration.service.dto.TransactionMonthlySummary;
-import cl.casero.migration.util.CurrencyUtil;
-import cl.casero.migration.util.DateTimeUtil;
-import lombok.AllArgsConstructor;
+import java.time.LocalDate;
+import java.util.List;
 
+import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -21,8 +17,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import java.time.LocalDate;
-import java.util.List;
+import cl.casero.migration.domain.enums.TransactionType;
+import cl.casero.migration.service.TransactionQueries;
+import cl.casero.migration.service.dto.TransactionDetails;
+import cl.casero.migration.service.dto.TransactionMonthlySummary;
+import cl.casero.migration.util.CurrencyUtil;
+import cl.casero.migration.util.DateTimeUtil;
 
 @Controller
 @AllArgsConstructor
@@ -42,7 +42,7 @@ public class TransactionController {
         int sanitizedSize = Math.min(Math.max(size, 1), 50);
         Sort sort = Sort.by(Sort.Direction.DESC, "date").and(Sort.by(Sort.Direction.DESC, "createdAt"));
         Pageable pageable = PageRequest.of(sanitizedPage, sanitizedSize, sort);
-        Page<Transaction> transactionsPage = transactionQueries.listAll(type, pageable);
+        Page<TransactionDetails> transactionsPage = transactionQueries.listAll(type, pageable);
 
         model.addAttribute("transactionsPage", transactionsPage);
         model.addAttribute("dateTimeUtil", DateTimeUtil.class);

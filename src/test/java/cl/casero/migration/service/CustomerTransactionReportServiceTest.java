@@ -23,14 +23,17 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import cl.casero.migration.domain.Customer;
-import cl.casero.migration.domain.Transaction;
 import cl.casero.migration.domain.Sector;
+import cl.casero.migration.domain.Transaction;
 import cl.casero.migration.domain.enums.TransactionType;
+import cl.casero.migration.service.dto.CustomerDetails;
 import cl.casero.migration.service.dto.CustomerTransactionReportData;
 import cl.casero.migration.service.dto.ReportCustomerData;
 import cl.casero.migration.service.dto.ReportTransactionData;
+import cl.casero.migration.service.dto.TransactionDetails;
 import cl.casero.migration.service.dto.TransactionReportCriteria;
 import cl.casero.migration.service.dto.TransactionReportCriteria.ReportRange;
+import cl.casero.migration.support.ReadModelFixtures;
 
 @ExtendWith(MockitoExtension.class)
 class CustomerTransactionReportServiceTest {
@@ -235,8 +238,10 @@ class CustomerTransactionReportServiceTest {
     }
 
     private CustomerTransactionReportData prepare(TransactionReportCriteria criteria, List<Transaction> transactions) {
-        doReturn(customer).when(customerQueries).get(CUSTOMER_ID);
-        doReturn(transactions).when(transactionQueries).listAllByCustomer(CUSTOMER_ID);
+        CustomerDetails customerData = ReadModelFixtures.customer(customer);
+        List<TransactionDetails> movements = ReadModelFixtures.transactions(transactions);
+        doReturn(customerData).when(customerQueries).get(CUSTOMER_ID);
+        doReturn(movements).when(transactionQueries).listAllByCustomer(CUSTOMER_ID);
         return reportService.prepare(CUSTOMER_ID, criteria);
     }
 

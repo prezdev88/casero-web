@@ -77,13 +77,17 @@ import cl.casero.migration.service.command.PaymentCommand;
 import cl.casero.migration.service.command.SaleCommand;
 import cl.casero.migration.service.dto.AuditContext;
 import cl.casero.migration.service.dto.CreateCustomerForm;
+import cl.casero.migration.service.dto.CustomerDetails;
 import cl.casero.migration.service.dto.CustomerRankingEntry;
+import cl.casero.migration.service.dto.CustomerScoreInput;
+import cl.casero.migration.service.dto.CustomerScorePresentation;
 import cl.casero.migration.service.dto.CustomerTransactionReportData;
 import cl.casero.migration.service.dto.ReportCustomerData;
 import cl.casero.migration.service.dto.ReportTransactionData;
-import cl.casero.migration.service.dto.CustomerScorePresentation;
-import cl.casero.migration.util.CustomerScoreCalculator.ScoreResult;
+import cl.casero.migration.service.dto.TransactionDetails;
+import cl.casero.migration.support.ReadModelFixtures;
 import cl.casero.migration.util.CustomerScoreCalculator;
+import cl.casero.migration.util.CustomerScoreCalculator.ScoreResult;
 import cl.casero.migration.util.CustomerScoreSummary.CycleScore;
 import cl.casero.migration.web.CustomerExceptionHandler;
 import cl.casero.migration.web.audit.AuditContextFactory;
@@ -214,7 +218,8 @@ class CustomerRoutesTest {
         "birthdate/edit, customers/actions/birthdate-edit, updateBirthdateForm"
     })
     void keepsActionViewsAndPreservedForms(String action, String expectedView, String formAttribute) throws Exception {
-        doReturn(customer).when(customerQueries).get(CUSTOMER_ID);
+        CustomerDetails customerData = ReadModelFixtures.customer(customer);
+        doReturn(customerData).when(customerQueries).get(CUSTOMER_ID);
         Object preservedForm = new Object();
         String path = "/customers/" + CUSTOMER_ID + "/actions/" + action;
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders.get(path);
@@ -227,7 +232,7 @@ class CustomerRoutesTest {
         String viewName = modelAndView.getViewName();
         Map<String, Object> model = modelAndView.getModel();
         assertThat(viewName).isEqualTo(expectedView);
-        assertThat(model).containsEntry("customer", customer).containsEntry(formAttribute, preservedForm);
+        assertThat(model).containsEntry("customer", customerData).containsEntry(formAttribute, preservedForm);
     }
 
     @ParameterizedTest
@@ -432,10 +437,12 @@ class CustomerRoutesTest {
         customer.setBirthMonth(month);
         Pageable pageable = PageRequest.of(0, PAGE_SIZE);
         List<Customer> customers = List.of(customer);
-        Page<Customer> page = new PageImpl<>(customers, pageable, 1);
+        List<CustomerDetails> data = ReadModelFixtures.customers(customers);
+        Page<CustomerDetails> page = new PageImpl<>(data, pageable, 1);
         doReturn(page).when(customerQueries).search("Test", pageable);
         Map<Long, Double> scores = Map.of(CUSTOMER_ID, CUSTOMER_SCORE);
-        doReturn(scores).when(customerScoreService).calculateScores(customers);
+        List<CustomerScoreInput> inputs = ReadModelFixtures.scores(customers);
+        doReturn(scores).when(customerScoreService).calculateScores(inputs);
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders.get("/customers");
         request.param("q", " Test ");
         request.accept(MediaType.APPLICATION_JSON);
@@ -469,7 +476,8 @@ class CustomerRoutesTest {
         transaction.setAmount(PAYMENT_AMOUNT);
         transaction.setBalance(CUSTOMER_DEBT);
         List<Transaction> transactions = List.of(transaction);
-        Page<Transaction> page = new PageImpl<>(transactions);
+        List<TransactionDetails> data = ReadModelFixtures.transactions(transactions);
+        Page<TransactionDetails> page = new PageImpl<>(data);
         TransactionQueries queryStub = doReturn(page).when(transactionQueries);
         Long matchedId = eq(CUSTOMER_ID);
         Pageable matchedPage = any(Pageable.class);
@@ -502,9 +510,11 @@ class CustomerRoutesTest {
         CustomerScorePresentation presentation = new CustomerScorePresentation(CUSTOMER_SCORE, explanation, cycles);
         Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
         Pageable pageable = PageRequest.of(0, PAGE_SIZE, sort);
-        Page<Transaction> transactions = Page.empty(pageable);
-        doReturn(customer).when(customerQueries).get(CUSTOMER_ID);
-        doReturn(presentation).when(presentationService).getScorePresentation(customer);
+        Page<TransactionDetails> transactions = Page.empty(pageable);
+        CustomerDetails customerData = ReadModelFixtures.customer(customer);
+        doReturn(customerData).when(customerQueries).get(CUSTOMER_ID);
+        CustomerScoreInput scoreInput = new CustomerScoreInput(CUSTOMER_ID, CUSTOMER_DEBT);
+        doReturn(presentation).when(presentationService).getScorePresentation(scoreInput);
         doReturn(transactions).when(transactionQueries).listByCustomer(CUSTOMER_ID, pageable);
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders.get("/customers/{id}", CUSTOMER_ID);
 
@@ -520,10 +530,10 @@ class CustomerRoutesTest {
         assertThat(model).containsEntry("customerScore", CUSTOMER_SCORE)
                 .containsEntry("customerScoreExplanation", explanation)
                 .containsEntry("customerScoreCycles", expectedCycles)
-                .containsEntry("customer", customer)
+                .containsEntry("customer", customerData)
                 .containsEntry("transactionsPage", transactions);
         assertThat(cycles).containsExactly(firstCycle, secondCycle);
-        verify(presentationService).getScorePresentation(customer);
+        verify(presentationService).getScorePresentation(scoreInput);
         verifyNoInteractions(customerScoreService);
     }
 
@@ -570,8 +580,10 @@ class CustomerRoutesTest {
         String rangeLabel = filtered ? "Últimos 1 mes" : "Todas las transacciones";
         TransactionType filterType = filtered ? TransactionType.PAYMENT : null;
         byte[] pdf = "%PDF-test".getBytes(StandardCharsets.US_ASCII);
-        doReturn(customer).when(customerQueries).get(CUSTOMER_ID);
-        doReturn(transactions).when(transactionQueries).listAllByCustomer(CUSTOMER_ID);
+        CustomerDetails customerData = ReadModelFixtures.customer(customer);
+        doReturn(customerData).when(customerQueries).get(CUSTOMER_ID);
+        List<TransactionDetails> movements = ReadModelFixtures.transactions(transactions);
+        doReturn(movements).when(transactionQueries).listAllByCustomer(CUSTOMER_ID);
         String name = customer.getName();
         String address = customer.getAddress();
         Sector sector = customer.getSector();

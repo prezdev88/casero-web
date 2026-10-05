@@ -23,6 +23,8 @@ import cl.casero.migration.service.CustomerQueries;
 import cl.casero.migration.service.SectorService;
 import cl.casero.migration.service.StatisticsService;
 import cl.casero.migration.service.dto.CreateCustomerForm;
+import cl.casero.migration.service.dto.CustomerDetails;
+import cl.casero.migration.service.dto.SectorSummary;
 import cl.casero.migration.service.dto.UpdateAddressForm;
 import cl.casero.migration.service.dto.UpdateBirthdateForm;
 import cl.casero.migration.service.dto.UpdateNameForm;
@@ -136,14 +138,14 @@ public class CustomerManagementController {
 
     @GetMapping("/{id}/actions/address")
     public String viewAddress(@PathVariable Long id, Model model) {
-        Customer customer = customerQueries.get(id);
+        CustomerDetails customer = customerQueries.get(id);
         model.addAttribute("customer", customer);
         return "customers/actions/address";
     }
 
     @GetMapping("/{id}/actions/address/edit")
     public String editAddress(@PathVariable Long id, Model model) {
-        Customer customer = customerQueries.get(id);
+        CustomerDetails customer = customerQueries.get(id);
         model.addAttribute("customer", customer);
 
         if (!model.containsAttribute("updateAddressForm")) {
@@ -178,7 +180,7 @@ public class CustomerManagementController {
 
     @GetMapping("/{id}/actions/name/edit")
     public String editName(@PathVariable Long id, Model model) {
-        Customer customer = customerQueries.get(id);
+        CustomerDetails customer = customerQueries.get(id);
         model.addAttribute("customer", customer);
 
         if (!model.containsAttribute("updateNameForm")) {
@@ -192,12 +194,12 @@ public class CustomerManagementController {
 
     @GetMapping("/{id}/actions/sector/edit")
     public String editSector(@PathVariable Long id, Model model) {
-        Customer customer = customerQueries.get(id);
+        CustomerDetails customer = customerQueries.get(id);
         model.addAttribute("customer", customer);
 
         if (!model.containsAttribute("updateSectorForm")) {
             UpdateSectorForm form = new UpdateSectorForm();
-            Sector sector = customer.getSector();
+            SectorSummary sector = customer.getSector();
             Long sectorId = sector.getId();
             form.setSectorId(sectorId);
             model.addAttribute("updateSectorForm", form);
@@ -234,7 +236,7 @@ public class CustomerManagementController {
 
     @GetMapping("/{id}/actions/birthdate/edit")
     public String editBirthdate(@PathVariable Long id, Model model) {
-        Customer customer = customerQueries.get(id);
+        CustomerDetails customer = customerQueries.get(id);
         model.addAttribute("customer", customer);
 
         if (!model.containsAttribute("updateBirthdateForm")) {

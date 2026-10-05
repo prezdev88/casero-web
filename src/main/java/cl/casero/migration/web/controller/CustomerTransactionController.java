@@ -24,23 +24,23 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import cl.casero.migration.domain.Customer;
-import cl.casero.migration.domain.Transaction;
 import cl.casero.migration.domain.enums.TransactionType;
 import cl.casero.migration.service.CustomerQueries;
 import cl.casero.migration.service.TransactionCommands;
-import cl.casero.migration.service.command.SaleCommand;
-import cl.casero.migration.service.command.PaymentCommand;
-import cl.casero.migration.service.command.MoneyTransactionCommand;
-import cl.casero.migration.service.command.DebtForgivenessCommand;
 import cl.casero.migration.service.TransactionQueries;
+import cl.casero.migration.service.command.DebtForgivenessCommand;
+import cl.casero.migration.service.command.MoneyTransactionCommand;
+import cl.casero.migration.service.command.PaymentCommand;
+import cl.casero.migration.service.command.SaleCommand;
+import cl.casero.migration.service.dto.CustomerDetails;
+import cl.casero.migration.service.dto.TransactionDetails;
+import cl.casero.migration.util.CurrencyUtil;
+import cl.casero.migration.util.DateUtil;
+import cl.casero.migration.web.audit.CustomerAuditLogger;
 import cl.casero.migration.web.form.DebtForgivenessForm;
 import cl.casero.migration.web.form.MoneyTransactionForm;
 import cl.casero.migration.web.form.PaymentForm;
 import cl.casero.migration.web.form.SaleForm;
-import cl.casero.migration.util.CurrencyUtil;
-import cl.casero.migration.util.DateUtil;
-import cl.casero.migration.web.audit.CustomerAuditLogger;
 import cl.casero.migration.web.util.CustomerFormRedirect;
 import cl.casero.migration.web.util.TransactionCommandMapper;
 
@@ -69,8 +69,8 @@ public class CustomerTransactionController {
         int sanitizedSize = Math.min(positiveSize, MAX_PAGE_SIZE);
         Sort sort = Sort.by(ascending ? Sort.Direction.ASC : Sort.Direction.DESC, "createdAt");
         Pageable pageable = PageRequest.of(sanitizedPage, sanitizedSize, sort);
-        Page<Transaction> transactions = transactionQueries.listByCustomer(id, pageable);
-        List<Transaction> customerTransactions = transactions.getContent();
+        Page<TransactionDetails> transactions = transactionQueries.listByCustomer(id, pageable);
+        List<TransactionDetails> customerTransactions = transactions.getContent();
         List<TransactionCard> content = customerTransactions.stream()
                 .map(this::toTransactionCard)
                 .toList();
@@ -205,7 +205,7 @@ public class CustomerTransactionController {
 
     @GetMapping("/{id}/actions/payment")
     public String showPaymentForm(@PathVariable Long id, Model model) {
-        Customer customer = customerQueries.get(id);
+        CustomerDetails customer = customerQueries.get(id);
         model.addAttribute("customer", customer);
 
         if (!model.containsAttribute("paymentForm")) {
@@ -220,7 +220,7 @@ public class CustomerTransactionController {
 
     @GetMapping("/{id}/actions/sale")
     public String showSaleForm(@PathVariable Long id, Model model) {
-        Customer customer = customerQueries.get(id);
+        CustomerDetails customer = customerQueries.get(id);
         model.addAttribute("customer", customer);
 
         if (!model.containsAttribute("saleForm")) {
@@ -235,7 +235,7 @@ public class CustomerTransactionController {
 
     @GetMapping("/{id}/actions/refund")
     public String showRefundForm(@PathVariable Long id, Model model) {
-        Customer customer = customerQueries.get(id);
+        CustomerDetails customer = customerQueries.get(id);
         model.addAttribute("customer", customer);
 
         if (!model.containsAttribute("refundForm")) {
@@ -250,7 +250,7 @@ public class CustomerTransactionController {
 
     @GetMapping("/{id}/actions/fault-discount")
     public String showFaultDiscountForm(@PathVariable Long id, Model model) {
-        Customer customer = customerQueries.get(id);
+        CustomerDetails customer = customerQueries.get(id);
         model.addAttribute("customer", customer);
 
         if (!model.containsAttribute("faultDiscountForm")) {
@@ -265,7 +265,7 @@ public class CustomerTransactionController {
 
     @GetMapping("/{id}/actions/forgiveness")
     public String showForgivenessForm(@PathVariable Long id, Model model) {
-        Customer customer = customerQueries.get(id);
+        CustomerDetails customer = customerQueries.get(id);
         model.addAttribute("customer", customer);
 
         if (!model.containsAttribute("debtForgivenessForm")) {
@@ -278,7 +278,7 @@ public class CustomerTransactionController {
         return "customers/actions/forgiveness";
     }
 
-    private TransactionCard toTransactionCard(Transaction transaction) {
+    private TransactionCard toTransactionCard(TransactionDetails transaction) {
         Long transactionId = transaction.getId();
         LocalDate date = transaction.getDate();
         String formattedDate = DateUtil.format(date);

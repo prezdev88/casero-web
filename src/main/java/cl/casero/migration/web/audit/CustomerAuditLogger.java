@@ -15,6 +15,7 @@ import cl.casero.migration.domain.Customer;
 import cl.casero.migration.domain.Sector;
 import cl.casero.migration.domain.enums.AuditEventType;
 import cl.casero.migration.service.AuditEventService;
+import cl.casero.migration.service.dto.AuditContext;
 import cl.casero.migration.service.dto.DebtForgivenessForm;
 import cl.casero.migration.service.dto.MoneyTransactionForm;
 import cl.casero.migration.service.dto.PaymentForm;
@@ -30,6 +31,7 @@ import cl.casero.migration.web.security.CaseroUserDetails;
 public class CustomerAuditLogger {
 
     private final AuditEventService auditEventService;
+    private final AuditContextFactory auditContextFactory;
 
     public void logCustomerCreated(
         Customer customer,
@@ -267,7 +269,8 @@ public class CustomerAuditLogger {
     ) {
         payload.values().removeIf(Objects::isNull);
         AppUser actor = currentUser(authentication);
-        auditEventService.logEvent(AuditEventType.ACTION, actor, payload, request);
+        AuditContext context = auditContextFactory.from(actor, request);
+        auditEventService.logEvent(AuditEventType.ACTION, payload, context);
     }
 
     private AppUser currentUser(Authentication authentication) {

@@ -1,10 +1,12 @@
 package cl.casero.migration.service;
 
-import cl.casero.migration.domain.AppUser;
-import cl.casero.migration.domain.enums.AuditEventType;
-import jakarta.servlet.http.HttpServletRequest;
 import java.util.Map;
 
+import cl.casero.migration.domain.enums.AuditEventType;
+import cl.casero.migration.service.dto.AuditContext;
+
 public interface AuditEventService {
-    void logEvent(AuditEventType eventType, AppUser user, Map<String, Object> payload, HttpServletRequest request);
+
+    /** Context is required; a null payload is recorded as an empty map. */
+    void logEvent(AuditEventType eventType, Map<String, Object> payload, AuditContext context);
 }

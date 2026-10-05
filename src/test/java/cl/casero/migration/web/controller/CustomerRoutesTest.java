@@ -3,7 +3,6 @@ package cl.casero.migration.web.controller;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -13,14 +12,13 @@ import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.ZoneOffset;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -58,16 +56,18 @@ import cl.casero.migration.domain.enums.AuditEventType;
 import cl.casero.migration.domain.enums.TransactionType;
 import cl.casero.migration.domain.enums.UserRole;
 import cl.casero.migration.service.AuditEventService;
-import cl.casero.migration.service.CustomerReportService;
-import cl.casero.migration.service.CustomerScoreService;
 import cl.casero.migration.service.CustomerCommands;
 import cl.casero.migration.service.CustomerQueries;
+import cl.casero.migration.service.CustomerReportService;
+import cl.casero.migration.service.CustomerScoreService;
 import cl.casero.migration.service.CustomerTransactionReportService;
 import cl.casero.migration.service.SectorService;
 import cl.casero.migration.service.StatisticsService;
 import cl.casero.migration.service.TransactionCommands;
 import cl.casero.migration.service.TransactionQueries;
+import cl.casero.migration.service.dto.AuditContext;
 import cl.casero.migration.service.dto.CreateCustomerForm;
+import cl.casero.migration.web.audit.AuditContextFactory;
 import cl.casero.migration.web.audit.CustomerAuditLogger;
 import cl.casero.migration.web.security.CaseroUserDetails;
 
@@ -135,7 +135,8 @@ class CustomerRoutesTest {
         customer.setDebt(CUSTOMER_DEBT);
         customer.setSector(sector);
 
-        CustomerAuditLogger auditLogger = new CustomerAuditLogger(auditEventService);
+        AuditContextFactory contextFactory = new AuditContextFactory();
+        CustomerAuditLogger auditLogger = new CustomerAuditLogger(auditEventService, contextFactory);
         CustomerController customerViews = new CustomerController(customerQueries, customerScoreService, transactionQueries);
         CustomerManagementController management = new CustomerManagementController(
                 customerQueries, customerCommands, sectorService, statisticsService, auditLogger);
@@ -286,10 +287,10 @@ class CustomerRoutesTest {
         VerificationMode expectedEvents = times(UPDATED_PROFILE_EVENT_COUNT);
         AuditEventService auditVerification = verify(auditEventService, expectedEvents);
         AuditEventType eventType = eq(AuditEventType.ACTION);
-        AppUser anonymous = isNull();
+        AuditContext anonymousContext = new AuditContext(null, "127.0.0.1", null);
         Map<String, Object> capturedPayload = captor.capture();
-        HttpServletRequest capturedRequest = any(HttpServletRequest.class);
-        auditVerification.logEvent(eventType, anonymous, capturedPayload, capturedRequest);
+        AuditContext expectedContext = eq(anonymousContext);
+        auditVerification.logEvent(eventType, capturedPayload, expectedContext);
         List<Map<String, Object>> payloads = captor.getAllValues();
         Map<String, Object> namePayload = payloads.get(0);
         Map<String, Object> birthdayPayload = payloads.get(1);
@@ -323,10 +324,10 @@ class CustomerRoutesTest {
         Map<String, Object> payload = Map.of("type", "CREATE_CUSTOMER", "data", data);
         AuditEventService auditVerification = verify(auditEventService);
         AuditEventType eventType = eq(AuditEventType.ACTION);
-        AppUser expectedActor = eq(actor);
+        AuditContext actorContext = new AuditContext(actor, "127.0.0.1", null);
         Map<String, Object> expectedPayload = eq(payload);
-        HttpServletRequest actualRequest = any(HttpServletRequest.class);
-        auditVerification.logEvent(eventType, expectedActor, expectedPayload, actualRequest);
+        AuditContext expectedContext = eq(actorContext);
+        auditVerification.logEvent(eventType, expectedPayload, expectedContext);
     }
 
     @Test
@@ -495,10 +496,10 @@ class CustomerRoutesTest {
         ArgumentCaptor<Map<String, Object>> captor = ArgumentCaptor.captor();
         AuditEventService auditVerification = verify(auditEventService);
         AuditEventType eventType = eq(AuditEventType.ACTION);
-        AppUser anonymous = isNull();
+        AuditContext anonymousContext = new AuditContext(null, "127.0.0.1", null);
         Map<String, Object> payload = captor.capture();
-        HttpServletRequest request = any(HttpServletRequest.class);
-        auditVerification.logEvent(eventType, anonymous, payload, request);
+        AuditContext expectedContext = eq(anonymousContext);
+        auditVerification.logEvent(eventType, payload, expectedContext);
         return captor.getValue();
     }
 

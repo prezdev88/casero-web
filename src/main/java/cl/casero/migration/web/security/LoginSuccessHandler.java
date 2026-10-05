@@ -1,22 +1,27 @@
 package cl.casero.migration.web.security;
 
-import cl.casero.migration.domain.AppUser;
-import cl.casero.migration.domain.enums.AuditEventType;
-import cl.casero.migration.service.AuditEventService;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
+
+import cl.casero.migration.domain.AppUser;
+import cl.casero.migration.domain.enums.AuditEventType;
+import cl.casero.migration.service.AuditEventService;
+import cl.casero.migration.service.dto.AuditContext;
+import cl.casero.migration.web.audit.AuditContextFactory;
 
 @RequiredArgsConstructor
 public class LoginSuccessHandler extends SavedRequestAwareAuthenticationSuccessHandler {
 
     private final AuditEventService auditEventService;
+    private final AuditContextFactory auditContextFactory;
 
     {
         setDefaultTargetUrl("/customers");
@@ -26,7 +31,10 @@ public class LoginSuccessHandler extends SavedRequestAwareAuthenticationSuccessH
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication)
             throws ServletException, IOException {
-        auditEventService.logEvent(AuditEventType.LOG_IN, extractUser(authentication), buildPayload(request), request);
+        AppUser user = extractUser(authentication);
+        Map<String, Object> payload = buildPayload(request);
+        AuditContext context = auditContextFactory.from(user, request);
+        auditEventService.logEvent(AuditEventType.LOG_IN, payload, context);
         super.onAuthenticationSuccess(request, response, authentication);
     }
 

@@ -1,20 +1,14 @@
 package cl.casero.migration.web.controller;
 
-import cl.casero.migration.domain.enums.UserRole;
-import cl.casero.migration.service.AppUserService;
-import cl.casero.migration.service.dto.CreateUserForm;
-import cl.casero.migration.service.dto.UpdatePinForm;
-import cl.casero.migration.domain.enums.AuditEventType;
-import cl.casero.migration.domain.AppUser;
-import cl.casero.migration.service.AuditEventService;
-import cl.casero.migration.web.security.CaseroUserDetails;
-import jakarta.validation.Valid;
-import lombok.AllArgsConstructor;
-
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
+import lombok.AllArgsConstructor;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -23,8 +17,17 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import org.springframework.security.core.Authentication;
-import jakarta.servlet.http.HttpServletRequest;
+
+import cl.casero.migration.domain.AppUser;
+import cl.casero.migration.domain.enums.AuditEventType;
+import cl.casero.migration.domain.enums.UserRole;
+import cl.casero.migration.service.AppUserService;
+import cl.casero.migration.service.AuditEventService;
+import cl.casero.migration.service.dto.AuditContext;
+import cl.casero.migration.service.dto.CreateUserForm;
+import cl.casero.migration.service.dto.UpdatePinForm;
+import cl.casero.migration.web.audit.AuditContextFactory;
+import cl.casero.migration.web.security.CaseroUserDetails;
 
 @Controller
 @AllArgsConstructor
@@ -33,6 +36,7 @@ public class AdminUserController {
 
     private final AppUserService appUserService;
     private final AuditEventService auditEventService;
+    private final AuditContextFactory auditContextFactory;
 
     @GetMapping
     public String users(Model model) {
@@ -55,15 +59,14 @@ public class AdminUserController {
         try {
             AppUser created = appUserService.create(form.getName(), form.getRole(), form.getPin());
             redirectAttributes.addFlashAttribute("message", "Usuario creado correctamente");
-            auditEventService.logEvent(
-                AuditEventType.ACTION,
-                currentUser(authentication),
-                actionPayload("ADMIN_USER_CREATED", Map.of(
-                    "id", created.getId(),
-                    "name", created.getName(),
-                    "role", created.getRole()
-                )),
-                request);
+            AppUser actor = currentUser(authentication);
+            Long createdId = created.getId();
+            String createdName = created.getName();
+            UserRole createdRole = created.getRole();
+            Map<String, Object> data = Map.of("id", createdId, "name", createdName, "role", createdRole);
+            Map<String, Object> payload = actionPayload("ADMIN_USER_CREATED", data);
+            AuditContext context = auditContextFactory.from(actor, request);
+            auditEventService.logEvent(AuditEventType.ACTION, payload, context);
         } catch (IllegalArgumentException ex) {
             result.reject("createUserForm", ex.getMessage());
             preserveForm("createUserForm", form, result, redirectAttributes);
@@ -90,13 +93,12 @@ public class AdminUserController {
         try {
             appUserService.updatePin(form.getUserId(), form.getPin());
             redirectAttributes.addFlashAttribute("message", "PIN actualizado");
-            auditEventService.logEvent(
-                AuditEventType.ACTION,
-                currentUser(authentication),
-                actionPayload("ADMIN_USER_PIN_UPDATED", Map.of(
-                    "userId", form.getUserId()
-                )),
-                request);
+            AppUser actor = currentUser(authentication);
+            Long userId = form.getUserId();
+            Map<String, Object> data = Map.of("userId", userId);
+            Map<String, Object> payload = actionPayload("ADMIN_USER_PIN_UPDATED", data);
+            AuditContext context = auditContextFactory.from(actor, request);
+            auditEventService.logEvent(AuditEventType.ACTION, payload, context);
         } catch (IllegalArgumentException ex) {
             redirectAttributes.addFlashAttribute("pinErrorUserId", form.getUserId());
             redirectAttributes.addFlashAttribute("pinError", ex.getMessage());

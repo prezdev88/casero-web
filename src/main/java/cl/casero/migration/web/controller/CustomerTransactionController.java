@@ -28,7 +28,8 @@ import cl.casero.migration.domain.Customer;
 import cl.casero.migration.domain.Transaction;
 import cl.casero.migration.domain.enums.TransactionType;
 import cl.casero.migration.service.CustomerService;
-import cl.casero.migration.service.TransactionService;
+import cl.casero.migration.service.TransactionCommands;
+import cl.casero.migration.service.TransactionQueries;
 import cl.casero.migration.service.dto.DebtForgivenessForm;
 import cl.casero.migration.service.dto.MoneyTransactionForm;
 import cl.casero.migration.service.dto.PaymentForm;
@@ -46,7 +47,8 @@ public class CustomerTransactionController {
     private static final int MAX_PAGE_SIZE = 50;
 
     private final CustomerService customerService;
-    private final TransactionService transactionService;
+    private final TransactionQueries transactionQueries;
+    private final TransactionCommands transactionCommands;
     private final CustomerAuditLogger customerAuditLogger;
 
     @ResponseBody
@@ -62,7 +64,7 @@ public class CustomerTransactionController {
         int sanitizedSize = Math.min(positiveSize, MAX_PAGE_SIZE);
         Sort sort = Sort.by(ascending ? Sort.Direction.ASC : Sort.Direction.DESC, "createdAt");
         Pageable pageable = PageRequest.of(sanitizedPage, sanitizedSize, sort);
-        Page<Transaction> transactions = transactionService.listByCustomer(id, pageable);
+        Page<Transaction> transactions = transactionQueries.listByCustomer(id, pageable);
         List<Transaction> customerTransactions = transactions.getContent();
         List<TransactionCard> content = customerTransactions.stream()
                 .map(this::toTransactionCard)
@@ -89,7 +91,7 @@ public class CustomerTransactionController {
             return CustomerFormRedirect.redirectToAction(id, redirectAttributes, "saleForm", form, result, "sale");
         }
 
-        transactionService.registerSale(id, form);
+        transactionCommands.registerSale(id, form);
         redirectAttributes.addFlashAttribute("message", "Venta registrada");
         customerAuditLogger.logSale(id, form, authentication, request);
 
@@ -109,7 +111,7 @@ public class CustomerTransactionController {
             return CustomerFormRedirect.redirectToAction(id, redirectAttributes, "paymentForm", form, result, "payment");
         }
 
-        transactionService.registerPayment(id, form);
+        transactionCommands.registerPayment(id, form);
         redirectAttributes.addFlashAttribute("message", "Pago registrado");
         customerAuditLogger.logPayment(id, form, authentication, request);
 
@@ -129,7 +131,7 @@ public class CustomerTransactionController {
             return CustomerFormRedirect.redirectToAction(id, redirectAttributes, "refundForm", form, result, "refund");
         }
 
-        transactionService.registerRefund(id, form);
+        transactionCommands.registerRefund(id, form);
         redirectAttributes.addFlashAttribute("message", "Devolución registrada");
         customerAuditLogger.logRefund(id, form, authentication, request);
 
@@ -149,7 +151,7 @@ public class CustomerTransactionController {
             return CustomerFormRedirect.redirectToAction(id, redirectAttributes, "faultDiscountForm", form, result, "fault-discount");
         }
 
-        transactionService.registerFaultDiscount(id, form);
+        transactionCommands.registerFaultDiscount(id, form);
         redirectAttributes.addFlashAttribute("message", "Descuento por falla registrado");
         customerAuditLogger.logFaultDiscount(id, form, authentication, request);
 
@@ -169,7 +171,7 @@ public class CustomerTransactionController {
             return CustomerFormRedirect.redirectToAction(id, redirectAttributes, "debtForgivenessForm", form, result, "forgiveness");
         }
 
-        transactionService.forgiveDebt(id, form);
+        transactionCommands.forgiveDebt(id, form);
         redirectAttributes.addFlashAttribute("message", "Deuda condonada");
         customerAuditLogger.logDebtForgiveness(id, form, authentication, request);
 
@@ -184,7 +186,7 @@ public class CustomerTransactionController {
         Authentication authentication,
         HttpServletRequest request
     ) {
-        transactionService.delete(transactionId);
+        transactionCommands.delete(transactionId);
         redirectAttributes.addFlashAttribute("message", "Transacción eliminada");
         customerAuditLogger.logTransactionDeleted(transactionId, customerId, authentication, request);
 

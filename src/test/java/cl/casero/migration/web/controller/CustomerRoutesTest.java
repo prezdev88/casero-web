@@ -64,7 +64,8 @@ import cl.casero.migration.service.CustomerService;
 import cl.casero.migration.service.CustomerTransactionReportService;
 import cl.casero.migration.service.SectorService;
 import cl.casero.migration.service.StatisticsService;
-import cl.casero.migration.service.TransactionService;
+import cl.casero.migration.service.TransactionCommands;
+import cl.casero.migration.service.TransactionQueries;
 import cl.casero.migration.service.dto.CreateCustomerForm;
 import cl.casero.migration.web.audit.CustomerAuditLogger;
 import cl.casero.migration.web.security.CaseroUserDetails;
@@ -95,7 +96,10 @@ class CustomerRoutesTest {
     private CustomerScoreService customerScoreService;
 
     @Mock
-    private TransactionService transactionService;
+    private TransactionQueries transactionQueries;
+
+    @Mock
+    private TransactionCommands transactionCommands;
 
     @Mock
     private StatisticsService statisticsService;
@@ -126,15 +130,15 @@ class CustomerRoutesTest {
         customer.setSector(sector);
 
         CustomerAuditLogger auditLogger = new CustomerAuditLogger(auditEventService);
-        CustomerController customerViews = new CustomerController(customerService, customerScoreService, transactionService);
+        CustomerController customerViews = new CustomerController(customerService, customerScoreService, transactionQueries);
         CustomerManagementController management = new CustomerManagementController(
                 customerService, sectorService, statisticsService, auditLogger);
         CustomerTransactionController transactions = new CustomerTransactionController(
-                customerService, transactionService, auditLogger);
+                customerService, transactionQueries, transactionCommands, auditLogger);
         CustomerRankingController ranking = new CustomerRankingController(customerScoreService);
         reportClock = Clock.fixed(REPORT_INSTANT, ZoneOffset.UTC);
         CustomerTransactionReportService reportPreparation = new CustomerTransactionReportService(
-                customerService, transactionService, reportClock);
+                customerService, transactionQueries, reportClock);
         CustomerReportController reports = new CustomerReportController(reportPreparation, customerReportService);
         InternalResourceViewResolver viewResolver = new InternalResourceViewResolver("/test-views/", ".html");
         StandaloneMockMvcBuilder builder = MockMvcBuilders.standaloneSetup(
@@ -197,7 +201,7 @@ class CustomerRoutesTest {
         BindingResult validation = (BindingResult) flash.get(bindingKey);
         boolean hasErrors = validation.hasErrors();
         assertThat(hasErrors).isTrue();
-        verifyNoInteractions(customerService, transactionService, auditEventService);
+        verifyNoInteractions(customerService, transactionQueries, transactionCommands, auditEventService);
     }
 
     @ParameterizedTest
@@ -316,7 +320,7 @@ class CustomerRoutesTest {
         String redirect = "/customers/" + CUSTOMER_ID;
         assertRedirect(result, redirect);
 
-        verify(transactionService).delete(TRANSACTION_ID);
+        verify(transactionCommands).delete(TRANSACTION_ID);
         Map<String, Object> payload = captureAnonymousAudit();
         Map<String, Object> data = Map.of("transactionId", TRANSACTION_ID, "customerId", CUSTOMER_ID);
         assertThat(payload).containsEntry("type", "TRANSACTION_DELETED").containsEntry("data", data);
@@ -369,7 +373,7 @@ class CustomerRoutesTest {
         transaction.setBalance(CUSTOMER_DEBT);
         List<Transaction> transactions = List.of(transaction);
         Page<Transaction> page = new PageImpl<>(transactions);
-        TransactionService queryStub = doReturn(page).when(transactionService);
+        TransactionQueries queryStub = doReturn(page).when(transactionQueries);
         Long matchedId = eq(CUSTOMER_ID);
         Pageable matchedPage = any(Pageable.class);
         queryStub.listByCustomer(matchedId, matchedPage);
@@ -435,7 +439,7 @@ class CustomerRoutesTest {
         TransactionType filterType = filtered ? TransactionType.PAYMENT : null;
         byte[] pdf = "%PDF-test".getBytes(StandardCharsets.US_ASCII);
         doReturn(customer).when(customerService).get(CUSTOMER_ID);
-        doReturn(transactions).when(transactionService).listAllByCustomer(CUSTOMER_ID);
+        doReturn(transactions).when(transactionQueries).listAllByCustomer(CUSTOMER_ID);
         doReturn(pdf).when(customerReportService).generateTransactionsReport(customer, selected, rangeLabel, filterType);
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders.get(
                 "/customers/{id}/reports/transactions", CUSTOMER_ID);

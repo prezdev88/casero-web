@@ -41,7 +41,7 @@ class CustomerTransactionReportServiceTest {
     private CustomerService customerService;
 
     @Mock
-    private TransactionService transactionService;
+    private TransactionQueries transactionQueries;
 
     private CustomerTransactionReportService reportService;
     private Customer customer;
@@ -49,7 +49,7 @@ class CustomerTransactionReportServiceTest {
     @BeforeEach
     void setUp() {
         Clock clock = Clock.fixed(REPORT_INSTANT, ZoneOffset.UTC);
-        reportService = new CustomerTransactionReportService(customerService, transactionService, clock);
+        reportService = new CustomerTransactionReportService(customerService, transactionQueries, clock);
         customer = new Customer();
         customer.setId(CUSTOMER_ID);
     }
@@ -178,12 +178,12 @@ class CustomerTransactionReportServiceTest {
         TransactionReportCriteria criteria = new TransactionReportCriteria(ReportRange.ALL, null, null);
 
         assertThatThrownBy(() -> reportService.prepare(CUSTOMER_ID, criteria)).isSameAs(failure);
-        verifyNoInteractions(transactionService);
+        verifyNoInteractions(transactionQueries);
     }
 
     private CustomerTransactionReportData prepare(TransactionReportCriteria criteria, List<Transaction> transactions) {
         doReturn(customer).when(customerService).get(CUSTOMER_ID);
-        doReturn(transactions).when(transactionService).listAllByCustomer(CUSTOMER_ID);
+        doReturn(transactions).when(transactionQueries).listAllByCustomer(CUSTOMER_ID);
         return reportService.prepare(CUSTOMER_ID, criteria);
     }
 

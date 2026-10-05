@@ -2,7 +2,7 @@ package cl.casero.migration.web.controller;
 
 import cl.casero.migration.domain.Transaction;
 import cl.casero.migration.service.CustomerService;
-import cl.casero.migration.service.TransactionService;
+import cl.casero.migration.service.TransactionQueries;
 import lombok.AllArgsConstructor;
 
 import org.springframework.http.ResponseEntity;
@@ -21,14 +21,14 @@ import java.util.List;
 public class AdminCustomerController {
 
     private final CustomerService customerService;
-    private final TransactionService transactionService;
+    private final TransactionQueries transactionQueries;
 
     @ResponseBody
     @GetMapping("/{id}/transactions/json")
     public ResponseEntity<List<TransactionExportItem>> exportTransactions(@PathVariable Long id) {
         customerService.get(id);
 
-        List<TransactionExportItem> items = transactionService.listAllByCustomer(id)
+        List<TransactionExportItem> items = transactionQueries.listAllByCustomer(id)
                 .stream()
                 .map(TransactionExportItem::fromEntity)
                 .toList();

@@ -2,7 +2,7 @@ package cl.casero.migration.web.controller;
 
 import cl.casero.migration.service.CustomerService;
 import cl.casero.migration.service.StatisticsService;
-import cl.casero.migration.service.TransactionService;
+import cl.casero.migration.service.TransactionQueries;
 import cl.casero.migration.service.dto.CustomerBirthdayDTO;
 import cl.casero.migration.service.dto.TransactionMonthlySummary;
 import org.springframework.data.domain.PageRequest;
@@ -24,7 +24,7 @@ public class DashboardController {
 
     private final CustomerService customerService;
     private final StatisticsService statisticsService;
-    private final TransactionService transactionService;
+    private final TransactionQueries transactionQueries;
 
     @GetMapping
     public String index(Model model) {
@@ -53,11 +53,11 @@ public class DashboardController {
         LocalDate lastMonth = today.minusMonths(1);
         LocalDate startOfLastMonth = lastMonth.withDayOfMonth(1);
         
-        long lastMonthSales = transactionService.getSalesSum(startOfLastMonth, lastMonth);
-        long lastMonthPayments = transactionService.getPaymentsSum(startOfLastMonth, lastMonth);
+        long lastMonthSales = transactionQueries.getSalesSum(startOfLastMonth, lastMonth);
+        long lastMonthPayments = transactionQueries.getPaymentsSum(startOfLastMonth, lastMonth);
 
         // Top 3 customers
-        List<cl.casero.migration.repository.TransactionRepository.TopCustomerProjection> topCustomers = transactionService.getTopCustomersThisMonth();
+        List<cl.casero.migration.repository.TransactionRepository.TopCustomerProjection> topCustomers = transactionQueries.getTopCustomersThisMonth();
 
         model.addAttribute("birthdaysCount", birthdaysCount);
         model.addAttribute("totalDebt", totalDebt);
@@ -82,7 +82,7 @@ public class DashboardController {
         // Chart Data (Last 6 months)
         LocalDate startOfSixMonthsAgo = today.minusMonths(5).withDayOfMonth(1);
         LocalDate endOfCurrentMonth = today.withDayOfMonth(today.lengthOfMonth());
-        List<TransactionMonthlySummary> last6Months = transactionService.getMonthlySummary(startOfSixMonthsAgo, endOfCurrentMonth);
+        List<TransactionMonthlySummary> last6Months = transactionQueries.getMonthlySummary(startOfSixMonthsAgo, endOfCurrentMonth);
         
         List<String> chartLabels = new ArrayList<>();
         List<Long> chartSales = new ArrayList<>();
@@ -114,13 +114,13 @@ public class DashboardController {
 
     @GetMapping("/finished-cards")
     public String finishedCards(Model model) {
-        model.addAttribute("transactions", transactionService.getFinishedCardsThisMonth());
+        model.addAttribute("transactions", transactionQueries.getFinishedCardsThisMonth());
         return "dashboard/finished-cards";
     }
 
     @GetMapping("/sales")
     public String sales(Model model) {
-        model.addAttribute("transactions", transactionService.getSalesThisMonth());
+        model.addAttribute("transactions", transactionQueries.getSalesThisMonth());
         return "dashboard/sales";
     }
 

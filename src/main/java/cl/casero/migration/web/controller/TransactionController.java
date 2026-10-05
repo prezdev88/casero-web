@@ -2,7 +2,7 @@ package cl.casero.migration.web.controller;
 
 import cl.casero.migration.domain.Transaction;
 import cl.casero.migration.domain.enums.TransactionType;
-import cl.casero.migration.service.TransactionService;
+import cl.casero.migration.service.TransactionQueries;
 import cl.casero.migration.service.dto.TransactionMonthlySummary;
 import cl.casero.migration.util.CurrencyUtil;
 import cl.casero.migration.util.DateTimeUtil;
@@ -29,7 +29,7 @@ import java.util.List;
 @RequestMapping("/transactions")
 public class TransactionController {
 
-    private final TransactionService transactionService;
+    private final TransactionQueries transactionQueries;
 
     @GetMapping
     public String listTransactions(
@@ -42,7 +42,7 @@ public class TransactionController {
         int sanitizedSize = Math.min(Math.max(size, 1), 50);
         Sort sort = Sort.by(Sort.Direction.DESC, "date").and(Sort.by(Sort.Direction.DESC, "createdAt"));
         Pageable pageable = PageRequest.of(sanitizedPage, sanitizedSize, sort);
-        Page<Transaction> transactionsPage = transactionService.listAll(type, pageable);
+        Page<Transaction> transactionsPage = transactionQueries.listAll(type, pageable);
 
         model.addAttribute("transactionsPage", transactionsPage);
         model.addAttribute("dateTimeUtil", DateTimeUtil.class);
@@ -61,6 +61,6 @@ public class TransactionController {
         @RequestParam(value = "endDate", required = false)
         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
     ) {
-        return transactionService.getMonthlySummary(startDate, endDate);
+        return transactionQueries.getMonthlySummary(startDate, endDate);
     }
 }

@@ -27,7 +27,7 @@ import cl.casero.migration.domain.Transaction;
 import cl.casero.migration.domain.enums.TransactionType;
 import cl.casero.migration.service.CustomerScoreService;
 import cl.casero.migration.service.CustomerService;
-import cl.casero.migration.service.TransactionService;
+import cl.casero.migration.service.TransactionQueries;
 import cl.casero.migration.util.CurrencyUtil;
 import cl.casero.migration.util.CustomerScoreCalculator;
 import cl.casero.migration.util.CustomerScoreSummary;
@@ -43,7 +43,7 @@ public class CustomerController {
 
     private final CustomerService customerService;
     private final CustomerScoreService customerScoreService;
-    private final TransactionService transactionService;
+    private final TransactionQueries transactionQueries;
 
     @GetMapping
     public String listCustomers(
@@ -114,7 +114,7 @@ public class CustomerController {
         List<CustomerScoreSummary.CycleScore> reversedCycles = new ArrayList<>(cycles);
         Collections.reverse(reversedCycles);
         model.addAttribute("customerScoreCycles", reversedCycles);
-        Page<Transaction> transactions = transactionService.listByCustomer(id, pageable);
+        Page<Transaction> transactions = transactionQueries.listByCustomer(id, pageable);
 
         model.addAttribute("customer", customer);
         model.addAttribute("transactionsPage", transactions);

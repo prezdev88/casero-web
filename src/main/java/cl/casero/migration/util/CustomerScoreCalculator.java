@@ -57,6 +57,10 @@ public final class CustomerScoreCalculator {
         return MIN_SCORE;
     }
 
+    public static int perfectPaymentWindowDays() {
+        return PERFECT_PAYMENT_WINDOW_DAYS;
+    }
+
     private static double scoreFromDelay(Integer delayInDays, boolean hasPayments) {
         if (!hasPayments) {
             return MIN_SCORE;

@@ -170,7 +170,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
                     MAX(interval_days) AS max_interval_days,
                     SUM(CASE WHEN interval_days IS NOT NULL THEN interval_days ELSE 0 END) AS total_interval_days,
                     SUM(CASE WHEN interval_days IS NOT NULL THEN 1 ELSE 0 END)::int AS interval_count,
-                    SUM(CASE WHEN interval_days > 45 THEN 1 ELSE 0 END)::int AS late_interval_count,
+                    SUM(CASE WHEN interval_days > :perfectPaymentWindowDays THEN 1 ELSE 0 END)::int AS late_interval_count,
                     COUNT(DISTINCT TO_CHAR(date, 'YYYYMM')) AS payment_month_count
                 FROM payment_intervals
                 GROUP BY customer_id, cycle_group
@@ -206,7 +206,10 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
                      ps.interval_count, ps.late_interval_count, ps.payment_month_count
             ORDER BY cb.customer_id, cb.cycle_group
             """, nativeQuery = true)
-    List<CustomerCycleProjection> findCustomerCycleStats(@Param("customerIds") List<Long> customerIds);
+    List<CustomerCycleProjection> findCustomerCycleStats(
+        @Param("customerIds") List<Long> customerIds,
+        @Param("perfectPaymentWindowDays") int perfectPaymentWindowDays
+    );
 
     interface CustomerCycleProjection {
         Long getCustomerId();

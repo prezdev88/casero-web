@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -24,6 +25,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -58,6 +60,7 @@ import cl.casero.migration.domain.enums.TransactionType;
 import cl.casero.migration.domain.enums.UserRole;
 import cl.casero.migration.service.AuditEventService;
 import cl.casero.migration.service.CustomerCommands;
+import cl.casero.migration.service.CustomerNotFoundException;
 import cl.casero.migration.service.CustomerQueries;
 import cl.casero.migration.service.CustomerRankingService;
 import cl.casero.migration.service.CustomerReportService;
@@ -75,6 +78,7 @@ import cl.casero.migration.service.dto.CustomerScorePresentation;
 import cl.casero.migration.util.CustomerScoreCalculator.ScoreResult;
 import cl.casero.migration.util.CustomerScoreCalculator;
 import cl.casero.migration.util.CustomerScoreSummary.CycleScore;
+import cl.casero.migration.web.CustomerExceptionHandler;
 import cl.casero.migration.web.audit.AuditContextFactory;
 import cl.casero.migration.web.audit.CustomerAuditLogger;
 import cl.casero.migration.web.presentation.CustomerBirthDateFormatter;
@@ -168,8 +172,26 @@ class CustomerRoutesTest {
         InternalResourceViewResolver viewResolver = new InternalResourceViewResolver("/test-views/", ".html");
         StandaloneMockMvcBuilder builder = MockMvcBuilders.standaloneSetup(
                 customerViews, management, transactions, ranking, reports);
+        CustomerExceptionHandler exceptionHandler = new CustomerExceptionHandler();
+        builder.setControllerAdvice(exceptionHandler);
         builder.setViewResolvers(viewResolver);
         mockMvc = builder.build();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/customers/7", "/customers/7/actions/name/edit", "/customers/7/reports/transactions"})
+    void translatesApplicationCustomerAbsenceToTheSameHttpError(String path) throws Exception {
+        CustomerNotFoundException failure = new CustomerNotFoundException(CUSTOMER_ID);
+        doThrow(failure).when(customerQueries).get(CUSTOMER_ID);
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders.get(path);
+
+        MvcResult result = mockMvc.perform(request).andReturn();
+
+        assertStatus(result, HttpStatus.NOT_FOUND);
+        MockHttpServletResponse response = result.getResponse();
+        boolean errorSent = response.isCommitted();
+        assertThat(errorSent).isTrue();
+        verifyNoInteractions(auditEventService);
     }
 
     @ParameterizedTest

@@ -1,6 +1,7 @@
 package cl.casero.migration.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -28,6 +29,7 @@ import cl.casero.migration.util.CustomerScoreSummary.CycleScore;
 @ExtendWith(MockitoExtension.class)
 class CustomerScoreServicesTest {
 
+    private static final int PERFECT_PAYMENT_WINDOW_DAYS = 45;
     private static final long CUSTOMER_ID = 7L;
     private static final long OTHER_CUSTOMER_ID = 8L;
     private static final double MINIMUM_SCORE = 1.0;
@@ -99,7 +101,7 @@ class CustomerScoreServicesTest {
         Customer customer = customer(CUSTOMER_ID);
         List<Long> ids = List.of(CUSTOMER_ID);
         List<CustomerCycleProjection> rows = List.of();
-        doReturn(rows).when(repository).findCustomerCycleStats(ids);
+        doReturn(rows).when(repository).findCustomerCycleStats(ids, PERFECT_PAYMENT_WINDOW_DAYS);
 
         CustomerScorePresentation presentation = presentations.getScorePresentation(customer);
         double score = presentation.score();
@@ -109,7 +111,7 @@ class CustomerScoreServicesTest {
         assertThat(score).isEqualTo(MINIMUM_SCORE);
         assertThat(explanation).isEqualTo(NO_HISTORY_EXPLANATION);
         assertThat(cycles).isEmpty();
-        verify(repository).findCustomerCycleStats(ids);
+        verify(repository).findCustomerCycleStats(ids, PERFECT_PAYMENT_WINDOW_DAYS);
     }
 
     @Test
@@ -124,7 +126,8 @@ class CustomerScoreServicesTest {
         List<CustomerCycleProjection> rows = List.of(paid, other, unidentified, unpaid);
         TransactionRepository stub = doReturn(rows).when(repository);
         List<Long> matchedIds = customerIds.capture();
-        stub.findCustomerCycleStats(matchedIds);
+        int matchedWindow = eq(PERFECT_PAYMENT_WINDOW_DAYS);
+        stub.findCustomerCycleStats(matchedIds, matchedWindow);
 
         Map<Long, CustomerScoreSummary> summaries = scores.calculateScoreSummaries(customers);
 
@@ -150,7 +153,8 @@ class CustomerScoreServicesTest {
         assertThat(unpaidScore).isEqualTo(MINIMUM_SCORE);
         TransactionRepository verification = verify(repository);
         List<Long> queriedIds = customerIds.capture();
-        verification.findCustomerCycleStats(queriedIds);
+        int queriedWindow = eq(PERFECT_PAYMENT_WINDOW_DAYS);
+        verification.findCustomerCycleStats(queriedIds, queriedWindow);
         List<Long> capturedIds = customerIds.getValue();
         assertThat(capturedIds).containsExactlyInAnyOrder(CUSTOMER_ID, OTHER_CUSTOMER_ID);
     }
@@ -161,7 +165,7 @@ class CustomerScoreServicesTest {
         CustomerCycleProjection unpaid = projection(CUSTOMER_ID, 0, SECOND_CYCLE_DATE);
         List<CustomerCycleProjection> rows = List.of(paid, unpaid);
         List<Long> ids = List.of(CUSTOMER_ID);
-        doReturn(rows).when(repository).findCustomerCycleStats(ids);
+        doReturn(rows).when(repository).findCustomerCycleStats(ids, PERFECT_PAYMENT_WINDOW_DAYS);
         Customer customer = customer(CUSTOMER_ID);
         List<Customer> customers = List.of(customer);
         Map<Long, CustomerScoreSummary> summaries = scores.calculateScoreSummaries(customers);
@@ -181,7 +185,7 @@ class CustomerScoreServicesTest {
         int latestPosition = explanation.indexOf("Ciclo 2");
         int firstPosition = explanation.indexOf("Ciclo 1");
         assertThat(latestPosition).isLessThan(firstPosition);
-        verify(repository).findCustomerCycleStats(ids);
+        verify(repository).findCustomerCycleStats(ids, PERFECT_PAYMENT_WINDOW_DAYS);
     }
 
     private Customer customer(long id) {

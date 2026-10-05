@@ -2,6 +2,7 @@ package cl.casero.migration.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -48,6 +49,7 @@ import cl.casero.migration.web.controller.CustomerRankingController;
 @ExtendWith(MockitoExtension.class)
 class CustomerRankingServiceTest {
 
+    private static final int PERFECT_PAYMENT_WINDOW_DAYS = 45;
     private static final int DEFAULT_PAGE_SIZE = 20;
     private static final int CUSTOMER_COUNT = 6;
     private static final int TWO_CYCLES = 2;
@@ -188,7 +190,8 @@ class CustomerRankingServiceTest {
         assertThat(adaPosition).isLessThan(zoePosition);
         TransactionRepository verification = verify(transactions);
         List<Long> matchedIds = anyList();
-        verification.findCustomerCycleStats(matchedIds);
+        int matchedWindow = eq(PERFECT_PAYMENT_WINDOW_DAYS);
+        verification.findCustomerCycleStats(matchedIds, matchedWindow);
     }
 
     @Test
@@ -267,7 +270,8 @@ class CustomerRankingServiceTest {
         List<CustomerCycleProjection> rows = List.of();
         TransactionRepository stub = doReturn(rows).when(transactions);
         List<Long> matchedIds = anyList();
-        stub.findCustomerCycleStats(matchedIds);
+        int matchedWindow = eq(PERFECT_PAYMENT_WINDOW_DAYS);
+        stub.findCustomerCycleStats(matchedIds, matchedWindow);
         CustomerScoreService realScores = new CustomerScoreService(transactions);
         CustomerScorePresentationService presentations = new CustomerScorePresentationService(realScores);
         CustomerRankingService realRanking = new CustomerRankingService(customers, realScores, presentations);

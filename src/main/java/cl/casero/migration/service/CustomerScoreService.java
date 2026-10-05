@@ -93,7 +93,8 @@ public class CustomerScoreService {
         }
 
         List<Long> customerIds = List.copyOf(ids);
-        List<CustomerCycleProjection> stats = transactionRepository.findCustomerCycleStats(customerIds);
+        int paymentWindowDays = CustomerScoreCalculator.perfectPaymentWindowDays();
+        List<CustomerCycleProjection> stats = transactionRepository.findCustomerCycleStats(customerIds, paymentWindowDays);
         Map<Long, List<CustomerCycleProjection>> grouped = new HashMap<>();
 
         for (CustomerCycleProjection projection : stats) {

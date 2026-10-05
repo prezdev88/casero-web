@@ -29,15 +29,20 @@ import cl.casero.migration.domain.Transaction;
 import cl.casero.migration.domain.enums.TransactionType;
 import cl.casero.migration.service.CustomerQueries;
 import cl.casero.migration.service.TransactionCommands;
+import cl.casero.migration.service.command.SaleCommand;
+import cl.casero.migration.service.command.PaymentCommand;
+import cl.casero.migration.service.command.MoneyTransactionCommand;
+import cl.casero.migration.service.command.DebtForgivenessCommand;
 import cl.casero.migration.service.TransactionQueries;
-import cl.casero.migration.service.dto.DebtForgivenessForm;
-import cl.casero.migration.service.dto.MoneyTransactionForm;
-import cl.casero.migration.service.dto.PaymentForm;
-import cl.casero.migration.service.dto.SaleForm;
+import cl.casero.migration.web.form.DebtForgivenessForm;
+import cl.casero.migration.web.form.MoneyTransactionForm;
+import cl.casero.migration.web.form.PaymentForm;
+import cl.casero.migration.web.form.SaleForm;
 import cl.casero.migration.util.CurrencyUtil;
 import cl.casero.migration.util.DateUtil;
 import cl.casero.migration.web.audit.CustomerAuditLogger;
 import cl.casero.migration.web.util.CustomerFormRedirect;
+import cl.casero.migration.web.util.TransactionCommandMapper;
 
 @Controller
 @RequiredArgsConstructor
@@ -91,7 +96,8 @@ public class CustomerTransactionController {
             return CustomerFormRedirect.redirectToAction(id, redirectAttributes, "saleForm", form, result, "sale");
         }
 
-        transactionCommands.registerSale(id, form);
+        SaleCommand command = TransactionCommandMapper.sale(form);
+        transactionCommands.registerSale(id, command);
         redirectAttributes.addFlashAttribute("message", "Venta registrada");
         customerAuditLogger.logSale(id, form, authentication, request);
 
@@ -111,7 +117,8 @@ public class CustomerTransactionController {
             return CustomerFormRedirect.redirectToAction(id, redirectAttributes, "paymentForm", form, result, "payment");
         }
 
-        transactionCommands.registerPayment(id, form);
+        PaymentCommand command = TransactionCommandMapper.payment(form);
+        transactionCommands.registerPayment(id, command);
         redirectAttributes.addFlashAttribute("message", "Pago registrado");
         customerAuditLogger.logPayment(id, form, authentication, request);
 
@@ -131,7 +138,8 @@ public class CustomerTransactionController {
             return CustomerFormRedirect.redirectToAction(id, redirectAttributes, "refundForm", form, result, "refund");
         }
 
-        transactionCommands.registerRefund(id, form);
+        MoneyTransactionCommand command = TransactionCommandMapper.moneyTransaction(form);
+        transactionCommands.registerRefund(id, command);
         redirectAttributes.addFlashAttribute("message", "Devolución registrada");
         customerAuditLogger.logRefund(id, form, authentication, request);
 
@@ -151,7 +159,8 @@ public class CustomerTransactionController {
             return CustomerFormRedirect.redirectToAction(id, redirectAttributes, "faultDiscountForm", form, result, "fault-discount");
         }
 
-        transactionCommands.registerFaultDiscount(id, form);
+        MoneyTransactionCommand command = TransactionCommandMapper.moneyTransaction(form);
+        transactionCommands.registerFaultDiscount(id, command);
         redirectAttributes.addFlashAttribute("message", "Descuento por falla registrado");
         customerAuditLogger.logFaultDiscount(id, form, authentication, request);
 
@@ -171,7 +180,8 @@ public class CustomerTransactionController {
             return CustomerFormRedirect.redirectToAction(id, redirectAttributes, "debtForgivenessForm", form, result, "forgiveness");
         }
 
-        transactionCommands.forgiveDebt(id, form);
+        DebtForgivenessCommand command = TransactionCommandMapper.debtForgiveness(form);
+        transactionCommands.forgiveDebt(id, command);
         redirectAttributes.addFlashAttribute("message", "Deuda condonada");
         customerAuditLogger.logDebtForgiveness(id, form, authentication, request);
 

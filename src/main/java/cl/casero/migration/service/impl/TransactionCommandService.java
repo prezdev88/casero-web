@@ -21,10 +21,10 @@ import cl.casero.migration.repository.StatisticRepository;
 import cl.casero.migration.repository.TransactionRepository;
 import cl.casero.migration.service.CustomerNotFoundException;
 import cl.casero.migration.service.TransactionCommands;
-import cl.casero.migration.service.dto.DebtForgivenessForm;
-import cl.casero.migration.service.dto.MoneyTransactionForm;
-import cl.casero.migration.service.dto.PaymentForm;
-import cl.casero.migration.service.dto.SaleForm;
+import cl.casero.migration.service.command.DebtForgivenessCommand;
+import cl.casero.migration.service.command.MoneyTransactionCommand;
+import cl.casero.migration.service.command.PaymentCommand;
+import cl.casero.migration.service.command.SaleCommand;
 
 @Service
 @Transactional
@@ -38,15 +38,15 @@ public class TransactionCommandService implements TransactionCommands {
     private final TransactionRepository transactionRepository;
 
     @Override
-    public void registerSale(Long customerId, SaleForm form) {
+    public void registerSale(Long customerId, SaleCommand command) {
         Customer customer = getCustomer(customerId);
         int previousBalance = customer.getDebt();
-        int amount = form.getAmount();
+        int amount = command.amount();
         int newBalance = previousBalance + amount;
         SaleType saleType = (previousBalance == 0) ? SaleType.NEW_SALE : SaleType.MAINTENANCE;
-        LocalDate date = form.getDate();
-        String detail = form.getDetail();
-        Integer itemsCount = form.getItemsCount();
+        LocalDate date = command.date();
+        String detail = command.detail();
+        Integer itemsCount = command.itemsCount();
         Transaction transaction = buildTransaction(customer, date, detail, amount, TransactionType.SALE, newBalance);
         transaction.setItemCount(itemsCount);
 
@@ -54,12 +54,12 @@ public class TransactionCommandService implements TransactionCommands {
     }
 
     @Override
-    public void registerPayment(Long customerId, PaymentForm form) {
+    public void registerPayment(Long customerId, PaymentCommand command) {
         Customer customer = getCustomer(customerId);
         int debt = customer.getDebt();
-        int amount = form.getAmount();
+        int amount = command.amount();
         int newBalance = Math.max(0, debt - amount);
-        LocalDate date = form.getDate();
+        LocalDate date = command.date();
         String detail = "[Abono]: $" + amount;
         Transaction transaction = buildTransaction(customer, date, detail, amount, TransactionType.PAYMENT, newBalance);
 
@@ -67,17 +67,17 @@ public class TransactionCommandService implements TransactionCommands {
     }
 
     @Override
-    public void registerRefund(Long customerId, MoneyTransactionForm form) {
-        registerMoneyFlow(customerId, form, TransactionType.REFUND);
+    public void registerRefund(Long customerId, MoneyTransactionCommand command) {
+        registerMoneyFlow(customerId, command, TransactionType.REFUND);
     }
 
     @Override
-    public void registerFaultDiscount(Long customerId, MoneyTransactionForm form) {
-        registerMoneyFlow(customerId, form, TransactionType.FAULT_DISCOUNT);
+    public void registerFaultDiscount(Long customerId, MoneyTransactionCommand command) {
+        registerMoneyFlow(customerId, command, TransactionType.FAULT_DISCOUNT);
     }
 
     @Override
-    public void forgiveDebt(Long customerId, DebtForgivenessForm form) {
+    public void forgiveDebt(Long customerId, DebtForgivenessCommand command) {
         Customer customer = getCustomer(customerId);
         int amount = customer.getDebt();
 
@@ -85,8 +85,8 @@ public class TransactionCommandService implements TransactionCommands {
             return;
         }
 
-        LocalDate date = form.getDate();
-        String detail = form.getDetail();
+        LocalDate date = command.date();
+        String detail = command.detail();
         Transaction transaction = buildTransaction(customer, date, detail, amount, TransactionType.DEBT_FORGIVENESS, 0);
 
         persistTransaction(transaction, null, null);
@@ -112,13 +112,13 @@ public class TransactionCommandService implements TransactionCommands {
         customerRepository.save(customer);
     }
 
-    private void registerMoneyFlow(Long customerId, MoneyTransactionForm form, TransactionType type) {
+    private void registerMoneyFlow(Long customerId, MoneyTransactionCommand command, TransactionType type) {
         Customer customer = getCustomer(customerId);
         int debt = customer.getDebt();
-        int amount = form.getAmount();
+        int amount = command.amount();
         int newBalance = Math.max(0, debt - amount);
-        LocalDate date = form.getDate();
-        String detail = form.getDetail();
+        LocalDate date = command.date();
+        String detail = command.detail();
         Transaction transaction = buildTransaction(customer, date, detail, amount, type, newBalance);
 
         persistTransaction(transaction, null, null);

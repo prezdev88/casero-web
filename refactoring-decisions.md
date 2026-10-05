@@ -1,14 +1,12 @@
 # Decisiones sobre mejoras condicionales
 
-Evaluación de D04 y las tres filas D05 de [improvements.md](improvements.md), aplicando la skill `prezdev`: separar responsabilidades cuando aporta valor y evitar abstracciones motivadas solo por consumidores hipotéticos. Las cuatro decisiones están **evaluadas y diferidas**, sin un cambio de código que elimine estos acoplamientos.
+Implementación de D04 y las tres filas D05 de [improvements.md](improvements.md), aplicando la skill `prezdev`. El usuario solicitó expresamente completar las cuatro separaciones. Se conserva la evidencia del análisis y se actualiza cada decisión según su implementación.
 
 ## D04 — Formularios financieros y comandos de aplicación
 
 **Evidencia.** `SaleForm`, `PaymentForm`, `MoneyTransactionForm` y `DebtForgivenessForm` incorporan `@DateTimeFormat` para el adaptador MVC. Las operaciones financieras tienen un único adaptador de entrada en producción: `CustomerTransactionController`. La auditoría web reutiliza los mismos datos. Cuando el servicio recibe el formulario, la fecha ya es `LocalDate`; no interpreta texto HTTP. No se encontró otro adaptador de entrada ni un proceso programado que ejecute estas operaciones.
 
-**Decisión actual.** Conservar los formularios compartidos. El acoplamiento a las anotaciones de MVC existe, pero añadir cuatro comandos equivalentes y sus mapeos no resuelve actualmente una necesidad independiente. No se declara que los contratos financieros estén libres de dependencias de presentación.
-
-**Cuándo retomarlo.** Una API con otra representación, importación o tarea programada necesita ejecutar estos comandos; o formulario y entrada de negocio requieren campos o validaciones distintos. Entonces definir comandos sin anotaciones MVC y convertirlos en el adaptador, manteniendo saldo, importes, fecha, cantidad de artículos y comportamiento transaccional.
+**Implementado.** Los cuatro formularios residen en `web.form`. `TransactionCommandMapper` convierte sus datos después de la validación HTTP a cuatro records de aplicación. Los servicios financieros reciben únicamente esos comandos, sin anotaciones o tipos MVC. La auditoría permanece en el adaptador web y conserva su payload. Las pruebas de rutas comprueban la conversión de los cinco flujos y las pruebas financieras siguen comprobando saldos, estadísticas y transacciones.
 
 ## D05 — Resultados de consulta que exponen entidades
 
@@ -36,6 +34,4 @@ Evaluación de D04 y las tres filas D05 de [improvements.md](improvements.md), a
 
 ## Estado y alcance de validación
 
-Se revisaron las **15 filas que quedaban al comenzar la tanda**: diez se resolvieron mediante cambios de código, una mediante [documentación contractual](service-contracts.md) y cuatro mediante estas decisiones condicionales. El total de la tabla queda en **23 filas completadas y 4 evaluadas y diferidas**, de 27 originales. Estas cuatro no cuentan como refactorizaciones implementadas.
-
-La última ejecución de `mvn -o test` aprobó **252 pruebas**. Las decisiones se apoyan en inspección de código, referencias de producción y contratos actuales; no en una ejecución con base de datos real o navegador. Sus condiciones pueden cambiar al aparecer nuevos consumidores o requisitos.
+De las cuatro filas solicitadas, **1 están implementadas y 3 pendientes**. La tabla contiene **24 de 27 filas completadas**. La última suite aprobó **252 pruebas** con `mvn -o test`; no se ejecutó base de datos real ni navegador.

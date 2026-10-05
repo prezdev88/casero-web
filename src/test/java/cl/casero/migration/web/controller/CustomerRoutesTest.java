@@ -71,6 +71,10 @@ import cl.casero.migration.service.SectorService;
 import cl.casero.migration.service.StatisticsService;
 import cl.casero.migration.service.TransactionCommands;
 import cl.casero.migration.service.TransactionQueries;
+import cl.casero.migration.service.command.DebtForgivenessCommand;
+import cl.casero.migration.service.command.MoneyTransactionCommand;
+import cl.casero.migration.service.command.PaymentCommand;
+import cl.casero.migration.service.command.SaleCommand;
 import cl.casero.migration.service.dto.AuditContext;
 import cl.casero.migration.service.dto.CreateCustomerForm;
 import cl.casero.migration.service.dto.CustomerRankingEntry;
@@ -276,6 +280,8 @@ class CustomerRoutesTest {
         String redirect = route.equals("delete") ? "/customers" : "/customers/" + CUSTOMER_ID;
         assertRedirect(result, redirect);
 
+        assertFinancialCommand(route);
+
         if (route.equals("address")) {
             verify(customerCommands).updateAddress(CUSTOMER_ID, "  New\n Address  ");
         } else if (route.equals("sector")) {
@@ -303,6 +309,34 @@ class CustomerRoutesTest {
         if (data.containsKey("address")) {
             Object address = data.get("address");
             assertThat(address).isEqualTo("New Address");
+        }
+    }
+
+    private void assertFinancialCommand(String route) {
+        LocalDate date = LocalDate.parse(FORM_DATE);
+        String detail = "  Test\n detail  ";
+        switch (route) {
+            case "sales" -> {
+                SaleCommand command = new SaleCommand(date, detail, 1, PAYMENT_AMOUNT);
+                verify(transactionCommands).registerSale(CUSTOMER_ID, command);
+            }
+            case "payments" -> {
+                PaymentCommand command = new PaymentCommand(date, PAYMENT_AMOUNT);
+                verify(transactionCommands).registerPayment(CUSTOMER_ID, command);
+            }
+            case "refunds" -> {
+                MoneyTransactionCommand command = new MoneyTransactionCommand(date, detail, PAYMENT_AMOUNT);
+                verify(transactionCommands).registerRefund(CUSTOMER_ID, command);
+            }
+            case "fault-discounts" -> {
+                MoneyTransactionCommand command = new MoneyTransactionCommand(date, detail, PAYMENT_AMOUNT);
+                verify(transactionCommands).registerFaultDiscount(CUSTOMER_ID, command);
+            }
+            case "forgiveness" -> {
+                DebtForgivenessCommand command = new DebtForgivenessCommand(date, detail);
+                verify(transactionCommands).forgiveDebt(CUSTOMER_ID, command);
+            }
+            default -> verifyNoInteractions(transactionCommands);
         }
     }
 

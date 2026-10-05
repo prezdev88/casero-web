@@ -43,10 +43,10 @@ import cl.casero.migration.repository.CustomerRepository;
 import cl.casero.migration.repository.StatisticRepository;
 import cl.casero.migration.repository.TransactionRepository;
 import cl.casero.migration.service.TransactionCommands;
-import cl.casero.migration.service.dto.DebtForgivenessForm;
-import cl.casero.migration.service.dto.MoneyTransactionForm;
-import cl.casero.migration.service.dto.PaymentForm;
-import cl.casero.migration.service.dto.SaleForm;
+import cl.casero.migration.service.command.DebtForgivenessCommand;
+import cl.casero.migration.service.command.MoneyTransactionCommand;
+import cl.casero.migration.service.command.PaymentCommand;
+import cl.casero.migration.service.command.SaleCommand;
 
 @ExtendWith(MockitoExtension.class)
 class TransactionCommandServiceTest {
@@ -101,9 +101,9 @@ class TransactionCommandServiceTest {
     void keepsSaleBalanceItemsAndClassification(int initialDebt, int expectedBalance, SaleType expectedSaleType) {
         prepareCustomer(initialDebt);
         trackSuccessfulWrites();
-        SaleForm form = saleForm();
+        SaleCommand command = saleCommand();
 
-        commands.registerSale(CUSTOMER_ID, form);
+        commands.registerSale(CUSTOMER_ID, command);
 
         PersistedMovement movement = captureWrites();
         assertMovement(movement, TransactionType.SALE, SALE_AMOUNT, expectedBalance);
@@ -123,11 +123,9 @@ class TransactionCommandServiceTest {
     void keepsPaymentAmountWhileClampingDebt(int amount, int expectedBalance) {
         prepareCustomer(INITIAL_DEBT);
         trackSuccessfulWrites();
-        PaymentForm form = new PaymentForm();
-        form.setDate(MOVEMENT_DATE);
-        form.setAmount(amount);
+        PaymentCommand command = new PaymentCommand(MOVEMENT_DATE, amount);
 
-        commands.registerPayment(CUSTOMER_ID, form);
+        commands.registerPayment(CUSTOMER_ID, command);
 
         PersistedMovement movement = captureWrites();
         assertMovement(movement, TransactionType.PAYMENT, amount, expectedBalance);
@@ -148,15 +146,12 @@ class TransactionCommandServiceTest {
     void keepsRefundAndFaultDiscountBehavior(TransactionType type, int amount, int expectedBalance) {
         prepareCustomer(INITIAL_DEBT);
         trackSuccessfulWrites();
-        MoneyTransactionForm form = new MoneyTransactionForm();
-        form.setDate(MOVEMENT_DATE);
-        form.setDetail("Test adjustment");
-        form.setAmount(amount);
+        MoneyTransactionCommand command = new MoneyTransactionCommand(MOVEMENT_DATE, "Test adjustment", amount);
 
         if (type == TransactionType.REFUND) {
-            commands.registerRefund(CUSTOMER_ID, form);
+            commands.registerRefund(CUSTOMER_ID, command);
         } else {
-            commands.registerFaultDiscount(CUSTOMER_ID, form);
+            commands.registerFaultDiscount(CUSTOMER_ID, command);
         }
 
         PersistedMovement movement = captureWrites();
@@ -171,9 +166,9 @@ class TransactionCommandServiceTest {
     void forgivesExactlyTheOutstandingDebt() {
         prepareCustomer(INITIAL_DEBT);
         trackSuccessfulWrites();
-        DebtForgivenessForm form = forgivenessForm();
+        DebtForgivenessCommand command = forgivenessCommand();
 
-        commands.forgiveDebt(CUSTOMER_ID, form);
+        commands.forgiveDebt(CUSTOMER_ID, command);
 
         PersistedMovement movement = captureWrites();
         assertMovement(movement, TransactionType.DEBT_FORGIVENESS, INITIAL_DEBT, 0);
@@ -184,9 +179,9 @@ class TransactionCommandServiceTest {
     @ValueSource(ints = {0, -1})
     void doesNotPersistForgivenessWhenDebtIsNotPositive(int debt) {
         prepareCustomer(debt);
-        DebtForgivenessForm form = forgivenessForm();
+        DebtForgivenessCommand command = forgivenessCommand();
 
-        commands.forgiveDebt(CUSTOMER_ID, form);
+        commands.forgiveDebt(CUSTOMER_ID, command);
 
         verifyNoInteractions(transactionRepository, statisticRepository);
         Integer remainingDebt = customer.getDebt();
@@ -238,9 +233,9 @@ class TransactionCommandServiceTest {
         }).when(statisticRepository);
         Statistic matchedStatistic = any(Statistic.class);
         stub.save(matchedStatistic);
-        SaleForm form = saleForm();
+        SaleCommand command = saleCommand();
 
-        assertThatThrownBy(() -> commands.registerSale(CUSTOMER_ID, form)).isSameAs(failure);
+        assertThatThrownBy(() -> commands.registerSale(CUSTOMER_ID, command)).isSameAs(failure);
 
         int begins = transactionManager.getBeginCount();
         int commits = transactionManager.getCommitCount();
@@ -281,20 +276,12 @@ class TransactionCommandServiceTest {
         return invocation.getArgument(0);
     }
 
-    private SaleForm saleForm() {
-        SaleForm form = new SaleForm();
-        form.setAmount(SALE_AMOUNT);
-        form.setItemsCount(ITEMS_COUNT);
-        form.setDetail("Test sale");
-        form.setDate(MOVEMENT_DATE);
-        return form;
+    private SaleCommand saleCommand() {
+        return new SaleCommand(MOVEMENT_DATE, "Test sale", ITEMS_COUNT, SALE_AMOUNT);
     }
 
-    private DebtForgivenessForm forgivenessForm() {
-        DebtForgivenessForm form = new DebtForgivenessForm();
-        form.setDate(MOVEMENT_DATE);
-        form.setDetail("Test forgiveness");
-        return form;
+    private DebtForgivenessCommand forgivenessCommand() {
+        return new DebtForgivenessCommand(MOVEMENT_DATE, "Test forgiveness");
     }
 
     private PersistedMovement captureWrites() {

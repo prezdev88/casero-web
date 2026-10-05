@@ -6,7 +6,7 @@ Documento de L03 en [improvements.md](improvements.md). Describe el comportamien
 
 - Los importes representan pesos enteros, sin conversión de moneda ni redondeo decimal. Los tipos existentes son `int`/`Integer` y `long` para algunos agregados; devolver `long` no cambia el tipo de la suma realizada por el repositorio.
 - Las fechas financieras son `LocalDate`. Los rangos con `BETWEEN` incluyen ambos extremos. Los meses son meses calendario, no bloques de treinta días.
-- Los servicios reciben entradas ya validadas por el adaptador MVC. Las anotaciones de los formularios no garantizan validación automática al invocar directamente un servicio. Identificadores, fechas y paginación deben ser válidos salvo los casos opcionales descritos abajo.
+- Los comandos financieros reciben records de aplicación, creados por el adaptador tras validar sus formularios web. Otros servicios mantienen sus entradas actuales. Las anotaciones de los formularios no garantizan validación automática al invocar directamente un servicio. Identificadores, fechas y paginación deben ser válidos salvo los casos opcionales descritos abajo.
 - Las consultas no modifican el dominio. Las implementaciones de `CustomerQueries`, `TransactionQueries`, `AuditQueries` y `UserCredentialLookup` usan transacciones de solo lectura a través del proxy de Spring. Esto no convierte sus entidades devueltas en objetos inmutables.
 - Los comandos de clientes y movimientos usan transacciones de escritura a través del proxy. La anotación no ofrece la misma garantía al construir una instancia directamente ni demuestra protección frente a escrituras concurrentes.
 - No hay un criterio universal de desempate. Se documentan los órdenes explícitos; los empates restantes conservan las limitaciones de la consulta existente.
@@ -57,7 +57,7 @@ Los registros financieros requieren un cliente habilitado. La secuencia común a
 | `forgiveDebt` | Si la deuda es menor o igual a cero, no escribe. En otro caso registra el importe de la deuda previa y deja saldo cero. |
 | `delete(transactionId)` | Ausencia: `NoSuchElementException`. Elimina estadísticas coincidentes por tipo, importe y fecha; elimina el movimiento; restaura la deuda al saldo del último movimiento visible por `createdAt DESC, id DESC`, o cero si no queda ninguno. |
 
-`date` proviene del formulario. `createdAt` se obtiene con `OffsetDateTime.now` en `America/Santiago`. Borrar un movimiento conserva la regla de restaurar el último saldo guardado; no recalcula todos los movimientos históricos.
+`date` proviene del comando de aplicación; el adaptador lo copia del formulario validado. `createdAt` se obtiene con `OffsetDateTime.now` en `America/Santiago`. Borrar un movimiento conserva la regla de restaurar el último saldo guardado; no recalcula todos los movimientos históricos.
 
 La atomicidad exigida a una alternativa incluye saldo, movimiento y estadística. Las pruebas actuales comprueban el uso de la transacción y el orden de llamadas; no demuestran rollback de una base de datos real ni ausencia de actualizaciones perdidas bajo concurrencia.
 

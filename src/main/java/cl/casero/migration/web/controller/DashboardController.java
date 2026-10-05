@@ -1,25 +1,25 @@
 package cl.casero.migration.web.controller;
 
 import java.time.LocalDate;
-import java.time.format.TextStyle;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import cl.casero.migration.domain.MonthlyStatistic;
 import cl.casero.migration.service.CustomerQueries;
-import cl.casero.migration.service.StatisticsService;
+import cl.casero.migration.service.DashboardService;
 import cl.casero.migration.service.TransactionQueries;
 import cl.casero.migration.service.dto.CustomerBirthdayDTO;
+import cl.casero.migration.service.dto.DashboardData;
 import cl.casero.migration.service.dto.TopCustomerSummary;
 import cl.casero.migration.service.dto.TransactionMonthlySummary;
+import cl.casero.migration.web.presentation.CustomerBirthdayPresenter;
+import cl.casero.migration.web.presentation.CustomerBirthdayView;
+import cl.casero.migration.web.presentation.DashboardChartData;
+import cl.casero.migration.web.presentation.DashboardChartPresenter;
 
 @Controller
 @RequestMapping("/dashboard")
@@ -27,83 +27,49 @@ import cl.casero.migration.service.dto.TransactionMonthlySummary;
 public class DashboardController {
 
     private final CustomerQueries customerQueries;
-    private final StatisticsService statisticsService;
     private final TransactionQueries transactionQueries;
+    private final DashboardService dashboardService;
+    private final CustomerBirthdayPresenter birthdayPresenter;
+    private final DashboardChartPresenter chartPresenter;
 
     @GetMapping
     public String index(Model model) {
         LocalDate today = LocalDate.now();
-        
-        // 1. Birthdays this month
-        int currentMonth = today.getMonthValue();
-        long birthdaysCount = customerQueries.getBirthdaysThisMonthCount(currentMonth);
-        
-        // 2. Total Debt
-        int totalDebt = statisticsService.getTotalDebt();
-        
-        // 3. Active Customers
-        long activeCustomersCount = customerQueries.count();
-        
-        // 4. Overdue Customers (morosos) - defined as 1+ months overdue in the service layer
-        long overdueCustomersCount = customerQueries.getOverdueCustomers(PageRequest.of(0, 1), 1).getTotalElements();
-        long overdueDebt = customerQueries.getOverdueDebt(1);
-        
-        // 5. Monthly Sales/Payments (Optimized)
-        MonthlyStatistic stats = statisticsService.getMonthlyStatistic(today.getMonthValue(), today.getYear());
-        long salesAmount = stats.getSalesCount(); // refers to sales sum
-        long paymentsAmount = stats.getPaymentsCount(); // refers to payments sum
-
-        // Last month to compare (Month-To-Date)
-        LocalDate lastMonth = today.minusMonths(1);
-        LocalDate startOfLastMonth = lastMonth.withDayOfMonth(1);
-        
-        long lastMonthSales = transactionQueries.getSalesSum(startOfLastMonth, lastMonth);
-        long lastMonthPayments = transactionQueries.getPaymentsSum(startOfLastMonth, lastMonth);
-
-        // Top 3 customers
-        List<TopCustomerSummary> topCustomers = transactionQueries.getTopCustomersThisMonth();
-
+        DashboardData data = dashboardService.prepare(today);
+        long birthdaysCount = data.birthdaysCount();
         model.addAttribute("birthdaysCount", birthdaysCount);
+        int totalDebt = data.totalDebt();
         model.addAttribute("totalDebt", totalDebt);
+        long activeCustomersCount = data.activeCustomersCount();
         model.addAttribute("activeCustomersCount", activeCustomersCount);
+        long overdueCustomersCount = data.overdueCustomersCount();
         model.addAttribute("overdueCustomersCount", overdueCustomersCount);
+        long overdueDebt = data.overdueDebt();
         model.addAttribute("overdueDebt", overdueDebt);
+        long salesAmount = data.salesAmount();
         model.addAttribute("salesAmount", salesAmount);
+        long paymentsAmount = data.paymentsAmount();
         model.addAttribute("paymentsAmount", paymentsAmount);
+        long lastMonthSales = data.lastMonthSales();
         model.addAttribute("lastMonthSales", lastMonthSales);
+        long lastMonthPayments = data.lastMonthPayments();
         model.addAttribute("lastMonthPayments", lastMonthPayments);
+        List<TopCustomerSummary> topCustomers = data.topCustomers();
         model.addAttribute("topCustomers", topCustomers);
-        
-        // Extra stats
-        int averageDebt = statisticsService.getAverageDebt();
-        int finishedCardsCount = stats.getFinishedCardsCount();
-        int totalItemsCount = stats.getTotalItemsCount();
-        
+        int averageDebt = data.averageDebt();
         model.addAttribute("averageDebt", averageDebt);
+        int finishedCardsCount = data.finishedCardsCount();
         model.addAttribute("finishedCardsCount", finishedCardsCount);
+        int totalItemsCount = data.totalItemsCount();
         model.addAttribute("totalItemsCount", totalItemsCount);
-        
-        // Chart Data (Last 6 months)
-        LocalDate startOfSixMonthsAgo = today.minusMonths(5).withDayOfMonth(1);
-        LocalDate endOfCurrentMonth = today.withDayOfMonth(today.lengthOfMonth());
-        List<TransactionMonthlySummary> last6Months = transactionQueries.getMonthlySummary(startOfSixMonthsAgo, endOfCurrentMonth);
-        
-        List<String> chartLabels = new ArrayList<>();
-        List<Long> chartSales = new ArrayList<>();
-        List<Long> chartPayments = new ArrayList<>();
-        
-        for (TransactionMonthlySummary summary : last6Months) {
-            String monthName = summary.month().getMonth().getDisplayName(TextStyle.SHORT, new Locale("es", "ES"));
-            monthName = monthName.substring(0, 1).toUpperCase() + monthName.substring(1);
-            chartLabels.add("'" + monthName + " " + summary.month().getYear() + "'");
-            chartSales.add(summary.salesAmount());
-            chartPayments.add(summary.paymentsAmount());
-        }
-        
-        model.addAttribute("chartLabels", String.join(",", chartLabels));
-        model.addAttribute("chartSales", chartSales.toString().replaceAll("\\[|\\]", ""));
-        model.addAttribute("chartPayments", chartPayments.toString().replaceAll("\\[|\\]", ""));
-        
+        List<TransactionMonthlySummary> series = data.monthlySeries();
+        DashboardChartData chart = chartPresenter.present(series);
+        List<String> labels = chart.labels();
+        List<Long> sales = chart.sales();
+        List<Long> payments = chart.payments();
+        model.addAttribute("chartLabels", labels);
+        model.addAttribute("chartSales", sales);
+        model.addAttribute("chartPayments", payments);
         return "dashboard/index";
     }
 
@@ -112,7 +78,10 @@ public class DashboardController {
         LocalDate today = LocalDate.now();
         int currentMonth = today.getMonthValue();
         List<CustomerBirthdayDTO> monthlyBirthdays = customerQueries.getBirthdaysThisMonth(currentMonth);
-        model.addAttribute("birthdays", monthlyBirthdays);
+        List<CustomerBirthdayView> birthdays = monthlyBirthdays.stream()
+                .map(birthday -> birthdayPresenter.present(birthday, today))
+                .toList();
+        model.addAttribute("birthdays", birthdays);
         return "dashboard/birthdays";
     }
 

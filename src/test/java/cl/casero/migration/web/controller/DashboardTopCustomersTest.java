@@ -37,8 +37,13 @@ import cl.casero.migration.domain.MonthlyStatistic;
 import cl.casero.migration.repository.TransactionRepository;
 import cl.casero.migration.repository.TransactionRepository.TopCustomerProjection;
 import cl.casero.migration.service.CustomerQueries;
+import cl.casero.migration.service.DashboardService;
+import cl.casero.migration.web.presentation.CustomerBirthdayPresenter;
+import cl.casero.migration.web.presentation.CustomerBirthDateFormatter;
+import cl.casero.migration.web.presentation.DashboardChartPresenter;
 import cl.casero.migration.service.StatisticsService;
 import cl.casero.migration.service.dto.OverdueCustomerSummary;
+import cl.casero.migration.service.dto.CustomerBirthdayDTO;
 import cl.casero.migration.service.dto.TopCustomerSummary;
 import cl.casero.migration.service.impl.TransactionQueryService;
 
@@ -70,15 +75,12 @@ class DashboardTopCustomersTest {
     void setUp() {
         Clock clock = Clock.fixed(REFERENCE_INSTANT, ZoneOffset.UTC);
         TransactionQueryService queries = new TransactionQueryService(repository, clock);
-        DashboardController controller = new DashboardController(customers, statistics, queries);
-        Pageable overduePageable = PageRequest.of(0, 1);
-        Page<OverdueCustomerSummary> overduePage = Page.empty(overduePageable);
-        doReturn(overduePage).when(customers).getOverdueCustomers(overduePageable, 1);
-        MonthlyStatistic monthly = new MonthlyStatistic();
-        StatisticsService stub = doReturn(monthly).when(statistics);
-        int month = anyInt();
-        int year = anyInt();
-        stub.getMonthlyStatistic(month, year);
+        DashboardService dashboardService = new DashboardService(customers, statistics, queries);
+        CustomerBirthDateFormatter formatter = new CustomerBirthDateFormatter();
+        CustomerBirthdayPresenter birthdayPresenter = new CustomerBirthdayPresenter(formatter);
+        DashboardChartPresenter chartPresenter = new DashboardChartPresenter();
+        DashboardController controller = new DashboardController(
+                customers, queries, dashboardService, birthdayPresenter, chartPresenter);
         String encoding = StandardCharsets.UTF_8.name();
         ClassLoaderTemplateResolver templates = new ClassLoaderTemplateResolver();
         templates.setPrefix("templates/");
@@ -97,6 +99,7 @@ class DashboardTopCustomersTest {
 
     @Test
     void rendersApplicationResultsWithTheSameMonthOrderAmountsAndEscapedNames() throws Exception {
+        prepareIndicators();
         TopCustomerProjection first = new TopCustomerRow("<First Customer>", FIRST_CUSTOMER_TOTAL);
         TopCustomerProjection second = new TopCustomerRow("Second Customer", SECOND_CUSTOMER_TOTAL);
         TopCustomerProjection third = new TopCustomerRow("Third Customer", THIRD_CUSTOMER_TOTAL);
@@ -115,7 +118,8 @@ class DashboardTopCustomersTest {
         MockHttpServletResponse response = result.getResponse();
         String html = response.getContentAsString();
         assertThat(html).contains("&lt;First Customer&gt;", "Second Customer", "Third Customer", "12.000", "9.000", "2.000")
-                .doesNotContain("No hay abonos registrados este mes aún.");
+                .doesNotContain("No hay abonos registrados este mes aún.")
+                .contains("const salesData = [0,0,0,0,0,0]", "const paymentsData = [0,0,0,0,0,0]");
         int firstPosition = html.indexOf("&lt;First Customer&gt;");
         int secondPosition = html.indexOf("Second Customer");
         int thirdPosition = html.indexOf("Third Customer");
@@ -126,6 +130,7 @@ class DashboardTopCustomersTest {
 
     @Test
     void rendersTheExistingEmptyStateWhenTheMonthHasNoPayments() throws Exception {
+        prepareIndicators();
         List<TopCustomerProjection> rows = List.of();
         doReturn(rows).when(repository).findTopCustomers(MONTH_START, MONTH_END);
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders.get(DASHBOARD_PATH);
@@ -138,6 +143,53 @@ class DashboardTopCustomersTest {
         String html = response.getContentAsString();
         assertThat(html).contains("No hay abonos registrados este mes aún.");
         verify(repository).findTopCustomers(MONTH_START, MONTH_END);
+    }
+
+    @Test
+    void rendersBirthdayViewDataWithYearAgeNamesAndExistingLinks() throws Exception {
+        LocalDate today = LocalDate.now();
+        int month = today.getMonthValue();
+        int year = today.getYear();
+        int birthYear = year - 1;
+        CustomerBirthdayDTO birthday = new CustomerBirthdayDTO(1L, "<Birthday Customer>", 1, month, birthYear, 0, null);
+        List<CustomerBirthdayDTO> birthdays = List.of(birthday);
+        doReturn(birthdays).when(customers).getBirthdaysThisMonth(month);
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders.get("/dashboard/birthdays");
+
+        MvcResult result = mockMvc.perform(request).andReturn();
+
+        MockHttpServletResponse response = result.getResponse();
+        String html = response.getContentAsString();
+        int status = response.getStatus();
+        assertThat(status).isEqualTo(HTTP_OK);
+        assertThat(html).contains("&lt;Birthday Customer&gt;", "1 años", "/customers/1", "Sin abonos")
+                .doesNotContain("No hay cumpleaños registrados para este mes.");
+    }
+
+    @Test
+    void rendersTheExistingEmptyBirthdayState() throws Exception {
+        LocalDate today = LocalDate.now();
+        int month = today.getMonthValue();
+        List<CustomerBirthdayDTO> birthdays = List.of();
+        doReturn(birthdays).when(customers).getBirthdaysThisMonth(month);
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders.get("/dashboard/birthdays");
+
+        MvcResult result = mockMvc.perform(request).andReturn();
+
+        MockHttpServletResponse response = result.getResponse();
+        String html = response.getContentAsString();
+        assertThat(html).contains("No hay cumpleaños registrados para este mes.");
+    }
+
+    private void prepareIndicators() {
+        Pageable overduePageable = PageRequest.of(0, 1);
+        Page<OverdueCustomerSummary> overduePage = Page.empty(overduePageable);
+        doReturn(overduePage).when(customers).getOverdueCustomers(overduePageable, 1);
+        MonthlyStatistic monthly = new MonthlyStatistic();
+        StatisticsService stub = doReturn(monthly).when(statistics);
+        int month = anyInt();
+        int year = anyInt();
+        stub.getMonthlyStatistic(month, year);
     }
 
     private List<?> assertResult(MvcResult result) {

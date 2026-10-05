@@ -22,13 +22,11 @@ public class CustomerBirthDateFormatter {
     public String format(Customer customer, LocalDate referenceDate) {
         Integer birthDay = customer.getBirthDay();
         Integer birthMonth = customer.getBirthMonth();
-        if (birthDay == null || birthMonth == null) {
+        String label = formatDayAndMonth(birthDay, birthMonth);
+        if (label == null) {
             return null;
         }
 
-        String monthName = (birthMonth >= FIRST_MONTH && birthMonth <= LAST_MONTH)
-                ? MONTH_NAMES.get(birthMonth - 1) : "";
-        String label = birthDay + " de " + monthName;
         Integer birthYear = customer.getBirthYear();
         if (birthYear == null) {
             return label;
@@ -36,6 +34,16 @@ public class CustomerBirthDateFormatter {
 
         int age = calculateAge(customer, referenceDate);
         return label + " de " + birthYear + " (" + age + " años)";
+    }
+
+    public String formatDayAndMonth(Integer day, Integer month) {
+        if (day == null || month == null) {
+            return null;
+        }
+
+        String monthName = (month >= FIRST_MONTH && month <= LAST_MONTH)
+                ? MONTH_NAMES.get(month - 1) : "";
+        return day + " de " + monthName;
     }
 
     private int calculateAge(Customer customer, LocalDate referenceDate) {

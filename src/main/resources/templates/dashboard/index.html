@@ -176,9 +176,9 @@
     <script th:inline="javascript">
         /*<![CDATA[*/
         const ctx = document.getElementById('salesChart').getContext('2d');
-        const labels = [ [(${chartLabels})] ];
-        const salesData = [ [(${chartSales})] ];
-        const paymentsData = [ [(${chartPayments})] ];
+        const labels = /*[[${chartLabels}]]*/ [];
+        const salesData = /*[[${chartSales}]]*/ [];
+        const paymentsData = /*[[${chartPayments}]]*/ [];
 
         const formatCurrency = (value) => {
             return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(value);

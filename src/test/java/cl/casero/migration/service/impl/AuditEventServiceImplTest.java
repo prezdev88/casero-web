@@ -25,7 +25,7 @@ import cl.casero.migration.domain.AuditEvent;
 import cl.casero.migration.domain.enums.AuditEventType;
 import cl.casero.migration.domain.enums.UserRole;
 import cl.casero.migration.repository.AuditEventRepository;
-import cl.casero.migration.service.AppConfigService;
+import cl.casero.migration.service.AuditPolicy;
 import cl.casero.migration.service.dto.AuditContext;
 
 @ExtendWith(MockitoExtension.class)
@@ -38,7 +38,7 @@ class AuditEventServiceImplTest {
     private AuditEventRepository repository;
 
     @Mock
-    private AppConfigService configuration;
+    private AuditPolicy configuration;
 
     private AuditEventServiceImpl service;
 

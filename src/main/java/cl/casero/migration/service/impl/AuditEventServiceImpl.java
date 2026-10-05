@@ -12,7 +12,7 @@ import cl.casero.migration.domain.AppUser;
 import cl.casero.migration.domain.AuditEvent;
 import cl.casero.migration.domain.enums.AuditEventType;
 import cl.casero.migration.repository.AuditEventRepository;
-import cl.casero.migration.service.AppConfigService;
+import cl.casero.migration.service.AuditPolicy;
 import cl.casero.migration.service.AuditEventService;
 import cl.casero.migration.service.dto.AuditContext;
 
@@ -22,12 +22,12 @@ import cl.casero.migration.service.dto.AuditContext;
 public class AuditEventServiceImpl implements AuditEventService {
 
     private final AuditEventRepository repository;
-    private final AppConfigService appConfigService;
+    private final AuditPolicy auditPolicy;
 
     @Override
     @Transactional
     public void logEvent(AuditEventType eventType, Map<String, Object> payload, AuditContext context) {
-        if (!appConfigService.isAuditEnabled()) {
+        if (!auditPolicy.isAuditEnabled()) {
             return;
         }
 

@@ -7,8 +7,6 @@ import java.util.List;
 public interface AppConfigService {
     Optional<AppConfig> findByKey(String key);
 
-    boolean isAuditEnabled();
-
     List<AppConfig> listAll();
 
     void updateValue(String key, String value);

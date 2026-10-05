@@ -1,6 +1,5 @@
 package cl.casero.migration.web.controller;
 
-import java.util.Arrays;
 import java.util.Map;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -26,6 +25,7 @@ import cl.casero.migration.service.audit.AuditAction;
 import cl.casero.migration.service.dto.AuditContext;
 import cl.casero.migration.service.dto.CreateUserForm;
 import cl.casero.migration.service.dto.UpdatePinForm;
+import cl.casero.migration.service.dto.UserIdentity;
 import cl.casero.migration.web.audit.AuditContextFactory;
 import cl.casero.migration.web.security.CaseroUserDetails;
 
@@ -59,7 +59,7 @@ public class AdminUserController {
         try {
             AppUser created = appUserService.create(form.getName(), form.getRole(), form.getPin());
             redirectAttributes.addFlashAttribute("message", "Usuario creado correctamente");
-            AppUser actor = currentUser(authentication);
+            UserIdentity actor = currentUser(authentication);
             Long createdId = created.getId();
             String createdName = created.getName();
             UserRole createdRole = created.getRole();
@@ -93,7 +93,7 @@ public class AdminUserController {
         try {
             appUserService.updatePin(form.getUserId(), form.getPin());
             redirectAttributes.addFlashAttribute("message", "PIN actualizado");
-            AppUser actor = currentUser(authentication);
+            UserIdentity actor = currentUser(authentication);
             Long userId = form.getUserId();
             Map<String, Object> data = Map.of("userId", userId);
             Map<String, Object> payload = AuditAction.ADMIN_USER_PIN_UPDATED.payload(data);
@@ -125,9 +125,9 @@ public class AdminUserController {
                 .orElse("Error al procesar la solicitud");
     }
 
-    private AppUser currentUser(Authentication authentication) {
+    private UserIdentity currentUser(Authentication authentication) {
         if (authentication != null && authentication.getPrincipal() instanceof CaseroUserDetails details) {
-            return details.getAppUser();
+            return details.getIdentity();
         }
         return null;
     }

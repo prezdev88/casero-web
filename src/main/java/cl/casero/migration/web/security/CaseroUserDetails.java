@@ -1,33 +1,41 @@
 package cl.casero.migration.web.security;
 
-import cl.casero.migration.domain.AppUser;
-import cl.casero.migration.domain.enums.UserRole;
-import lombok.AllArgsConstructor;
-
 import java.util.Collection;
 import java.util.List;
+
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-@AllArgsConstructor
+import cl.casero.migration.domain.enums.UserRole;
+import cl.casero.migration.service.dto.UserIdentity;
+
+@RequiredArgsConstructor
 public class CaseroUserDetails implements UserDetails {
 
-    private final AppUser appUser;
+    private static final long serialVersionUID = 1L;
+
+    private final UserIdentity identity;
+    private final String username;
+    private final String password;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_" + appUser.getRole().name()));
+        UserRole role = identity.role();
+        String authorityName = "ROLE_" + role.name();
+        GrantedAuthority authority = new SimpleGrantedAuthority(authorityName);
+        return List.of(authority);
     }
 
     @Override
     public String getPassword() {
-        return appUser.getPinHash();
+        return password;
     }
 
     @Override
     public String getUsername() {
-        return appUser.getPinFingerprint();
+        return username;
     }
 
     @Override
@@ -47,14 +55,14 @@ public class CaseroUserDetails implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return appUser.isEnabled();
+        return identity.enabled();
     }
 
-    public AppUser getAppUser() {
-        return appUser;
+    public UserIdentity getIdentity() {
+        return identity;
     }
 
     public boolean isAdmin() {
-        return appUser.getRole() == UserRole.ADMIN;
+        return identity.isAdmin();
     }
 }

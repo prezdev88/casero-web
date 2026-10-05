@@ -10,21 +10,21 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
-import cl.casero.migration.domain.AppUser;
 import cl.casero.migration.domain.Customer;
 import cl.casero.migration.domain.Sector;
 import cl.casero.migration.domain.enums.AuditEventType;
 import cl.casero.migration.service.AuditEventService;
 import cl.casero.migration.service.audit.AuditAction;
 import cl.casero.migration.service.dto.AuditContext;
-import cl.casero.migration.web.form.DebtForgivenessForm;
-import cl.casero.migration.web.form.MoneyTransactionForm;
-import cl.casero.migration.web.form.PaymentForm;
-import cl.casero.migration.web.form.SaleForm;
 import cl.casero.migration.service.dto.UpdateAddressForm;
 import cl.casero.migration.service.dto.UpdateBirthdateForm;
 import cl.casero.migration.service.dto.UpdateNameForm;
 import cl.casero.migration.service.dto.UpdateSectorForm;
+import cl.casero.migration.service.dto.UserIdentity;
+import cl.casero.migration.web.form.DebtForgivenessForm;
+import cl.casero.migration.web.form.MoneyTransactionForm;
+import cl.casero.migration.web.form.PaymentForm;
+import cl.casero.migration.web.form.SaleForm;
 import cl.casero.migration.web.security.CaseroUserDetails;
 
 @Component
@@ -266,19 +266,19 @@ public class CustomerAuditLogger {
         HttpServletRequest request
     ) {
         payload.values().removeIf(Objects::isNull);
-        AppUser actor = currentUser(authentication);
+        UserIdentity actor = currentUser(authentication);
         AuditContext context = auditContextFactory.from(actor, request);
         auditEventService.logEvent(AuditEventType.ACTION, payload, context);
     }
 
-    private AppUser currentUser(Authentication authentication) {
+    private UserIdentity currentUser(Authentication authentication) {
         if (authentication == null) {
             return null;
         }
 
         Object principal = authentication.getPrincipal();
         if (principal instanceof CaseroUserDetails details) {
-            return details.getAppUser();
+            return details.getIdentity();
         }
 
         return null;

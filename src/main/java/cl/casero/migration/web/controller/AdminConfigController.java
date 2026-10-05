@@ -13,12 +13,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import cl.casero.migration.domain.AppUser;
 import cl.casero.migration.domain.enums.AuditEventType;
 import cl.casero.migration.service.AppConfigService;
 import cl.casero.migration.service.AuditEventService;
 import cl.casero.migration.service.audit.AuditAction;
 import cl.casero.migration.service.dto.AuditContext;
+import cl.casero.migration.service.dto.UserIdentity;
 import cl.casero.migration.web.audit.AuditContextFactory;
 import cl.casero.migration.web.security.CaseroUserDetails;
 
@@ -47,7 +47,7 @@ public class AdminConfigController {
         try {
             appConfigService.updateValue(configKey, value);
             redirectAttributes.addFlashAttribute("message", "Configuración actualizada");
-            AppUser actor = currentUser(authentication);
+            UserIdentity actor = currentUser(authentication);
             Map<String, Object> data = Map.of("key", configKey, "value", value);
             Map<String, Object> payload = AuditAction.APP_CONFIG_UPDATED.payload(data);
             AuditContext context = auditContextFactory.from(actor, request);
@@ -58,9 +58,9 @@ public class AdminConfigController {
         return "redirect:/admin/config";
     }
 
-    private AppUser currentUser(Authentication authentication) {
+    private UserIdentity currentUser(Authentication authentication) {
         if (authentication != null && authentication.getPrincipal() instanceof CaseroUserDetails details) {
-            return details.getAppUser();
+            return details.getIdentity();
         }
         return null;
     }

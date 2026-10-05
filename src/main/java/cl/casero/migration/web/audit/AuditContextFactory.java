@@ -4,13 +4,13 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import cl.casero.migration.domain.AppUser;
 import cl.casero.migration.service.dto.AuditContext;
+import cl.casero.migration.service.dto.UserIdentity;
 
 @Component
 public class AuditContextFactory {
 
-    public AuditContext from(AppUser user, HttpServletRequest request) {
+    public AuditContext from(UserIdentity user, HttpServletRequest request) {
         if (request == null) {
             return new AuditContext(user, null, null);
         }

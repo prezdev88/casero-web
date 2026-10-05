@@ -85,6 +85,7 @@ import cl.casero.migration.service.dto.CustomerTransactionReportData;
 import cl.casero.migration.service.dto.ReportCustomerData;
 import cl.casero.migration.service.dto.ReportTransactionData;
 import cl.casero.migration.service.dto.TransactionDetails;
+import cl.casero.migration.service.dto.UserIdentity;
 import cl.casero.migration.support.ReadModelFixtures;
 import cl.casero.migration.util.CustomerScoreCalculator;
 import cl.casero.migration.util.CustomerScoreCalculator.ScoreResult;
@@ -389,7 +390,7 @@ class CustomerRoutesTest {
         creationStub.create(matchedForm);
         AppUser actor = new AppUser();
         actor.setRole(UserRole.NORMAL);
-        CaseroUserDetails details = new CaseroUserDetails(actor);
+        CaseroUserDetails details = ReadModelFixtures.principal(actor);
         Authentication authentication = new TestingAuthenticationToken(details, null);
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders.post("/customers");
         request.principal(authentication);
@@ -406,7 +407,8 @@ class CustomerRoutesTest {
         Map<String, Object> payload = Map.of("type", "CREATE_CUSTOMER", "data", data);
         AuditEventService auditVerification = verify(auditEventService);
         AuditEventType eventType = eq(AuditEventType.ACTION);
-        AuditContext actorContext = new AuditContext(actor, "127.0.0.1", null);
+        UserIdentity actorIdentity = ReadModelFixtures.identity(actor);
+        AuditContext actorContext = new AuditContext(actorIdentity, "127.0.0.1", null);
         Map<String, Object> expectedPayload = eq(payload);
         AuditContext expectedContext = eq(actorContext);
         auditVerification.logEvent(eventType, expectedPayload, expectedContext);

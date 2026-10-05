@@ -11,10 +11,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
 
-import cl.casero.migration.domain.AppUser;
 import cl.casero.migration.domain.enums.AuditEventType;
 import cl.casero.migration.service.AuditEventService;
 import cl.casero.migration.service.dto.AuditContext;
+import cl.casero.migration.service.dto.UserIdentity;
 import cl.casero.migration.web.audit.AuditContextFactory;
 
 @RequiredArgsConstructor
@@ -31,20 +31,20 @@ public class LoginSuccessHandler extends SavedRequestAwareAuthenticationSuccessH
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication)
             throws ServletException, IOException {
-        AppUser user = extractUser(authentication);
+        UserIdentity user = extractUser(authentication);
         Map<String, Object> payload = buildPayload(request);
         AuditContext context = auditContextFactory.from(user, request);
         auditEventService.logEvent(AuditEventType.LOG_IN, payload, context);
         super.onAuthenticationSuccess(request, response, authentication);
     }
 
-    private AppUser extractUser(Authentication authentication) {
+    private UserIdentity extractUser(Authentication authentication) {
         if (authentication == null) {
             return null;
         }
         Object principal = authentication.getPrincipal();
         if (principal instanceof CaseroUserDetails details) {
-            return details.getAppUser();
+            return details.getIdentity();
         }
         return null;
     }

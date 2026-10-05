@@ -9,8 +9,9 @@ import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.mock.web.MockHttpServletRequest;
 
-import cl.casero.migration.domain.AppUser;
+import cl.casero.migration.domain.enums.UserRole;
 import cl.casero.migration.service.dto.AuditContext;
+import cl.casero.migration.service.dto.UserIdentity;
 
 class AuditContextFactoryTest {
 
@@ -32,7 +33,7 @@ class AuditContextFactoryTest {
 
         String ip = context.ip();
         String userAgent = context.userAgent();
-        AppUser user = context.user();
+        UserIdentity user = context.user();
         assertThat(ip).isEqualTo(REMOTE_IP);
         assertThat(userAgent).isEqualTo(USER_AGENT);
         assertThat(user).isNull();
@@ -43,19 +44,19 @@ class AuditContextFactoryTest {
     void keepsTheFirstForwardedAddress(String forwardedFor, String expectedIp) {
         MockHttpServletRequest request = requestWithMetadata();
         request.addHeader("X-Forwarded-For", forwardedFor);
-        AppUser actor = new AppUser();
+        UserIdentity actor = new UserIdentity(1L, "Test User", UserRole.NORMAL, true);
 
         AuditContext context = factory.from(actor, request);
 
         String ip = context.ip();
-        AppUser user = context.user();
+        UserIdentity user = context.user();
         assertThat(ip).isEqualTo(expectedIp);
         assertThat(user).isSameAs(actor);
     }
 
     @Test
     void preservesTheActorWithoutRequestMetadata() {
-        AppUser actor = new AppUser();
+        UserIdentity actor = new UserIdentity(1L, "Test User", UserRole.NORMAL, true);
 
         AuditContext context = factory.from(actor, null);
 

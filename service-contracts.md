@@ -153,11 +153,11 @@ Un valor que comienza con `{` se interpreta como JSON ya normalizado: `enabled` 
 
 1. Política deshabilitada o tipo nulo: retorna sin guardar.
 2. Contexto con administrador: retorna sin guardar.
-3. En los demás casos guarda tipo, usuario opcional, IP, agente y una copia superficial del payload. Payload nulo se transforma en mapa vacío.
+3. En los demás casos guarda tipo, referencia del usuario opcional, IP, agente y una copia superficial del payload. El contexto contiene `UserIdentity`; dentro de la transacción de guardado se obtiene la referencia persistente mediante `AppUserRepository.getReferenceById`. Un actor autenticado requiere identificador persistido. La sesión y los emisores no suministran entidades. Payload nulo se transforma en mapa vacío.
 
 El contexto es obligatorio cuando el flujo alcanza su lectura; un usuario nulo representa una acción anónima. El servicio no recibe objetos Servlet. Si `X-Forwarded-For` contiene texto, la capa web toma el primer segmento separado por coma y aplica `trim`; en otro caso usa la dirección remota. No busca el primer segmento no vacío. Conserva `User-Agent`; una solicitud nula produce IP y agente nulos.
 
-Las excepciones dentro de `persistEvent`, incluida la llamada a `save`, se registran como advertencia y no se propagan desde ese bloque. No se promete absorber errores de lectura de política, contexto inválido ni fallos de commit que sucedan al salir del proxy transaccional. Capturar un error de `save` tampoco prueba que la transacción pueda confirmarse después de un fallo real de persistencia.
+Las excepciones dentro de `persistEvent`, incluidas la resolución de referencia del actor y la llamada a `save`, se registran como advertencia y no se propagan desde ese bloque. No se promete absorber errores de lectura de política, contexto inválido ni fallos de commit que sucedan al salir del proxy transaccional. Capturar un error de `save` tampoco prueba que la transacción pueda confirmarse después de un fallo real de persistencia.
 
 `AuditAction` conserva identificadores persistidos, omisión de nulos y dos convenciones: acciones envueltas en `type`/`data`, y cambios de nombre/cumpleaños planos con `action`. Sus opciones filtrables excluyen las acciones planas y conservan alias históricos.
 
@@ -169,15 +169,15 @@ El servicio no normaliza cadenas ni limita páginas. El adaptador HTTP normaliza
 
 ## Credenciales y administración de usuarios
 
-`UserCredentialLookup.findByPinFingerprint(fingerprint)` consulta en solo lectura y devuelve `Optional<AppUser>`; ausencia es `Optional.empty()`. No administra usuarios ni valida por sí solo el PIN.
+`UserCredentialLookup.findByPinFingerprint(fingerprint)` consulta en solo lectura y devuelve `Optional<UserCredentials>`; ausencia es `Optional.empty()`. Copia identidad, huella, hash y salt desde la entidad dentro de la transacción. No administra usuarios ni valida por sí solo el PIN. Su representación de diagnóstico omite huella, hash y salt.
 
-El proveedor de autenticación obtiene la huella, consulta ese contrato y verifica el hash con su salt. Usuario ausente o PIN incorrecto producen `BadCredentialsException`; usuario deshabilitado produce `DisabledException`. Una autenticación correcta conserva el usuario y sus autoridades, elimina las credenciales del token resultante y copia los detalles de solicitud. Un token de otro proveedor devuelve nulo sin consultar credenciales.
+El proveedor de autenticación obtiene la huella, consulta ese contrato y verifica el hash con su salt. Usuario ausente o PIN incorrecto producen `BadCredentialsException`; usuario deshabilitado produce `DisabledException`. Una autenticación correcta conserva una identidad inmutable y sus autoridades, elimina las credenciales del token resultante y copia los detalles de solicitud. El principal expone `getIdentity`, sin entidad JPA; mantiene username y hash para compatibilidad con `UserDetails`, y no conserva el salt. Un token de otro proveedor devuelve nulo sin consultar credenciales.
 
-`AppUserService` conserva listado, creación y actualización de PIN. La separación no cambia validación de PIN, detección de duplicados, generación de salt ni asignación de roles. El principal sigue compartiendo la entidad; su posible sustitución se evalúa en [refactoring-decisions.md](refactoring-decisions.md).
+`AppUserService` conserva listado, creación y actualización de PIN. La separación no cambia validación de PIN, detección de duplicados, generación de salt ni asignación de roles. La identidad serializable captura identificador, nombre, rol y estado al autenticar; cambios posteriores de la entidad no la modifican. Una nueva autenticación consulta los valores actualizados. No hay revocación automática de sesiones existentes introducida por esta separación. Ver decisiones finales en [refactoring-decisions.md](refactoring-decisions.md).
 
 ## Evidencia y uso al sustituir implementaciones
 
-La suite actual pasó con **262 pruebas, cero fallos, errores u omisiones**, mediante `mvn -o test`. Casos relevantes:
+La suite actual pasó con **267 pruebas, cero fallos, errores u omisiones**, mediante `mvn -o clean test`. Casos relevantes:
 
 | Contrato | Pruebas existentes |
 | --- | --- |
@@ -188,6 +188,6 @@ La suite actual pasó con **262 pruebas, cero fallos, errores u omisiones**, med
 | Auditoría | `ConfiguredAuditPolicyTest`, `AuditEventServiceImplTest`, `AuditQueryServiceTest`, `AuditActionTest`, `AuditEmittersTest`, `AuditContextFactoryTest` |
 | Credenciales | `UserCredentialLookupServiceTest` |
 
-Hay repositorios simulados, pruebas del hash real, verificaciones transaccionales mediante proxies y renderizado real de Thymeleaf. No se ejecutó SQL nativa contra PostgreSQL, rollback real, navegador ni carga concurrente. La parametrización de la ventana en SQL está verificada en las llamadas al repositorio y por inspección del código.
+Hay repositorios simulados, pruebas del hash real, verificaciones transaccionales mediante proxies, serialización real de autenticación y renderizado real de Thymeleaf y PDF. No se ejecutó SQL nativa contra PostgreSQL, rollback real, navegador ni carga concurrente. La parametrización de la ventana en SQL está verificada en las llamadas al repositorio y por inspección del código.
 
 Para introducir una alternativa, ejecutar los mismos escenarios de comportamiento contra ella y comprobar también sus consultas, paginación y transacciones con el almacenamiento elegido. Conservar los resultados de ausencia, unidades, orden y referencias temporales documentados. Si se quiere cambiar una regla existente, explicitar ese cambio y sus consumidores; no presentarlo como una sustitución equivalente.

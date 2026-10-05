@@ -11,10 +11,12 @@ import org.springframework.transaction.annotation.Transactional;
 import cl.casero.migration.domain.AppUser;
 import cl.casero.migration.domain.AuditEvent;
 import cl.casero.migration.domain.enums.AuditEventType;
+import cl.casero.migration.repository.AppUserRepository;
 import cl.casero.migration.repository.AuditEventRepository;
-import cl.casero.migration.service.AuditPolicy;
 import cl.casero.migration.service.AuditEventService;
+import cl.casero.migration.service.AuditPolicy;
 import cl.casero.migration.service.dto.AuditContext;
+import cl.casero.migration.service.dto.UserIdentity;
 
 @Service
 @RequiredArgsConstructor
@@ -23,6 +25,7 @@ public class AuditEventServiceImpl implements AuditEventService {
 
     private final AuditEventRepository repository;
     private final AuditPolicy auditPolicy;
+    private final AppUserRepository users;
 
     @Override
     @Transactional
@@ -35,7 +38,7 @@ public class AuditEventServiceImpl implements AuditEventService {
             return;
         }
 
-        AppUser user = context.user();
+        UserIdentity user = context.user();
         if (user != null && user.isAdmin()) {
             return;
         }
@@ -45,7 +48,8 @@ public class AuditEventServiceImpl implements AuditEventService {
 
     private void persistEvent(AuditEventType eventType, Map<String, Object> payload, AuditContext context) {
         try {
-            AppUser user = context.user();
+            UserIdentity identity = context.user();
+            AppUser user = resolveActor(identity);
             String ip = context.ip();
             String userAgent = context.userAgent();
             Map<String, Object> eventPayload = (payload != null) ? new HashMap<>(payload) : Map.of();
@@ -60,5 +64,14 @@ public class AuditEventServiceImpl implements AuditEventService {
             String reason = ex.getMessage();
             log.warn("No se pudo registrar evento de auditoría {}: {}", eventType, reason);
         }
+    }
+
+    private AppUser resolveActor(UserIdentity identity) {
+        if (identity == null) {
+            return null;
+        }
+
+        Long id = identity.id();
+        return users.getReferenceById(id);
     }
 }

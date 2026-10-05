@@ -3,6 +3,7 @@ package cl.casero.migration.service.impl;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
@@ -19,18 +20,26 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import cl.casero.migration.domain.AppUser;
 import cl.casero.migration.domain.AuditEvent;
 import cl.casero.migration.domain.enums.AuditEventType;
 import cl.casero.migration.domain.enums.UserRole;
+import cl.casero.migration.repository.AppUserRepository;
 import cl.casero.migration.repository.AuditEventRepository;
+import cl.casero.migration.service.AuditEventService;
 import cl.casero.migration.service.AuditPolicy;
 import cl.casero.migration.service.dto.AuditContext;
+import cl.casero.migration.service.dto.UserIdentity;
+import cl.casero.migration.support.ReadModelFixtures;
 
 @ExtendWith(MockitoExtension.class)
 class AuditEventServiceImplTest {
 
+    private static final long USER_ID = 7L;
     private static final String IP = "198.51.100.8";
     private static final String USER_AGENT = "Audit test browser";
 
@@ -40,11 +49,14 @@ class AuditEventServiceImplTest {
     @Mock
     private AuditPolicy configuration;
 
+    @Mock
+    private AppUserRepository users;
+
     private AuditEventServiceImpl service;
 
     @BeforeEach
     void setUp() {
-        service = new AuditEventServiceImpl(repository, configuration);
+        service = new AuditEventServiceImpl(repository, configuration, users);
     }
 
     @ParameterizedTest
@@ -52,7 +64,14 @@ class AuditEventServiceImplTest {
     void recordsPreparedMetadataAndCopiesPayloadForAuthenticatedOrAnonymousUsers(boolean authenticated) {
         enableAudit();
         AppUser actor = authenticated ? new AppUser() : null;
-        AuditContext context = new AuditContext(actor, IP, USER_AGENT);
+        if (authenticated) {
+            actor.setId(USER_ID);
+            actor.setRole(UserRole.NORMAL);
+            doReturn(actor).when(users).getReferenceById(USER_ID);
+        }
+
+        UserIdentity identity = ReadModelFixtures.identity(actor);
+        AuditContext context = new AuditContext(identity, IP, USER_AGENT);
         Map<String, Object> payload = new HashMap<>();
         payload.put("type", "TEST_ACTION");
         payload.put("optional", null);
@@ -97,7 +116,7 @@ class AuditEventServiceImplTest {
 
         service.logEvent(AuditEventType.ACTION, payload, context);
 
-        verifyNoInteractions(repository);
+        verifyNoInteractions(repository, users);
     }
 
     @Test
@@ -108,7 +127,7 @@ class AuditEventServiceImplTest {
 
         service.logEvent(null, payload, context);
 
-        verifyNoInteractions(repository);
+        verifyNoInteractions(repository, users);
     }
 
     @Test
@@ -116,12 +135,13 @@ class AuditEventServiceImplTest {
         enableAudit();
         AppUser actor = new AppUser();
         actor.setRole(UserRole.ADMIN);
-        AuditContext context = new AuditContext(actor, IP, USER_AGENT);
+        UserIdentity identity = ReadModelFixtures.identity(actor);
+        AuditContext context = new AuditContext(identity, IP, USER_AGENT);
         Map<String, Object> payload = Map.of();
 
         service.logEvent(AuditEventType.ACTION, payload, context);
 
-        verifyNoInteractions(repository);
+        verifyNoInteractions(repository, users);
     }
 
     @Test
@@ -135,6 +155,56 @@ class AuditEventServiceImplTest {
         Map<String, Object> payload = Map.of();
 
         assertThatCode(() -> service.logEvent(AuditEventType.LOG_IN, payload, context)).doesNotThrowAnyException();
+    }
+
+    @Test
+    void resolvesTheActorInsideTheAuditWriteTransaction() {
+        enableAudit();
+        AppUser reference = new AppUser();
+        reference.setId(USER_ID);
+        doAnswer(invocation -> {
+            boolean active = TransactionSynchronizationManager.isActualTransactionActive();
+            boolean readOnly = TransactionSynchronizationManager.isCurrentTransactionReadOnly();
+            assertThat(active).isTrue();
+            assertThat(readOnly).isFalse();
+            return reference;
+        }).when(users).getReferenceById(USER_ID);
+        RecordingTransactionManager manager = new RecordingTransactionManager();
+        try (AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext()) {
+            context.register(TransactionTestConfiguration.class);
+            context.registerBean(PlatformTransactionManager.class, () -> manager);
+            context.registerBean(AuditEventRepository.class, () -> repository);
+            context.registerBean(AppUserRepository.class, () -> users);
+            context.registerBean(AuditPolicy.class, () -> configuration);
+            context.registerBean(AuditEventServiceImpl.class);
+            context.refresh();
+            AuditEventService emitter = context.getBean(AuditEventService.class);
+            UserIdentity identity = new UserIdentity(USER_ID, "Test User", UserRole.NORMAL, true);
+            AuditContext source = new AuditContext(identity, IP, USER_AGENT);
+            Map<String, Object> payload = Map.of();
+
+            emitter.logEvent(AuditEventType.ACTION, payload, source);
+
+            AuditEvent event = savedEvent();
+            AppUser actor = event.getUser();
+            int commits = manager.getCommitCount();
+            assertThat(actor).isSameAs(reference);
+            assertThat(commits).isEqualTo(1);
+        }
+    }
+
+    @Test
+    void handlesActorResolutionFailuresWithinThePersistencePolicy() {
+        enableAudit();
+        IllegalStateException failure = new IllegalStateException("Actor reference unavailable");
+        doThrow(failure).when(users).getReferenceById(USER_ID);
+        UserIdentity identity = new UserIdentity(USER_ID, "Test User", UserRole.NORMAL, true);
+        AuditContext context = new AuditContext(identity, IP, USER_AGENT);
+        Map<String, Object> payload = Map.of();
+
+        assertThatCode(() -> service.logEvent(AuditEventType.ACTION, payload, context)).doesNotThrowAnyException();
+
+        verifyNoInteractions(repository);
     }
 
     private void enableAudit() {

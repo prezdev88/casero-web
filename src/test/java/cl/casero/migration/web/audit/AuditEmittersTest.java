@@ -37,6 +37,8 @@ import cl.casero.migration.service.AuditEventService;
 import cl.casero.migration.service.dto.AuditContext;
 import cl.casero.migration.service.dto.CreateUserForm;
 import cl.casero.migration.service.dto.UpdatePinForm;
+import cl.casero.migration.service.dto.UserIdentity;
+import cl.casero.migration.support.ReadModelFixtures;
 import cl.casero.migration.web.controller.AdminConfigController;
 import cl.casero.migration.web.controller.AdminUserController;
 import cl.casero.migration.web.interceptor.AuditViewInterceptor;
@@ -72,7 +74,7 @@ class AuditEmittersTest {
         actor.setId(USER_ID);
         actor.setName(USER_NAME);
         actor.setRole(UserRole.NORMAL);
-        CaseroUserDetails details = new CaseroUserDetails(actor);
+        CaseroUserDetails details = ReadModelFixtures.principal(actor);
         authentication = new TestingAuthenticationToken(details, null);
     }
 
@@ -220,7 +222,8 @@ class AuditEmittersTest {
     }
 
     private void assertEvent(AuditEventType type, Map<String, Object> payload, AppUser user) {
-        AuditContext expected = new AuditContext(user, FORWARDED_IP, USER_AGENT);
+        UserIdentity identity = ReadModelFixtures.identity(user);
+        AuditContext expected = new AuditContext(identity, FORWARDED_IP, USER_AGENT);
         verify(audit).logEvent(type, payload, expected);
     }
 }

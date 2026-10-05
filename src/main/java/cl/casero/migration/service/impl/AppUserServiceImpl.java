@@ -8,7 +8,6 @@ import cl.casero.migration.util.PinHasher;
 import lombok.AllArgsConstructor;
 
 import java.util.List;
-import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -19,12 +18,6 @@ public class AppUserServiceImpl implements AppUserService {
 
     private final PinHasher pinHasher;
     private final AppUserRepository repository;
-
-    @Override
-    @Transactional(readOnly = true)
-    public Optional<AppUser> findByPinFingerprint(String pinFingerprint) {
-        return repository.findByPinFingerprint(pinFingerprint);
-    }
 
     @Override
     @Transactional(readOnly = true)

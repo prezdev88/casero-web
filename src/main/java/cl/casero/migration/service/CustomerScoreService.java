@@ -1,21 +1,6 @@
 package cl.casero.migration.service;
 
-import cl.casero.migration.domain.Customer;
-import cl.casero.migration.repository.CustomerRepository;
-import cl.casero.migration.repository.TransactionRepository;
-import cl.casero.migration.util.CustomerScoreCalculator;
-import cl.casero.migration.util.CustomerScoreNarrator;
-import cl.casero.migration.util.CustomerScoreSummary;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.stereotype.Service;
-
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -27,20 +12,30 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import cl.casero.migration.repository.TransactionRepository;
+import cl.casero.migration.repository.TransactionRepository.CustomerCycleProjection;
+import cl.casero.migration.service.dto.CustomerScoreInput;
+import cl.casero.migration.util.CustomerScoreCalculator;
+import cl.casero.migration.util.CustomerScoreSummary;
+
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class CustomerScoreService {
 
-    private final CustomerRepository customerRepository;
+    private static final double SCORE_DECIMAL_FACTOR = 100.0;
+
     private final TransactionRepository transactionRepository;
 
-    public Map<Long, CustomerScoreSummary> calculateScoreSummaries(Collection<Customer> customers) {
+    public Map<Long, CustomerScoreSummary> calculateScoreSummaries(Collection<CustomerScoreInput> customers) {
         if (customers == null || customers.isEmpty()) {
             return Collections.emptyMap();
         }
 
         Set<Long> ids = customers.stream()
-                .map(Customer::getId)
+                .map(CustomerScoreInput::id)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
 
@@ -48,21 +43,22 @@ public class CustomerScoreService {
             return Collections.emptyMap();
         }
 
-        Map<Long, List<TransactionRepository.CustomerCycleProjection>> cycleStats = fetchCycleStats(ids);
+        Map<Long, List<CustomerCycleProjection>> cycleStats = fetchCycleStats(ids);
         Map<Long, CustomerScoreSummary> summaries = new HashMap<>();
 
-        for (Customer customer : customers) {
+        List<CustomerCycleProjection> emptyCycles = Collections.emptyList();
+        for (CustomerScoreInput customer : customers) {
             if (customer == null) {
                 continue;
             }
 
-            Long id = customer.getId();
+            Long id = customer.id();
 
             if (id == null) {
                 continue;
             }
 
-            List<TransactionRepository.CustomerCycleProjection> cycles = cycleStats.getOrDefault(id, Collections.emptyList());
+            List<CustomerCycleProjection> cycles = cycleStats.getOrDefault(id, emptyCycles);
             CustomerScoreSummary summary = buildSummary(customer, cycles);
 
             summaries.put(id, summary);
@@ -71,190 +67,112 @@ public class CustomerScoreService {
         return summaries;
     }
 
-    public Map<Long, Double> calculateScores(Collection<Customer> customers) {
+    public Map<Long, Double> calculateScores(Collection<CustomerScoreInput> customers) {
         return calculateScoreSummaries(customers)
                 .entrySet()
                 .stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().score()));
     }
 
-    public double calculateScore(Customer customer) {
+    public double calculateScore(CustomerScoreInput customer) {
         if (customer == null) {
             return CustomerScoreCalculator.minScore();
         }
 
-        Map<Long, CustomerScoreSummary> summaries = calculateScoreSummaries(List.of(customer));
-        CustomerScoreSummary summary = summaries.get(customer.getId());
+        List<CustomerScoreInput> singleCustomer = List.of(customer);
+        Map<Long, CustomerScoreSummary> summaries = calculateScoreSummaries(singleCustomer);
+        Long customerId = customer.id();
+        CustomerScoreSummary summary = summaries.get(customerId);
 
         return summary != null ? summary.score() : CustomerScoreCalculator.minScore();
     }
 
-    public ScorePresentation getScorePresentation(Customer customer) {
-        if (customer == null) {
-            return new ScorePresentation(CustomerScoreCalculator.minScore(), "", Collections.emptyList());
-        }
-
-        Map<Long, CustomerScoreSummary> summaries = calculateScoreSummaries(List.of(customer));
-        CustomerScoreSummary summary = summaries.get(customer.getId());
-
-        if (summary == null) {
-            summary = new CustomerScoreSummary(CustomerScoreCalculator.minScore(), Collections.emptyList());
-        }
-
-        String explanation = CustomerScoreNarrator.buildExplanation(summary);
-
-        return new ScorePresentation(summary.score(), explanation, summary.cycles());
-    }
-
-    public Page<RankingEntry> getRanking(Pageable pageable, boolean ascending) {
-        Pageable effectivePageable = pageable == null ? PageRequest.of(0, 20) : pageable;
-        List<Customer> customers = customerRepository.findAllByEnabledTrue();
-
-        if (customers.isEmpty()) {
-            return new PageImpl<>(Collections.emptyList(), effectivePageable, 0);
-        }
-
-        Map<Long, CustomerScoreSummary> summaries = calculateScoreSummaries(customers);
-        List<RankingEntry> ranking = customers.stream()
-                .map(customer -> {
-                    CustomerScoreSummary summary = summaries.get(customer.getId());
-                    if (summary == null) {
-                        summary = new CustomerScoreSummary(CustomerScoreCalculator.minScore(), Collections.emptyList());
-                    }
-                    String explanation = CustomerScoreNarrator.buildExplanation(summary);
-                    return new RankingEntry(
-                            customer.getId(),
-                            customer.getName(),
-                            customer.getDebt(),
-                            summary.score(),
-                            explanation,
-                            summary.cycles().size());
-                })
-                .collect(Collectors.toCollection(ArrayList::new));
-
-        ranking.sort((a, b) -> {
-            int scoreCompare = ascending
-                    ? a.score.compareTo(b.score)
-                    : b.score.compareTo(a.score);
-            if (scoreCompare != 0) {
-                return scoreCompare;
-            }
-            int cycleCompare = Integer.compare(b.cycleCount, a.cycleCount);
-            if (cycleCompare != 0) {
-                return cycleCompare;
-            }
-            String nameA = a.name == null ? "" : a.name;
-            String nameB = b.name == null ? "" : b.name;
-            return String.CASE_INSENSITIVE_ORDER.compare(nameA, nameB);
-        });
-
-        int total = ranking.size();
-        int start = (int) effectivePageable.getOffset();
-        int pageSize = effectivePageable.getPageSize();
-
-        if (pageSize <= 0) {
-            pageSize = 20;
-        }
-
-        if (start >= total) {
-            int lastPage = Math.max((int) Math.ceil((double) total / pageSize) - 1, 0);
-            int newStart = lastPage * pageSize;
-            int newEnd = Math.min(newStart + pageSize, total);
-            Pageable lastPageable = PageRequest.of(lastPage, pageSize, effectivePageable.getSort());
-            return new PageImpl<>(ranking.subList(newStart, newEnd), lastPageable, total);
-        }
-
-        int end = Math.min(start + pageSize, total);
-        List<RankingEntry> pageContent = ranking.subList(start, end);
-
-        return new PageImpl<>(pageContent, effectivePageable, total);
-    }
-
-    @Getter
-    @Setter
-    @AllArgsConstructor
-    public static final class RankingEntry {
-        private final Long id;
-        private final String name;
-        private final Integer debt;
-        private final Double score;
-        private final String explanation;
-        private final int cycleCount;
-    }
-
-    public record ScorePresentation(double score, String explanation, List<CustomerScoreSummary.CycleScore> cycles) {
-    }
-
-    private Map<Long, List<TransactionRepository.CustomerCycleProjection>> fetchCycleStats(Set<Long> ids) {
+    private Map<Long, List<CustomerCycleProjection>> fetchCycleStats(Set<Long> ids) {
         if (ids == null || ids.isEmpty()) {
             return Collections.emptyMap();
         }
 
-        List<TransactionRepository.CustomerCycleProjection> stats = transactionRepository.findCustomerCycleStats(List.copyOf(ids));
-        Map<Long, List<TransactionRepository.CustomerCycleProjection>> grouped = new HashMap<>();
+        List<Long> customerIds = List.copyOf(ids);
+        int paymentWindowDays = CustomerScoreCalculator.perfectPaymentWindowDays();
+        List<CustomerCycleProjection> stats = transactionRepository.findCustomerCycleStats(customerIds, paymentWindowDays);
+        Map<Long, List<CustomerCycleProjection>> grouped = new HashMap<>();
 
-        for (TransactionRepository.CustomerCycleProjection projection : stats) {
-            if (projection.getCustomerId() == null) {
+        for (CustomerCycleProjection projection : stats) {
+            Long customerId = projection.getCustomerId();
+            if (customerId == null) {
                 continue;
             }
 
-            grouped.computeIfAbsent(projection.getCustomerId(), unused -> new ArrayList<>()).add(projection);
+            grouped.computeIfAbsent(customerId, unused -> new ArrayList<>()).add(projection);
         }
 
         return grouped;
     }
 
     private CustomerScoreSummary buildSummary(
-        Customer customer,
-        List<TransactionRepository.CustomerCycleProjection> cycleProjections
+        CustomerScoreInput customer,
+        List<CustomerCycleProjection> cycleProjections
     ) {
         List<CustomerScoreSummary.CycleScore> cycleScores = new ArrayList<>();
 
         if (cycleProjections != null && !cycleProjections.isEmpty()) {
             int counter = 1;
-            for (TransactionRepository.CustomerCycleProjection projection : cycleProjections) {
+            for (CustomerCycleProjection projection : cycleProjections) {
                 CustomerScoreCalculator.ScoreInputs inputs = buildInputs(projection);
                 CustomerScoreCalculator.ScoreResult result = CustomerScoreCalculator.evaluate(inputs);
-                cycleScores.add(new CustomerScoreSummary.CycleScore(
-                        counter++,
-                        projection.getCycleStartDate(),
-                        projection.getCycleEndDate(),
-                        result));
+                LocalDate startDate = projection.getCycleStartDate();
+                LocalDate endDate = projection.getCycleEndDate();
+                CustomerScoreSummary.CycleScore cycleScore = new CustomerScoreSummary.CycleScore(
+                        counter++, startDate, endDate, result);
+                cycleScores.add(cycleScore);
             }
         }
 
         if (cycleScores.isEmpty()) {
-            boolean hasOutstandingDebt = customer != null && customer.getDebt() != null && customer.getDebt() > 0;
+            boolean hasOutstandingDebt = customer != null && customer.debt() != null && customer.debt() > 0;
             CustomerScoreCalculator.ScoreInputs fallbackInputs = new CustomerScoreCalculator.ScoreInputs(
                     0, null, null, null, null, null, null, null, hasOutstandingDebt);
             CustomerScoreCalculator.ScoreResult fallbackSummary = CustomerScoreCalculator.evaluate(fallbackInputs);
 
-            return new CustomerScoreSummary(fallbackSummary.score(), Collections.emptyList());
+            double score = fallbackSummary.score();
+            List<CustomerScoreSummary.CycleScore> emptyCycles = Collections.emptyList();
+            return new CustomerScoreSummary(score, emptyCycles);
         }
 
         DoubleSummaryStatistics stats = cycleScores.stream()
                 .mapToDouble(cycle -> cycle.result().score())
                 .summaryStatistics();
-        double roundedAverage = roundTwoDecimals(stats.getAverage());
-        
+        double average = stats.getAverage();
+        double roundedAverage = roundTwoDecimals(average);
+
         return new CustomerScoreSummary(roundedAverage, cycleScores);
     }
 
-    private CustomerScoreCalculator.ScoreInputs buildInputs(TransactionRepository.CustomerCycleProjection projection) {
+    private CustomerScoreCalculator.ScoreInputs buildInputs(CustomerCycleProjection projection) {
+        if (projection == null) {
+            return new CustomerScoreCalculator.ScoreInputs(
+                    0, null, null, null, null, null, null, null, false);
+        }
+
+        Integer paymentCount = projection.getTotalPayments();
+        int totalPayments = (paymentCount == null) ? 0 : paymentCount;
+        LocalDate lastPaymentDate = projection.getLastPaymentDate();
+        Integer maxInterval = projection.getMaxIntervalBetweenPayments();
+        Long totalIntervalDays = projection.getTotalIntervalDays();
+        Integer intervalCount = projection.getIntervalCount();
+        Integer lateIntervalCount = projection.getLateIntervalCount();
+        Long paymentMonthCount = projection.getPaymentMonthCount();
+        Integer cycleMonthCount = projection.getCycleMonthCount();
+        Boolean outstandingDebt = projection.getHasOutstandingDebt();
+        boolean hasOutstandingDebt = Boolean.TRUE.equals(outstandingDebt);
+
         return new CustomerScoreCalculator.ScoreInputs(
-                projection != null && projection.getTotalPayments() != null ? projection.getTotalPayments() : 0,
-                projection != null ? projection.getLastPaymentDate() : null,
-                projection != null ? projection.getMaxIntervalBetweenPayments() : null,
-                projection != null ? projection.getTotalIntervalDays() : null,
-                projection != null ? projection.getIntervalCount() : null,
-                projection != null ? projection.getLateIntervalCount() : null,
-                projection != null ? projection.getPaymentMonthCount() : null,
-                projection != null ? projection.getCycleMonthCount() : null,
-                projection != null && Boolean.TRUE.equals(projection.getHasOutstandingDebt())
-        );
+                totalPayments, lastPaymentDate, maxInterval, totalIntervalDays,
+                intervalCount, lateIntervalCount, paymentMonthCount, cycleMonthCount,
+                hasOutstandingDebt);
     }
 
     private static double roundTwoDecimals(double value) {
-        return Math.round(value * 100.0) / 100.0;
+        return Math.round(value * SCORE_DECIMAL_FACTOR) / SCORE_DECIMAL_FACTOR;
     }
 }

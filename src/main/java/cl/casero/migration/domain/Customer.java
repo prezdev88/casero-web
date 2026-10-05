@@ -1,5 +1,9 @@
 package cl.casero.migration.domain;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -11,10 +15,6 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Getter
@@ -54,44 +54,16 @@ public class Customer {
     private Integer birthYear;
 
     public boolean isBirthdayOn(LocalDate date) {
-        return birthDay != null && birthMonth != null
-                && birthDay == date.getDayOfMonth()
-                && birthMonth == date.getMonthValue();
+        CustomerBirthDate birthday = birthDate();
+        return birthday.isBirthdayOn(date);
     }
 
     public Integer getBirthdayAgeOn(LocalDate date) {
-        if (birthYear == null || !isBirthdayOn(date)) {
-            return null;
-        }
-        return date.getYear() - birthYear;
+        CustomerBirthDate birthday = birthDate();
+        return birthday.getBirthdayAgeOn(date);
     }
 
-    public String getFormattedBirthDate() {
-        if (birthDay == null || birthMonth == null) {
-            return null;
-        }
-        
-        String[] months = {
-            "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-            "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
-        };
-        
-        String monthName = (birthMonth >= 1 && birthMonth <= 12) ? months[birthMonth - 1] : "";
-        String base = birthDay + " de " + monthName;
-        
-        if (birthYear != null) {
-            int age;
-            try {
-                java.time.LocalDate birthDate = java.time.LocalDate.of(birthYear, birthMonth, birthDay);
-                age = java.time.Period.between(birthDate, java.time.LocalDate.now()).getYears();
-            } catch (Exception e) {
-                age = java.time.LocalDate.now().getYear() - birthYear;
-                if (java.time.LocalDate.now().getMonthValue() < birthMonth) {
-                    age--;
-                }
-            }
-            return base + " de " + birthYear + " (" + age + " años)";
-        }
-        return base;
+    private CustomerBirthDate birthDate() {
+        return new CustomerBirthDate(birthDay, birthMonth, birthYear);
     }
 }

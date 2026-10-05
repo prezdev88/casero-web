@@ -1,28 +1,32 @@
 package cl.casero.migration.web.controller;
 
-import cl.casero.migration.domain.AuditEvent;
-import cl.casero.migration.domain.enums.AuditEventType;
-import cl.casero.migration.repository.AuditEventRepository;
 import java.util.List;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+
+import cl.casero.migration.domain.AuditEvent;
+import cl.casero.migration.domain.enums.AuditEventType;
+import cl.casero.migration.service.AuditQueries;
+import cl.casero.migration.service.audit.AuditAction;
+import cl.casero.migration.service.dto.AuditSearchCriteria;
 
 @Controller
 @RequiredArgsConstructor
 public class AdminAuditController {
 
-    private final AuditEventRepository auditEventRepository;
+    private static final int MAX_PAGE_SIZE = 100;
+
+    private final AuditQueries auditQueries;
 
     @GetMapping("/admin/audit")
-    @Transactional(readOnly = true)
     public String audit(
         @RequestParam(value = "page", defaultValue = "0") int page,
         @RequestParam(value = "size", defaultValue = "20") int size,
@@ -31,46 +35,41 @@ public class AdminAuditController {
         Model model
     ) {
         int sanitizedPage = Math.max(page, 0);
-        int sanitizedSize = Math.min(Math.max(size, 1), 100);
-        Pageable pageable = PageRequest.of(sanitizedPage, sanitizedSize, Sort.by(Sort.Direction.DESC, "createdAt"));
+        int positiveSize = Math.max(size, 1);
+        int sanitizedSize = Math.min(positiveSize, MAX_PAGE_SIZE);
+        Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
+        Pageable pageable = PageRequest.of(sanitizedPage, sanitizedSize, sort);
         AuditEventType filterType = parseEventType(eventTypeParam);
         String sanitizedPayloadType = sanitize(payloadType);
 
-        var events = resolveEvents(pageable, filterType, sanitizedPayloadType);
+        AuditSearchCriteria criteria = new AuditSearchCriteria(filterType, sanitizedPayloadType, pageable);
+        Page<AuditEvent> events = auditQueries.search(criteria);
 
         model.addAttribute("events", events);
         model.addAttribute("page", sanitizedPage);
         model.addAttribute("size", sanitizedSize);
-        model.addAttribute("eventTypes", AuditEventType.values());
+        AuditEventType[] eventTypes = AuditEventType.values();
+        model.addAttribute("eventTypes", eventTypes);
         model.addAttribute("selectedEventType", filterType);
         model.addAttribute("payloadType", sanitizedPayloadType);
-        model.addAttribute("payloadTypeOptions", payloadTypeOptions());
+        List<String> payloadTypes = AuditAction.payloadTypeOptions();
+        model.addAttribute("payloadTypeOptions", payloadTypes);
 
         return "admin/audit";
-    }
-
-    private Page<AuditEvent> resolveEvents(Pageable pageable, AuditEventType filterType, String payloadType) {
-        if (payloadType != null && filterType != null) {
-            return auditEventRepository.findByEventTypeAndPayloadType(filterType, payloadType, pageable);
-        }
-        if (payloadType != null) {
-            return auditEventRepository.findByPayloadType(payloadType, pageable);
-        }
-        if (filterType != null) {
-            return auditEventRepository.findByEventTypeOrderByCreatedAtDesc(filterType, pageable);
-        }
-        return auditEventRepository.findAllByOrderByCreatedAtDesc(pageable);
     }
 
     private AuditEventType parseEventType(String value) {
         if (value == null || value.isBlank()) {
             return null;
         }
-        try {
-            return AuditEventType.valueOf(value);
-        } catch (IllegalArgumentException ex) {
-            return null;
+        for (AuditEventType eventType : AuditEventType.values()) {
+            String name = eventType.name();
+            if (name.equals(value)) {
+                return eventType;
+            }
         }
+
+        return null;
     }
 
     private String sanitize(String value) {
@@ -79,16 +78,5 @@ public class AdminAuditController {
         }
         String trimmed = value.trim();
         return trimmed.isEmpty() ? null : trimmed;
-    }
-
-    private List<String> payloadTypeOptions() {
-        return List.of(
-            "DEBT_FORGIVEN",
-            "SALE",
-            "PAYMENT",
-            "REFUND",
-            "DISCOUNT",
-            "UPDATE"
-        );
     }
 }

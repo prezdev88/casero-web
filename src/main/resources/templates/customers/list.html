@@ -24,7 +24,7 @@
                th:data-customer-address="${customer.address}"
                th:data-customer-debt="${formattedDebt}"
                th:data-customer-debt-raw="${customer.debt}"
-               th:data-customer-birthdate="${customer.formattedBirthDate}"
+               th:data-customer-birthdate="${customerBirthDates[customer.id]}"
                th:attr="data-customer-score=${score}"
                data-testid="customer-card">
                 <div class="customer-card__row">
@@ -36,8 +36,8 @@
                     </span>
                 </div>
                 <span class="customer-card__address" th:text="${customer.address}">Dirección</span>
-                <span th:if="${customer.isBirthdayOn(today)}"
-                      th:with="birthdayAge=${customer.getBirthdayAgeOn(today)}"
+                <span th:if="${customer.birthDate.isBirthdayOn(today)}"
+                      th:with="birthdayAge=${customer.birthDate.getBirthdayAgeOn(today)}"
                       class="customer-card__birthday">
                     <span aria-hidden="true">🎂</span>
                     <span th:text="${birthdayAge != null ? '(Hoy cumple ' + birthdayAge + (birthdayAge == 1 ? ' año)' : ' años)') : '(Hoy está de cumpleaños)'}">(Hoy está de cumpleaños)</span>

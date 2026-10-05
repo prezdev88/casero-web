@@ -1,7 +1,10 @@
 package cl.casero.migration.web.controller;
 
-import cl.casero.migration.service.AppConfigService;
+import java.util.Map;
+
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -9,14 +12,15 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import org.springframework.security.core.Authentication;
-import jakarta.servlet.http.HttpServletRequest;
+
 import cl.casero.migration.domain.enums.AuditEventType;
-import cl.casero.migration.domain.AppUser;
+import cl.casero.migration.service.AppConfigService;
 import cl.casero.migration.service.AuditEventService;
+import cl.casero.migration.service.audit.AuditAction;
+import cl.casero.migration.service.dto.AuditContext;
+import cl.casero.migration.service.dto.UserIdentity;
+import cl.casero.migration.web.audit.AuditContextFactory;
 import cl.casero.migration.web.security.CaseroUserDetails;
-import java.util.HashMap;
-import java.util.Map;
 
 @Controller
 @RequiredArgsConstructor
@@ -25,6 +29,7 @@ public class AdminConfigController {
 
     private final AppConfigService appConfigService;
     private final AuditEventService auditEventService;
+    private final AuditContextFactory auditContextFactory;
 
     @GetMapping
     public String config(Model model) {
@@ -42,31 +47,21 @@ public class AdminConfigController {
         try {
             appConfigService.updateValue(configKey, value);
             redirectAttributes.addFlashAttribute("message", "Configuración actualizada");
-            auditEventService.logEvent(
-                AuditEventType.ACTION,
-                currentUser(authentication),
-                actionPayload("APP_CONFIG_UPDATED", Map.of(
-                    "key", configKey,
-                    "value", value
-                )),
-                request);
+            UserIdentity actor = currentUser(authentication);
+            Map<String, Object> data = Map.of("key", configKey, "value", value);
+            Map<String, Object> payload = AuditAction.APP_CONFIG_UPDATED.payload(data);
+            AuditContext context = auditContextFactory.from(actor, request);
+            auditEventService.logEvent(AuditEventType.ACTION, payload, context);
         } catch (IllegalArgumentException ex) {
             redirectAttributes.addFlashAttribute("error", ex.getMessage());
         }
         return "redirect:/admin/config";
     }
 
-    private AppUser currentUser(Authentication authentication) {
+    private UserIdentity currentUser(Authentication authentication) {
         if (authentication != null && authentication.getPrincipal() instanceof CaseroUserDetails details) {
-            return details.getAppUser();
+            return details.getIdentity();
         }
         return null;
-    }
-
-    private Map<String, Object> actionPayload(String type, Map<String, Object> data) {
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("type", type);
-        payload.put("data", data != null ? data : Map.of());
-        return payload;
     }
 }

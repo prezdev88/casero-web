@@ -1,21 +1,24 @@
 package cl.casero.migration.service.impl;
 
-import cl.casero.migration.domain.Customer;
-import cl.casero.migration.repository.CustomerRepository;
-import cl.casero.migration.service.CustomerNotFoundException;
-import cl.casero.migration.service.SectorService;
-import cl.casero.migration.service.CustomerCommands;
-import cl.casero.migration.service.CustomerQueries;
-import cl.casero.migration.service.dto.CreateCustomerForm;
-import cl.casero.migration.service.dto.OverdueCustomerSummary;
-import lombok.AllArgsConstructor;
-import cl.casero.migration.service.dto.CustomerBirthdayDTO;
 import java.util.List;
 
+import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import cl.casero.migration.domain.Customer;
+import cl.casero.migration.repository.CustomerRepository.SectorCountView;
+import cl.casero.migration.repository.CustomerRepository;
+import cl.casero.migration.service.CustomerCommands;
+import cl.casero.migration.service.CustomerNotFoundException;
+import cl.casero.migration.service.CustomerQueries;
+import cl.casero.migration.service.SectorService;
+import cl.casero.migration.service.dto.CreateCustomerForm;
+import cl.casero.migration.service.dto.CustomerBirthdayDTO;
+import cl.casero.migration.service.dto.OverdueCustomerSummary;
+import cl.casero.migration.service.dto.SectorCustomerCount;
 
 @Service
 @Transactional
@@ -127,8 +130,9 @@ public class CustomerServiceImpl implements CustomerQueries, CustomerCommands {
     }
 
     @Override
-    public Page<CustomerRepository.SectorCountView> getCustomersCountBySector(Pageable pageable) {
-        return customerRepository.countBySector(pageable);
+    public Page<SectorCustomerCount> getCustomersCountBySector(Pageable pageable) {
+        Page<SectorCountView> sectorCounts = customerRepository.countBySector(pageable);
+        return sectorCounts.map(this::toSectorCustomerCount);
     }
     @Override
     public long getBirthdaysThisMonthCount(int month) {
@@ -138,5 +142,11 @@ public class CustomerServiceImpl implements CustomerQueries, CustomerCommands {
     @Override
     public List<CustomerBirthdayDTO> getBirthdaysThisMonth(int month) {
         return customerRepository.findBirthdaysThisMonth(month);
+    }
+
+    private SectorCustomerCount toSectorCustomerCount(SectorCountView view) {
+        String name = view.getName();
+        long total = view.getTotal();
+        return new SectorCustomerCount(name, total);
     }
 }

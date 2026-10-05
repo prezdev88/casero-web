@@ -1,12 +1,8 @@
 package cl.casero.migration.web.controller;
 
-import cl.casero.migration.domain.Customer;
-import cl.casero.migration.domain.MonthlyStatistic;
-import cl.casero.migration.repository.CustomerRepository;
-import cl.casero.migration.service.CustomerQueries;
-import cl.casero.migration.service.StatisticsService;
-import lombok.AllArgsConstructor;
+import java.time.LocalDate;
 
+import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -16,7 +12,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import java.time.LocalDate;
+import cl.casero.migration.domain.Customer;
+import cl.casero.migration.domain.MonthlyStatistic;
+import cl.casero.migration.service.CustomerQueries;
+import cl.casero.migration.service.StatisticsService;
+import cl.casero.migration.service.dto.SectorCustomerCount;
 
 @Controller
 @AllArgsConstructor
@@ -108,7 +108,7 @@ public class StatisticsController {
         int sanitizedPage = Math.max(page, 0);
         int sanitizedSize = Math.min(Math.max(size, 1), 100);
         PageRequest pageable = PageRequest.of(sanitizedPage, sanitizedSize);
-        Page<CustomerRepository.SectorCountView> sectorsPage = customerQueries.getCustomersCountBySector(pageable);
+        Page<SectorCustomerCount> sectorsPage = customerQueries.getCustomersCountBySector(pageable);
 
         model.addAttribute("sectorsPage", sectorsPage);
         

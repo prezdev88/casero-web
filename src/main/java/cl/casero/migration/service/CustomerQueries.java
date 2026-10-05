@@ -6,9 +6,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import cl.casero.migration.domain.Customer;
-import cl.casero.migration.repository.CustomerRepository.SectorCountView;
 import cl.casero.migration.service.dto.CustomerBirthdayDTO;
 import cl.casero.migration.service.dto.OverdueCustomerSummary;
+import cl.casero.migration.service.dto.SectorCustomerCount;
 
 public interface CustomerQueries {
 
@@ -26,7 +26,7 @@ public interface CustomerQueries {
 
     long count();
 
-    Page<SectorCountView> getCustomersCountBySector(Pageable pageable);
+    Page<SectorCustomerCount> getCustomersCountBySector(Pageable pageable);
 
     long getBirthdaysThisMonthCount(int month);
 

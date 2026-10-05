@@ -1,33 +1,29 @@
 package cl.casero.migration.service.impl;
 
 import java.util.List;
+import java.util.Optional;
 
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import cl.casero.migration.domain.Customer;
-import cl.casero.migration.repository.CustomerRepository.SectorCountView;
 import cl.casero.migration.repository.CustomerRepository;
-import cl.casero.migration.service.CustomerCommands;
+import cl.casero.migration.repository.CustomerRepository.OverdueCustomerView;
+import cl.casero.migration.repository.CustomerRepository.SectorCountView;
 import cl.casero.migration.service.CustomerNotFoundException;
 import cl.casero.migration.service.CustomerQueries;
-import cl.casero.migration.service.SectorService;
-import cl.casero.migration.service.dto.CreateCustomerForm;
 import cl.casero.migration.service.dto.CustomerBirthdayDTO;
 import cl.casero.migration.service.dto.OverdueCustomerSummary;
 import cl.casero.migration.service.dto.SectorCustomerCount;
 
 @Service
-@Transactional
+@Transactional(readOnly = true)
+@RequiredArgsConstructor
+public class CustomerQueryService implements CustomerQueries {
 
-
-@AllArgsConstructor
-public class CustomerServiceImpl implements CustomerQueries, CustomerCommands {
-
-    private final SectorService sectorService;
     private final CustomerRepository customerRepository;
 
     @Override
@@ -36,63 +32,14 @@ public class CustomerServiceImpl implements CustomerQueries, CustomerCommands {
             return Page.empty(pageable);
         }
 
-        return customerRepository.search(filter.trim(), pageable);
+        String trimmedFilter = filter.trim();
+        return customerRepository.search(trimmedFilter, pageable);
     }
 
     @Override
     public Customer get(Long id) {
-        return customerRepository.findByIdAndEnabledTrue(id)
-                .orElseThrow(() -> new CustomerNotFoundException(id));
-    }
-
-    @Override
-    public Customer create(CreateCustomerForm form) {
-        Customer customer = new Customer();
-
-        customer.setName(form.getName().trim());
-        customer.setSector(sectorService.get(form.getSectorId()));
-        customer.setAddress(form.getAddress().trim());
-        customer.setDebt(0);
-        customer.setEnabled(true);
-        
-        return customerRepository.save(customer);
-    }
-
-    @Override
-    public void delete(Long id) {
-        Customer customer = get(id);
-        customer.setEnabled(false);
-        customerRepository.save(customer);
-    }
-
-    @Override
-    public void updateAddress(Long id, String address) {
-        Customer customer = get(id);
-        customer.setAddress(address);
-        customerRepository.save(customer);
-    }
-
-    @Override
-    public void updateName(Long id, String name) {
-        Customer customer = get(id);
-        customer.setName(name.trim());
-        customerRepository.save(customer);
-    }
-
-    @Override
-    public void updateSector(Long id, Long sectorId) {
-        Customer customer = get(id);
-        customer.setSector(sectorService.get(sectorId));
-        customerRepository.save(customer);
-    }
-
-    @Override
-    public void updateBirthdate(Long id, Integer day, Integer month, Integer year) {
-        Customer customer = get(id);
-        customer.setBirthDay(day);
-        customer.setBirthMonth(month);
-        customer.setBirthYear(year);
-        customerRepository.save(customer);
+        Optional<Customer> result = customerRepository.findByIdAndEnabledTrue(id);
+        return result.orElseThrow(() -> new CustomerNotFoundException(id));
     }
 
     @Override
@@ -108,15 +55,8 @@ public class CustomerServiceImpl implements CustomerQueries, CustomerCommands {
     @Override
     public Page<OverdueCustomerSummary> getOverdueCustomers(Pageable pageable, int months) {
         int sanitizedMonths = Math.max(months, 1);
-        return customerRepository.findOverdueCustomers(pageable, sanitizedMonths)
-                .map(view -> new OverdueCustomerSummary(
-                        view.getId(),
-                        view.getName(),
-                        view.getSector(),
-                        view.getDebt(),
-                        view.getLast_payment(),
-                        view.getMonths_overdue()
-                ));
+        Page<OverdueCustomerView> overdueCustomers = customerRepository.findOverdueCustomers(pageable, sanitizedMonths);
+        return overdueCustomers.map(this::toOverdueCustomerSummary);
     }
 
     @Override
@@ -124,6 +64,7 @@ public class CustomerServiceImpl implements CustomerQueries, CustomerCommands {
         int sanitizedMonths = Math.max(months, 1);
         return customerRepository.sumOverdueDebt(sanitizedMonths);
     }
+
     @Override
     public long count() {
         return customerRepository.countByEnabledTrue();
@@ -134,6 +75,7 @@ public class CustomerServiceImpl implements CustomerQueries, CustomerCommands {
         Page<SectorCountView> sectorCounts = customerRepository.countBySector(pageable);
         return sectorCounts.map(this::toSectorCustomerCount);
     }
+
     @Override
     public long getBirthdaysThisMonthCount(int month) {
         return customerRepository.countBirthdaysThisMonth(month);
@@ -142,6 +84,16 @@ public class CustomerServiceImpl implements CustomerQueries, CustomerCommands {
     @Override
     public List<CustomerBirthdayDTO> getBirthdaysThisMonth(int month) {
         return customerRepository.findBirthdaysThisMonth(month);
+    }
+
+    private OverdueCustomerSummary toOverdueCustomerSummary(OverdueCustomerView view) {
+        Long id = view.getId();
+        String name = view.getName();
+        String sector = view.getSector();
+        Integer debt = view.getDebt();
+        String lastPayment = view.getLast_payment();
+        Integer monthsOverdue = view.getMonths_overdue();
+        return new OverdueCustomerSummary(id, name, sector, debt, lastPayment, monthsOverdue);
     }
 
     private SectorCustomerCount toSectorCustomerCount(SectorCountView view) {

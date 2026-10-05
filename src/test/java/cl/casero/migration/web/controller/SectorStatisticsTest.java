@@ -34,10 +34,9 @@ import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 
 import cl.casero.migration.repository.CustomerRepository;
 import cl.casero.migration.repository.CustomerRepository.SectorCountView;
-import cl.casero.migration.service.SectorService;
 import cl.casero.migration.service.StatisticsService;
 import cl.casero.migration.service.dto.SectorCustomerCount;
-import cl.casero.migration.service.impl.CustomerServiceImpl;
+import cl.casero.migration.service.impl.CustomerQueryService;
 
 @ExtendWith(MockitoExtension.class)
 class SectorStatisticsTest {
@@ -55,17 +54,14 @@ class SectorStatisticsTest {
     private CustomerRepository repository;
 
     @Mock
-    private SectorService sectors;
-
-    @Mock
     private StatisticsService statistics;
 
     private MockMvc mockMvc;
 
     @BeforeEach
     void setUp() {
-        CustomerServiceImpl customerService = new CustomerServiceImpl(sectors, repository);
-        StatisticsController controller = new StatisticsController(customerService, statistics);
+        CustomerQueryService customerQueries = new CustomerQueryService(repository);
+        StatisticsController controller = new StatisticsController(customerQueries, statistics);
         String encoding = StandardCharsets.UTF_8.name();
         ClassLoaderTemplateResolver templates = new ClassLoaderTemplateResolver();
         templates.setPrefix("templates/");
@@ -111,7 +107,7 @@ class SectorStatisticsTest {
         assertThat(html).contains("&lt;Central&gt;", "Zona Sur", "3000000000", "<td>12</td>",
                 "/statistics/sectors?page=0&amp;size=2", "/statistics/sectors?page=2&amp;size=2");
         verify(repository).countBySector(pageable);
-        verifyNoInteractions(sectors, statistics);
+        verifyNoInteractions(statistics);
     }
 
     @Test

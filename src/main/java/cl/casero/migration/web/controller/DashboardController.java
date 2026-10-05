@@ -1,21 +1,25 @@
 package cl.casero.migration.web.controller;
 
-import cl.casero.migration.service.CustomerQueries;
-import cl.casero.migration.service.StatisticsService;
-import cl.casero.migration.service.TransactionQueries;
-import cl.casero.migration.service.dto.CustomerBirthdayDTO;
-import cl.casero.migration.service.dto.TransactionMonthlySummary;
+import java.time.LocalDate;
+import java.time.format.TextStyle;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import lombok.RequiredArgsConstructor;
-import java.time.LocalDate;
-import java.util.List;
-import java.util.ArrayList;
-import java.time.format.TextStyle;
-import java.util.Locale;
+
+import cl.casero.migration.domain.MonthlyStatistic;
+import cl.casero.migration.service.CustomerQueries;
+import cl.casero.migration.service.StatisticsService;
+import cl.casero.migration.service.TransactionQueries;
+import cl.casero.migration.service.dto.CustomerBirthdayDTO;
+import cl.casero.migration.service.dto.TopCustomerSummary;
+import cl.casero.migration.service.dto.TransactionMonthlySummary;
 
 @Controller
 @RequestMapping("/dashboard")
@@ -45,7 +49,7 @@ public class DashboardController {
         long overdueDebt = customerQueries.getOverdueDebt(1);
         
         // 5. Monthly Sales/Payments (Optimized)
-        cl.casero.migration.domain.MonthlyStatistic stats = statisticsService.getMonthlyStatistic(today.getMonthValue(), today.getYear());
+        MonthlyStatistic stats = statisticsService.getMonthlyStatistic(today.getMonthValue(), today.getYear());
         long salesAmount = stats.getSalesCount(); // refers to sales sum
         long paymentsAmount = stats.getPaymentsCount(); // refers to payments sum
 
@@ -57,7 +61,7 @@ public class DashboardController {
         long lastMonthPayments = transactionQueries.getPaymentsSum(startOfLastMonth, lastMonth);
 
         // Top 3 customers
-        List<cl.casero.migration.repository.TransactionRepository.TopCustomerProjection> topCustomers = transactionQueries.getTopCustomersThisMonth();
+        List<TopCustomerSummary> topCustomers = transactionQueries.getTopCustomersThisMonth();
 
         model.addAttribute("birthdaysCount", birthdaysCount);
         model.addAttribute("totalDebt", totalDebt);

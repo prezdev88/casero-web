@@ -19,6 +19,7 @@ import cl.casero.migration.domain.enums.TransactionType;
 import cl.casero.migration.repository.TransactionRepository;
 import cl.casero.migration.repository.TransactionRepository.TopCustomerProjection;
 import cl.casero.migration.service.TransactionQueries;
+import cl.casero.migration.service.dto.TopCustomerSummary;
 import cl.casero.migration.service.dto.TransactionMonthlySummary;
 
 @Service
@@ -114,11 +115,14 @@ public class TransactionQueryService implements TransactionQueries {
     }
 
     @Override
-    public List<TopCustomerProjection> getTopCustomersThisMonth() {
+    public List<TopCustomerSummary> getTopCustomersThisMonth() {
         MonthRange range = currentMonth();
         LocalDate start = range.start();
         LocalDate end = range.end();
-        return transactionRepository.findTopCustomers(start, end);
+        List<TopCustomerProjection> topCustomers = transactionRepository.findTopCustomers(start, end);
+        return topCustomers.stream()
+                .map(this::toTopCustomerSummary)
+                .toList();
     }
 
     @Override
@@ -136,6 +140,12 @@ public class TransactionQueryService implements TransactionQueries {
     private YearMonth transactionMonth(Transaction transaction) {
         LocalDate date = transaction.getDate();
         return YearMonth.from(date);
+    }
+
+    private TopCustomerSummary toTopCustomerSummary(TopCustomerProjection projection) {
+        String customerName = projection.getCustomerName();
+        Integer totalPaid = projection.getTotalPaid();
+        return new TopCustomerSummary(customerName, totalPaid);
     }
 
     private long sumAmounts(List<Transaction> transactions, TransactionType type) {

@@ -8,7 +8,7 @@ import org.springframework.data.domain.Pageable;
 
 import cl.casero.migration.domain.Transaction;
 import cl.casero.migration.domain.enums.TransactionType;
-import cl.casero.migration.repository.TransactionRepository.TopCustomerProjection;
+import cl.casero.migration.service.dto.TopCustomerSummary;
 import cl.casero.migration.service.dto.TransactionMonthlySummary;
 
 public interface TransactionQueries {
@@ -27,7 +27,7 @@ public interface TransactionQueries {
 
     List<Transaction> getSalesThisMonth();
 
-    List<TopCustomerProjection> getTopCustomersThisMonth();
+    List<TopCustomerSummary> getTopCustomersThisMonth();
 
     long getSalesSum(LocalDate start, LocalDate end);
 

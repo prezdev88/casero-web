@@ -49,7 +49,7 @@
         </p>
         <p class="text-muted birthdate-row" th:if="${customer.birthDay != null}">
             <span>🎂 </span>
-            <span class="birthdate-row__value" th:text="${customer.formattedBirthDate}">15 de Octubre</span>
+            <span class="birthdate-row__value" th:text="${customerBirthDate}">15 de Octubre</span>
             <a class="icon-button" title="Editar cumpleaños"
                th:href="@{'/customers/' + ${customer.id} + '/actions/birthdate/edit'}">✏️</a>
         </p>

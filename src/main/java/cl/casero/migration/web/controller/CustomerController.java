@@ -34,6 +34,7 @@ import cl.casero.migration.util.CurrencyUtil;
 import cl.casero.migration.util.CustomerScoreCalculator;
 import cl.casero.migration.util.CustomerScoreSummary;
 import cl.casero.migration.util.TransactionTypeUtil;
+import cl.casero.migration.web.presentation.CustomerBirthDateFormatter;
 
 @Controller
 @RequiredArgsConstructor
@@ -47,6 +48,7 @@ public class CustomerController {
     private final CustomerScoreService customerScoreService;
     private final CustomerScorePresentationService presentationService;
     private final TransactionQueries transactionQueries;
+    private final CustomerBirthDateFormatter birthDateFormatter;
 
     @GetMapping
     public String listCustomers(
@@ -60,6 +62,9 @@ public class CustomerController {
 
         List<Customer> customers = customersPage.getContent();
         Map<Long, Double> scores = customerScoreService.calculateScores(customers);
+        LocalDate birthDateReferenceDate = LocalDate.now();
+        Map<Long, String> birthDates = formatBirthDates(customers, birthDateReferenceDate);
+        model.addAttribute("customerBirthDates", birthDates);
         model.addAttribute("customerScores", scores);
         model.addAttribute("customersPage", customersPage);
         model.addAttribute("query", (query == null) ? "" : query);
@@ -119,6 +124,9 @@ public class CustomerController {
         model.addAttribute("customerScoreCycles", reversedCycles);
         Page<Transaction> transactions = transactionQueries.listByCustomer(id, pageable);
 
+        LocalDate birthDateReferenceDate = LocalDate.now();
+        String birthDate = birthDateFormatter.format(customer, birthDateReferenceDate);
+        model.addAttribute("customerBirthDate", birthDate);
         model.addAttribute("customer", customer);
         model.addAttribute("transactionsPage", transactions);
         model.addAttribute("ascending", ascending);
@@ -126,6 +134,17 @@ public class CustomerController {
         model.addAttribute("transactionReportTypeOptions", reportTypeOptions);
 
         return "customers/detail";
+    }
+
+    private Map<Long, String> formatBirthDates(List<Customer> customers, LocalDate referenceDate) {
+        Map<Long, String> birthDates = new LinkedHashMap<>();
+        for (Customer customer : customers) {
+            Long customerId = customer.getId();
+            String birthDate = birthDateFormatter.format(customer, referenceDate);
+            birthDates.put(customerId, birthDate);
+        }
+
+        return birthDates;
     }
 
     private Page<Customer> searchCustomers(String query, int page, int size) {
@@ -162,7 +181,8 @@ public class CustomerController {
         Long customerId = customer.getId();
         String name = customer.getName();
         String address = customer.getAddress();
-        String formattedBirthDate = customer.getFormattedBirthDate();
+        LocalDate birthDateReferenceDate = LocalDate.now();
+        String formattedBirthDate = birthDateFormatter.format(customer, birthDateReferenceDate);
         Integer debt = customer.getDebt();
         String formattedDebt = CurrencyUtil.format(debt);
         double minimumScore = CustomerScoreCalculator.minScore();

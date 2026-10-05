@@ -24,7 +24,7 @@
                th:data-customer-address="${customer.address}"
                th:data-customer-debt="${formattedDebt}"
                th:data-customer-debt-raw="${customer.debt}"
-               th:data-customer-birthdate="${customer.formattedBirthDate}"
+               th:data-customer-birthdate="${customerBirthDates[customer.id]}"
                th:attr="data-customer-score=${score}"
                data-testid="customer-card">
                 <div class="customer-card__row">

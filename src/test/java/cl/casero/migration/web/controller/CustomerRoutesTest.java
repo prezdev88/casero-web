@@ -77,6 +77,7 @@ import cl.casero.migration.util.CustomerScoreCalculator;
 import cl.casero.migration.util.CustomerScoreSummary.CycleScore;
 import cl.casero.migration.web.audit.AuditContextFactory;
 import cl.casero.migration.web.audit.CustomerAuditLogger;
+import cl.casero.migration.web.presentation.CustomerBirthDateFormatter;
 import cl.casero.migration.web.security.CaseroUserDetails;
 
 @ExtendWith(MockitoExtension.class)
@@ -152,8 +153,9 @@ class CustomerRoutesTest {
 
         AuditContextFactory contextFactory = new AuditContextFactory();
         CustomerAuditLogger auditLogger = new CustomerAuditLogger(auditEventService, contextFactory);
+        CustomerBirthDateFormatter birthDateFormatter = new CustomerBirthDateFormatter();
         CustomerController customerViews = new CustomerController(
-                customerQueries, customerScoreService, presentationService, transactionQueries);
+                customerQueries, customerScoreService, presentationService, transactionQueries, birthDateFormatter);
         CustomerManagementController management = new CustomerManagementController(
                 customerQueries, customerCommands, sectorService, statisticsService, auditLogger);
         CustomerTransactionController transactions = new CustomerTransactionController(

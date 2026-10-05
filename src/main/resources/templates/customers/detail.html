@@ -362,22 +362,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const sortButton = document.getElementById('transactions-sort');
     const sortLabel = document.getElementById('transactions-sort-label');
     const sortIcon = document.getElementById('transactions-sort-icon');
-    const iconMap = {
-        sale: '🛒',
-        payment: '💰',
-        refund: '↩️',
-        debt_forgiveness: '❤️',
-        initial_balance: '⚖️',
-        fault_discount: '🛠️'
-    };
-    const labelMap = {
-        sale: 'Venta',
-        payment: 'Abono',
-        refund: 'Devolución',
-        debt_forgiveness: 'Condonación de deuda',
-        initial_balance: 'Saldo inicial',
-        fault_discount: 'Descuento por falla'
-    };
+    const transactionMetadata = /*[[${transactionMetadata}]]*/ {};
 
     const jsonWrapper = document.querySelector('.transactions-json');
     const jsonToggleBtn = document.getElementById('transactions-json-toggle');
@@ -562,11 +547,11 @@ document.addEventListener('DOMContentLoaded', () => {
         type.className = 'transaction-card__type';
         const typeIcon = document.createElement('span');
         const iconKey = transaction.typeKey ? transaction.typeKey.toLowerCase() : '';
-        typeIcon.textContent = iconMap[iconKey] || '📄';
+        typeIcon.textContent = transactionMetadata[iconKey]?.icon || '📄';
         typeIcon.classList.add('transaction-card__type-icon');
         type.appendChild(typeIcon);
         const typeText = document.createElement('span');
-        const typeLabel = labelMap[iconKey] || transaction.typeKey;
+        const typeLabel = transactionMetadata[iconKey]?.label || transaction.typeKey;
         typeText.textContent = ` ${typeLabel}`;
         type.appendChild(typeText);
         topRow.appendChild(type);

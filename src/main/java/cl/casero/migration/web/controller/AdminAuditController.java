@@ -3,6 +3,7 @@ package cl.casero.migration.web.controller;
 import cl.casero.migration.domain.AuditEvent;
 import cl.casero.migration.domain.enums.AuditEventType;
 import cl.casero.migration.repository.AuditEventRepository;
+import cl.casero.migration.service.audit.AuditAction;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -82,13 +83,6 @@ public class AdminAuditController {
     }
 
     private List<String> payloadTypeOptions() {
-        return List.of(
-            "DEBT_FORGIVEN",
-            "SALE",
-            "PAYMENT",
-            "REFUND",
-            "DISCOUNT",
-            "UPDATE"
-        );
+        return AuditAction.payloadTypeOptions();
     }
 }

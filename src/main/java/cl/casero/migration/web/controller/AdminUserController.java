@@ -1,7 +1,6 @@
 package cl.casero.migration.web.controller;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Map;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,6 +22,7 @@ import cl.casero.migration.domain.enums.AuditEventType;
 import cl.casero.migration.domain.enums.UserRole;
 import cl.casero.migration.service.AppUserService;
 import cl.casero.migration.service.AuditEventService;
+import cl.casero.migration.service.audit.AuditAction;
 import cl.casero.migration.service.dto.AuditContext;
 import cl.casero.migration.service.dto.CreateUserForm;
 import cl.casero.migration.service.dto.UpdatePinForm;
@@ -64,7 +64,7 @@ public class AdminUserController {
             String createdName = created.getName();
             UserRole createdRole = created.getRole();
             Map<String, Object> data = Map.of("id", createdId, "name", createdName, "role", createdRole);
-            Map<String, Object> payload = actionPayload("ADMIN_USER_CREATED", data);
+            Map<String, Object> payload = AuditAction.ADMIN_USER_CREATED.payload(data);
             AuditContext context = auditContextFactory.from(actor, request);
             auditEventService.logEvent(AuditEventType.ACTION, payload, context);
         } catch (IllegalArgumentException ex) {
@@ -96,7 +96,7 @@ public class AdminUserController {
             AppUser actor = currentUser(authentication);
             Long userId = form.getUserId();
             Map<String, Object> data = Map.of("userId", userId);
-            Map<String, Object> payload = actionPayload("ADMIN_USER_PIN_UPDATED", data);
+            Map<String, Object> payload = AuditAction.ADMIN_USER_PIN_UPDATED.payload(data);
             AuditContext context = auditContextFactory.from(actor, request);
             auditEventService.logEvent(AuditEventType.ACTION, payload, context);
         } catch (IllegalArgumentException ex) {
@@ -130,12 +130,5 @@ public class AdminUserController {
             return details.getAppUser();
         }
         return null;
-    }
-
-    private Map<String, Object> actionPayload(String type, Map<String, Object> data) {
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("type", type);
-        payload.put("data", data != null ? data : Map.of());
-        return payload;
     }
 }

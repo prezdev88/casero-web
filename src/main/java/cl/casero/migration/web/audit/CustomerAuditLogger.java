@@ -15,6 +15,7 @@ import cl.casero.migration.domain.Customer;
 import cl.casero.migration.domain.Sector;
 import cl.casero.migration.domain.enums.AuditEventType;
 import cl.casero.migration.service.AuditEventService;
+import cl.casero.migration.service.audit.AuditAction;
 import cl.casero.migration.service.dto.AuditContext;
 import cl.casero.migration.service.dto.DebtForgivenessForm;
 import cl.casero.migration.service.dto.MoneyTransactionForm;
@@ -51,7 +52,7 @@ public class CustomerAuditLogger {
         data.put("sectorId", sectorId);
         data.put("address", address);
 
-        logAction("CREATE_CUSTOMER", data, authentication, request);
+        logAction(AuditAction.CREATE_CUSTOMER, data, authentication, request);
     }
 
     public void logSale(
@@ -74,7 +75,7 @@ public class CustomerAuditLogger {
         data.put("date", formattedDate);
         data.put("detail", detail);
 
-        logAction("SALE", data, authentication, request);
+        logAction(AuditAction.SALE, data, authentication, request);
     }
 
     public void logPayment(
@@ -92,7 +93,7 @@ public class CustomerAuditLogger {
         data.put("amount", amount);
         data.put("date", formattedDate);
 
-        logAction("PAYMENT", data, authentication, request);
+        logAction(AuditAction.PAYMENT, data, authentication, request);
     }
 
     public void logRefund(
@@ -113,7 +114,7 @@ public class CustomerAuditLogger {
         data.put("date", formattedDate);
         data.put("detail", detail);
 
-        logAction("REFUND", data, authentication, request);
+        logAction(AuditAction.REFUND, data, authentication, request);
     }
 
     public void logFaultDiscount(
@@ -134,7 +135,7 @@ public class CustomerAuditLogger {
         data.put("date", formattedDate);
         data.put("detail", detail);
 
-        logAction("FAULT_DISCOUNT", data, authentication, request);
+        logAction(AuditAction.FAULT_DISCOUNT, data, authentication, request);
     }
 
     public void logDebtForgiveness(
@@ -153,7 +154,7 @@ public class CustomerAuditLogger {
         data.put("date", formattedDate);
         data.put("detail", detail);
 
-        logAction("DEBT_FORGIVEN", data, authentication, request);
+        logAction(AuditAction.DEBT_FORGIVEN, data, authentication, request);
     }
 
     public void logAddressUpdate(
@@ -169,7 +170,7 @@ public class CustomerAuditLogger {
         data.put("customerId", customerId);
         data.put("address", address);
 
-        logAction("UPDATE_CUSTOMER_ADDRESS", data, authentication, request);
+        logAction(AuditAction.UPDATE_CUSTOMER_ADDRESS, data, authentication, request);
     }
 
     public void logSectorUpdate(
@@ -184,7 +185,7 @@ public class CustomerAuditLogger {
         data.put("customerId", customerId);
         data.put("sectorId", sectorId);
 
-        logAction("UPDATE_CUSTOMER_SECTOR", data, authentication, request);
+        logAction(AuditAction.UPDATE_CUSTOMER_SECTOR, data, authentication, request);
     }
 
     public void logCustomerDeleted(
@@ -196,7 +197,7 @@ public class CustomerAuditLogger {
         Map<String, Object> data = new HashMap<>();
         data.put("customerId", customerId);
 
-        logAction("DELETE_CUSTOMER", data, authentication, request);
+        logAction(AuditAction.DELETE_CUSTOMER, data, authentication, request);
     }
 
     public void logTransactionDeleted(
@@ -210,7 +211,7 @@ public class CustomerAuditLogger {
         data.put("transactionId", transactionId);
         data.put("customerId", customerId);
 
-        logAction("TRANSACTION_DELETED", data, authentication, request);
+        logAction(AuditAction.TRANSACTION_DELETED, data, authentication, request);
     }
 
     public void logNameUpdate(
@@ -222,11 +223,11 @@ public class CustomerAuditLogger {
         String name = form.getNewName();
 
         Map<String, Object> data = new HashMap<>();
-        data.put("action", "UPDATE_CUSTOMER_NAME");
         data.put("customerId", customerId);
         data.put("name", name);
 
-        logEvent(data, authentication, request);
+        Map<String, Object> payload = AuditAction.UPDATE_CUSTOMER_NAME.payload(data);
+        logEvent(payload, authentication, request);
     }
 
     public void logBirthdateUpdate(
@@ -240,25 +241,22 @@ public class CustomerAuditLogger {
         Integer year = form.getYear();
 
         Map<String, Object> data = new HashMap<>();
-        data.put("action", "UPDATE_CUSTOMER_BIRTHDATE");
         data.put("customerId", customerId);
         data.put("day", day);
         data.put("month", month);
         data.put("year", year);
 
-        logEvent(data, authentication, request);
+        Map<String, Object> payload = AuditAction.UPDATE_CUSTOMER_BIRTHDATE.payload(data);
+        logEvent(payload, authentication, request);
     }
 
     private void logAction(
-        String actionType,
+        AuditAction actionType,
         Map<String, Object> data,
         Authentication authentication,
         HttpServletRequest request
     ) {
-        data.values().removeIf(Objects::isNull);
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("type", actionType);
-        payload.put("data", data);
+        Map<String, Object> payload = actionType.payload(data);
         logEvent(payload, authentication, request);
     }
 

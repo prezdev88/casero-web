@@ -149,7 +149,8 @@ class CustomerBirthDateViewsTest {
 
         String html = responseBody(result);
         assertThat(html).contains(expected, "&lt;Dated Customer&gt;")
-                .doesNotContain("Añadir fecha de nacimiento");
+                .doesNotContain("Añadir fecha de nacimiento")
+                .contains("const transactionMetadata = {", "\"label\":\"Venta\"", "\"label\":\"Abono\"");
     }
 
     @Test

@@ -1,6 +1,5 @@
 package cl.casero.migration.web.controller;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,6 +17,7 @@ import cl.casero.migration.domain.AppUser;
 import cl.casero.migration.domain.enums.AuditEventType;
 import cl.casero.migration.service.AppConfigService;
 import cl.casero.migration.service.AuditEventService;
+import cl.casero.migration.service.audit.AuditAction;
 import cl.casero.migration.service.dto.AuditContext;
 import cl.casero.migration.web.audit.AuditContextFactory;
 import cl.casero.migration.web.security.CaseroUserDetails;
@@ -49,7 +49,7 @@ public class AdminConfigController {
             redirectAttributes.addFlashAttribute("message", "Configuración actualizada");
             AppUser actor = currentUser(authentication);
             Map<String, Object> data = Map.of("key", configKey, "value", value);
-            Map<String, Object> payload = actionPayload("APP_CONFIG_UPDATED", data);
+            Map<String, Object> payload = AuditAction.APP_CONFIG_UPDATED.payload(data);
             AuditContext context = auditContextFactory.from(actor, request);
             auditEventService.logEvent(AuditEventType.ACTION, payload, context);
         } catch (IllegalArgumentException ex) {
@@ -63,12 +63,5 @@ public class AdminConfigController {
             return details.getAppUser();
         }
         return null;
-    }
-
-    private Map<String, Object> actionPayload(String type, Map<String, Object> data) {
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("type", type);
-        payload.put("data", data != null ? data : Map.of());
-        return payload;
     }
 }

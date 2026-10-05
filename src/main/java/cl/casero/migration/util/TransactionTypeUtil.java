@@ -11,13 +11,7 @@ public final class TransactionTypeUtil {
             return "—";
         }
 
-        return switch (type) {
-            case SALE -> "Venta";
-            case PAYMENT -> "Abono";
-            case REFUND -> "Devolución";
-            case DEBT_FORGIVENESS -> "Condonación de deuda";
-            case INITIAL_BALANCE -> "Saldo inicial";
-            case FAULT_DISCOUNT -> "Descuento por falla";
-        };
+        TransactionTypePresentation presentation = TransactionTypePresentation.forType(type);
+        return presentation.getLabel();
     }
 }

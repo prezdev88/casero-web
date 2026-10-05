@@ -34,6 +34,7 @@ import cl.casero.migration.util.CurrencyUtil;
 import cl.casero.migration.util.CustomerScoreCalculator;
 import cl.casero.migration.util.CustomerScoreSummary;
 import cl.casero.migration.util.TransactionTypeUtil;
+import cl.casero.migration.util.TransactionTypePresentation;
 import cl.casero.migration.web.presentation.CustomerBirthDateFormatter;
 
 @Controller
@@ -127,6 +128,8 @@ public class CustomerController {
         LocalDate birthDateReferenceDate = LocalDate.now();
         String birthDate = birthDateFormatter.format(customer, birthDateReferenceDate);
         model.addAttribute("customerBirthDate", birthDate);
+        Map<String, Map<String, String>> transactionMetadata = TransactionTypePresentation.byKey();
+        model.addAttribute("transactionMetadata", transactionMetadata);
         model.addAttribute("customer", customer);
         model.addAttribute("transactionsPage", transactions);
         model.addAttribute("ascending", ascending);

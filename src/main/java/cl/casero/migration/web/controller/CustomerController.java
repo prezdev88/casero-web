@@ -25,9 +25,11 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import cl.casero.migration.domain.Customer;
 import cl.casero.migration.domain.Transaction;
 import cl.casero.migration.domain.enums.TransactionType;
-import cl.casero.migration.service.CustomerScoreService;
 import cl.casero.migration.service.CustomerQueries;
+import cl.casero.migration.service.CustomerScorePresentationService;
+import cl.casero.migration.service.CustomerScoreService;
 import cl.casero.migration.service.TransactionQueries;
+import cl.casero.migration.service.dto.CustomerScorePresentation;
 import cl.casero.migration.util.CurrencyUtil;
 import cl.casero.migration.util.CustomerScoreCalculator;
 import cl.casero.migration.util.CustomerScoreSummary;
@@ -43,6 +45,7 @@ public class CustomerController {
 
     private final CustomerQueries customerQueries;
     private final CustomerScoreService customerScoreService;
+    private final CustomerScorePresentationService presentationService;
     private final TransactionQueries transactionQueries;
 
     @GetMapping
@@ -105,7 +108,7 @@ public class CustomerController {
         Sort sort = Sort.by(ascending ? Sort.Direction.ASC : Sort.Direction.DESC, "createdAt");
         Pageable pageable = PageRequest.of(sanitizedPage, sanitizedSize, sort);
         Customer customer = customerQueries.get(id);
-        CustomerScoreService.ScorePresentation scorePresentation = customerScoreService.getScorePresentation(customer);
+        CustomerScorePresentation scorePresentation = presentationService.getScorePresentation(customer);
         double score = scorePresentation.score();
         String explanation = scorePresentation.explanation();
         List<CustomerScoreSummary.CycleScore> cycles = scorePresentation.cycles();

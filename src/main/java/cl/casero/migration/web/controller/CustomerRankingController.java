@@ -10,7 +10,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import cl.casero.migration.service.CustomerScoreService;
+import cl.casero.migration.service.CustomerRankingService;
+import cl.casero.migration.service.dto.CustomerRankingEntry;
 
 @Controller
 @RequiredArgsConstructor
@@ -19,7 +20,7 @@ public class CustomerRankingController {
 
     private static final int MAX_PAGE_SIZE = 100;
 
-    private final CustomerScoreService customerScoreService;
+    private final CustomerRankingService customerRankingService;
 
     @GetMapping("/ranking")
     public String ranking(
@@ -33,7 +34,7 @@ public class CustomerRankingController {
         int sanitizedSize = Math.min(positiveSize, MAX_PAGE_SIZE);
         boolean ascending = "asc".equalsIgnoreCase(direction);
         Pageable pageable = PageRequest.of(sanitizedPage, sanitizedSize);
-        Page<CustomerScoreService.RankingEntry> rankingPage = customerScoreService.getRanking(pageable, ascending);
+        Page<CustomerRankingEntry> rankingPage = customerRankingService.getRanking(pageable, ascending);
 
         model.addAttribute("rankingPage", rankingPage);
         model.addAttribute("direction", ascending ? "asc" : "desc");

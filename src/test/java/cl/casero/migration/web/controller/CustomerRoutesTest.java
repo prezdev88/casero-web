@@ -32,6 +32,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -58,7 +59,9 @@ import cl.casero.migration.domain.enums.UserRole;
 import cl.casero.migration.service.AuditEventService;
 import cl.casero.migration.service.CustomerCommands;
 import cl.casero.migration.service.CustomerQueries;
+import cl.casero.migration.service.CustomerRankingService;
 import cl.casero.migration.service.CustomerReportService;
+import cl.casero.migration.service.CustomerScorePresentationService;
 import cl.casero.migration.service.CustomerScoreService;
 import cl.casero.migration.service.CustomerTransactionReportService;
 import cl.casero.migration.service.SectorService;
@@ -67,6 +70,11 @@ import cl.casero.migration.service.TransactionCommands;
 import cl.casero.migration.service.TransactionQueries;
 import cl.casero.migration.service.dto.AuditContext;
 import cl.casero.migration.service.dto.CreateCustomerForm;
+import cl.casero.migration.service.dto.CustomerRankingEntry;
+import cl.casero.migration.service.dto.CustomerScorePresentation;
+import cl.casero.migration.util.CustomerScoreCalculator.ScoreResult;
+import cl.casero.migration.util.CustomerScoreCalculator;
+import cl.casero.migration.util.CustomerScoreSummary.CycleScore;
 import cl.casero.migration.web.audit.AuditContextFactory;
 import cl.casero.migration.web.audit.CustomerAuditLogger;
 import cl.casero.migration.web.security.CaseroUserDetails;
@@ -78,6 +86,7 @@ class CustomerRoutesTest {
     private static final long SECTOR_ID = 3L;
     private static final long TRANSACTION_ID = 11L;
     private static final int PAGE_SIZE = 10;
+    private static final int SECOND_CYCLE_NUMBER = 2;
     private static final int CUSTOMER_JSON_FIELD_COUNT = 9;
     private static final int TRANSACTION_JSON_FIELD_COUNT = 6;
     private static final int PAGE_JSON_FIELD_COUNT = 6;
@@ -100,6 +109,12 @@ class CustomerRoutesTest {
 
     @Mock
     private CustomerScoreService customerScoreService;
+
+    @Mock
+    private CustomerScorePresentationService presentationService;
+
+    @Mock
+    private CustomerRankingService customerRankingService;
 
     @Mock
     private TransactionQueries transactionQueries;
@@ -137,12 +152,13 @@ class CustomerRoutesTest {
 
         AuditContextFactory contextFactory = new AuditContextFactory();
         CustomerAuditLogger auditLogger = new CustomerAuditLogger(auditEventService, contextFactory);
-        CustomerController customerViews = new CustomerController(customerQueries, customerScoreService, transactionQueries);
+        CustomerController customerViews = new CustomerController(
+                customerQueries, customerScoreService, presentationService, transactionQueries);
         CustomerManagementController management = new CustomerManagementController(
                 customerQueries, customerCommands, sectorService, statisticsService, auditLogger);
         CustomerTransactionController transactions = new CustomerTransactionController(
                 customerQueries, transactionQueries, transactionCommands, auditLogger);
-        CustomerRankingController ranking = new CustomerRankingController(customerScoreService);
+        CustomerRankingController ranking = new CustomerRankingController(customerRankingService);
         reportClock = Clock.fixed(REPORT_INSTANT, ZoneOffset.UTC);
         CustomerTransactionReportService reportPreparation = new CustomerTransactionReportService(
                 customerQueries, transactionQueries, reportClock);
@@ -416,10 +432,45 @@ class CustomerRoutesTest {
     }
 
     @Test
+    void keepsCustomerDetailScoreAndReversesCyclesFromThePresentationService() throws Exception {
+        ScoreResult cycleResult = CustomerScoreCalculator.evaluate(null);
+        CycleScore firstCycle = new CycleScore(1, null, null, cycleResult);
+        CycleScore secondCycle = new CycleScore(SECOND_CYCLE_NUMBER, null, null, cycleResult);
+        List<CycleScore> cycles = List.of(firstCycle, secondCycle);
+        String explanation = "Existing score explanation";
+        CustomerScorePresentation presentation = new CustomerScorePresentation(CUSTOMER_SCORE, explanation, cycles);
+        Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
+        Pageable pageable = PageRequest.of(0, PAGE_SIZE, sort);
+        Page<Transaction> transactions = Page.empty(pageable);
+        doReturn(customer).when(customerQueries).get(CUSTOMER_ID);
+        doReturn(presentation).when(presentationService).getScorePresentation(customer);
+        doReturn(transactions).when(transactionQueries).listByCustomer(CUSTOMER_ID, pageable);
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders.get("/customers/{id}", CUSTOMER_ID);
+
+        MvcResult result = mockMvc.perform(request).andReturn();
+
+        assertStatus(result, HttpStatus.OK);
+        ModelAndView modelAndView = result.getModelAndView();
+        assertThat(modelAndView).isNotNull();
+        String viewName = modelAndView.getViewName();
+        Map<String, Object> model = modelAndView.getModel();
+        List<CycleScore> expectedCycles = List.of(secondCycle, firstCycle);
+        assertThat(viewName).isEqualTo("customers/detail");
+        assertThat(model).containsEntry("customerScore", CUSTOMER_SCORE)
+                .containsEntry("customerScoreExplanation", explanation)
+                .containsEntry("customerScoreCycles", expectedCycles)
+                .containsEntry("customer", customer)
+                .containsEntry("transactionsPage", transactions);
+        assertThat(cycles).containsExactly(firstCycle, secondCycle);
+        verify(presentationService).getScorePresentation(customer);
+        verifyNoInteractions(customerScoreService);
+    }
+
+    @Test
     void keepsRankingRouteAndDirectionModel() throws Exception {
         Pageable pageable = PageRequest.of(0, MAX_RANKING_PAGE_SIZE);
-        Page<CustomerScoreService.RankingEntry> page = Page.empty(pageable);
-        doReturn(page).when(customerScoreService).getRanking(pageable, true);
+        Page<CustomerRankingEntry> page = Page.empty(pageable);
+        doReturn(page).when(customerRankingService).getRanking(pageable, true);
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders.get("/customers/ranking");
         request.param("direction", "asc");
         MvcResult result = mockMvc.perform(request).andReturn();

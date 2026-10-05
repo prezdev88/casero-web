@@ -10,7 +10,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
@@ -58,6 +61,7 @@ import cl.casero.migration.service.AuditEventService;
 import cl.casero.migration.service.CustomerReportService;
 import cl.casero.migration.service.CustomerScoreService;
 import cl.casero.migration.service.CustomerService;
+import cl.casero.migration.service.CustomerTransactionReportService;
 import cl.casero.migration.service.SectorService;
 import cl.casero.migration.service.StatisticsService;
 import cl.casero.migration.service.TransactionService;
@@ -81,6 +85,7 @@ class CustomerRoutesTest {
     private static final int PAYMENT_AMOUNT = 100;
     private static final double CUSTOMER_SCORE = 4.0;
     private static final String FORM_DATE = "2026-10-04";
+    private static final Instant REPORT_INSTANT = Instant.parse("2026-10-04T12:00:00Z");
     private static final ZoneId CUSTOMER_ZONE = ZoneId.of("America/Santiago");
 
     @Mock
@@ -106,6 +111,7 @@ class CustomerRoutesTest {
 
     private MockMvc mockMvc;
     private Customer customer;
+    private Clock reportClock;
 
     @BeforeEach
     void setUp() {
@@ -126,8 +132,10 @@ class CustomerRoutesTest {
         CustomerTransactionController transactions = new CustomerTransactionController(
                 customerService, transactionService, auditLogger);
         CustomerRankingController ranking = new CustomerRankingController(customerScoreService);
-        CustomerReportController reports = new CustomerReportController(
-                customerService, transactionService, customerReportService);
+        reportClock = Clock.fixed(REPORT_INSTANT, ZoneOffset.UTC);
+        CustomerTransactionReportService reportPreparation = new CustomerTransactionReportService(
+                customerService, transactionService, reportClock);
+        CustomerReportController reports = new CustomerReportController(reportPreparation, customerReportService);
         InternalResourceViewResolver viewResolver = new InternalResourceViewResolver("/test-views/", ".html");
         StandaloneMockMvcBuilder builder = MockMvcBuilders.standaloneSetup(
                 customerViews, management, transactions, ranking, reports);
@@ -402,9 +410,14 @@ class CustomerRoutesTest {
     }
 
     @ParameterizedTest
-    @CsvSource({"ALL, ALL, false", "MONTHS, PAYMENT, true"})
+    @CsvSource({
+        "ALL, ALL, false",
+        "MONTHS, PAYMENT, true",
+        "months, payment, true",
+        "unexpected, unexpected, false"
+    })
     void keepsReportSelectionAndPdfDownload(String range, String type, boolean filtered) throws Exception {
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(reportClock);
         LocalDate recentDate = today.withDayOfMonth(1);
         LocalDate oldDate = recentDate.minusMonths(1);
         Transaction recentPayment = new Transaction();

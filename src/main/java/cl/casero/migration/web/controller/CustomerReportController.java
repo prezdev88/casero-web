@@ -1,6 +1,5 @@
 package cl.casero.migration.web.controller;
 
-import java.time.LocalDate;
 import java.util.List;
 
 import lombok.RequiredArgsConstructor;
@@ -18,19 +17,17 @@ import cl.casero.migration.domain.Customer;
 import cl.casero.migration.domain.Transaction;
 import cl.casero.migration.domain.enums.TransactionType;
 import cl.casero.migration.service.CustomerReportService;
-import cl.casero.migration.service.CustomerService;
-import cl.casero.migration.service.TransactionService;
+import cl.casero.migration.service.CustomerTransactionReportService;
+import cl.casero.migration.service.dto.CustomerTransactionReportData;
+import cl.casero.migration.service.dto.TransactionReportCriteria;
+import cl.casero.migration.service.dto.TransactionReportCriteria.ReportRange;
 
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/customers")
 public class CustomerReportController {
 
-    private static final int DEFAULT_REPORT_MONTHS = 12;
-    private static final int MAX_REPORT_MONTHS = 60;
-
-    private final CustomerService customerService;
-    private final TransactionService transactionService;
+    private final CustomerTransactionReportService customerTransactionReportService;
     private final CustomerReportService customerReportService;
 
     @ResponseBody
@@ -41,33 +38,27 @@ public class CustomerReportController {
         @RequestParam(value = "months", required = false) Integer monthsParam,
         @RequestParam(value = "type", defaultValue = "ALL") String typeParam
     ) {
-        Customer customer = customerService.get(id);
+        ReportRange range = parseReportRange(rangeParam);
         TransactionType filterType = parseReportType(typeParam);
-        List<Transaction> transactions = transactionService.listAllByCustomer(id);
-        String rangeLabel;
-
-        if (isMonthsRange(rangeParam)) {
-            int months = sanitizeMonths(monthsParam);
-            transactions = filterTransactionsByMonths(transactions, months);
-            rangeLabel = "Últimos " + months + (months == 1 ? " mes" : " meses");
-        } else {
-            rangeLabel = "Todas las transacciones";
-        }
-
-        if (filterType != null) {
-            transactions = transactions.stream()
-                    .filter(tx -> tx.getType() == filterType)
-                    .toList();
-        }
-
-        byte[] pdf = customerReportService.generateTransactionsReport(customer, transactions, rangeLabel, filterType);
-        String safeName = (customer.getName() != null) ? customer.getName().replaceAll("[^a-zA-Z0-9]+", "-") : "cliente";
+        TransactionReportCriteria criteria = new TransactionReportCriteria(range, monthsParam, filterType);
+        CustomerTransactionReportData report = customerTransactionReportService.prepare(id, criteria);
+        Customer customer = report.customer();
+        List<Transaction> transactions = report.transactions();
+        String rangeLabel = report.rangeLabel();
+        TransactionType selectedType = report.filterType();
+        byte[] pdf = customerReportService.generateTransactionsReport(customer, transactions, rangeLabel, selectedType);
+        String customerName = customer.getName();
+        String safeName = (customerName != null) ? customerName.replaceAll("[^a-zA-Z0-9]+", "-") : "cliente";
         String filename = "casero-informe-" + safeName + ".pdf";
 
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_PDF)
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
                 .body(pdf);
+    }
+
+    private ReportRange parseReportRange(String raw) {
+        return "MONTHS".equalsIgnoreCase(raw) ? ReportRange.MONTHS : ReportRange.ALL;
     }
 
     private TransactionType parseReportType(String raw) {
@@ -83,28 +74,4 @@ public class CustomerReportController {
         }
     }
 
-    private boolean isMonthsRange(String rangeParam) {
-        return "MONTHS".equalsIgnoreCase(rangeParam);
-    }
-
-    private int sanitizeMonths(Integer monthsParam) {
-        if (monthsParam == null || monthsParam < 1) {
-            return DEFAULT_REPORT_MONTHS;
-        }
-
-        return Math.min(monthsParam, MAX_REPORT_MONTHS);
-    }
-
-    private List<Transaction> filterTransactionsByMonths(List<Transaction> transactions, int months) {
-        if (transactions == null || transactions.isEmpty()) {
-            return List.of();
-        }
-
-        LocalDate today = LocalDate.now();
-        LocalDate reference = today.withDayOfMonth(1);
-        LocalDate cutoff = reference.minusMonths(months - 1);
-        return transactions.stream()
-                .filter(tx -> tx.getDate() != null && !tx.getDate().isBefore(cutoff))
-                .toList();
-    }
 }
